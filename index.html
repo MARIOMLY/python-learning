@@ -391,6 +391,23 @@ kbd{background:#fff; border:1px solid var(--line); border-bottom-width:2px; bord
 .tplbox .mini{font-family:"Cascadia Code",Consolas,monospace; font-size:12.3px; background:#f1f5f9; border-radius:6px; padding:0 5px}
 .saveline{font-size:12px; color:var(--ink-3); margin-top:8px; display:flex; align-items:center; gap:8px; flex-wrap:wrap}
 .saveline .ok{color:var(--done); font-weight:600}
+
+/* ---------- 分享 / 交给别人 ---------- */
+.sharebar{
+  display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:12px;
+  padding-top:12px; border-top:1px dashed var(--line);
+}
+.sharebar .hint2{font-size:11.5px; color:var(--ink-3); flex:1 1 100%; margin-top:2px; line-height:1.5}
+.setrow input[type="date"]{
+  border:1px solid var(--line); border-radius:9px; padding:5px 9px; font-size:13px;
+  background:#fff; outline:none;
+}
+.setrow input[type="date"]:focus{border-color:#9dbdf5; box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.minibtn{
+  border:1px solid var(--line); background:#fff; border-radius:9px; padding:5px 11px;
+  font-size:12.5px; font-weight:600; color:var(--ink-2);
+}
+.minibtn:hover{border-color:#c7d2e5; color:var(--ink)}
 .workbadge{
   margin-top:7px; font-size:11.5px; font-weight:700; border-radius:999px; padding:2px 9px; display:inline-block;
   background:#f1f5f9; color:#64748b; border:1px solid #e2e8f0;
@@ -637,6 +654,19 @@ kbd{background:#fff; border:1px solid var(--line); border-bottom-width:2px; bord
       <input type="checkbox" id="allowNoWork">
       <span><b>允许不交作业直接标记完成</b>
         <span class="sub">默认关闭 —— 开着门禁才拦得住"假装学会"。只有真遇到意外（生病、断网、电脑坏了）才建议临时打开；开门禁期间标记的完成不会发鼓励，并会在当天备注里留痕。</span>
+      </span>
+    </div>
+    <div class="setrow" style="margin-top:14px">
+      <span style="flex:none;font-size:15px;line-height:1.2">📅</span>
+      <span style="flex:1">
+        <b>计划开始日期</b>
+        <span class="sub">默认从"下一个周一"开始。想立刻开始就点「从今天开始」—— 注意第 6、7 天是"周末 2 小时"的重课，从周三开始的话它们会落在周一周二。</span>
+        <span style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center">
+          <input type="date" id="startDateInput">
+          <button class="minibtn" id="applyStart">应用</button>
+          <button class="minibtn" id="startToday">从今天开始</button>
+          <button class="minibtn" id="resetStart">恢复默认（下周一）</button>
+        </span>
       </span>
     </div>
   </section>
@@ -913,7 +943,7 @@ function renderPlan(){
           style="--wc:${w.soft};--wcd:${w.color};--wct:${w.text}">
         <div class="when">
           ${isToday ? '<span class="todaytag">今天</span>' : ""}
-          <div class="dow">${d.dow}</div>
+          <div class="dow">${WEEKDAY_CN[dt.getDay()]}</div>
           <div class="dt">${dstrShort(dt)}</div>
           <div class="hr">${d.time}</div>
           <div class="len">${d.len}</div>
@@ -1295,7 +1325,12 @@ function renderWork(id){
     html += '<div class="tplbox">🔗 <b>建议一并保存的附件：</b>' + esc(hw.attach) + "<br>" +
       '<span class="mini">在项目文件夹里执行： git add . &amp;&amp; git commit -m "D' + pad2(WORK_IDX(id) + 1) + ' ' + esc(DAYS[WORK_IDX(id)].topic) + '"</span></div>';
   }
-  html += '<div class="saveline" id="savedLine"></div></div>';
+  html += '<div class="saveline" id="savedLine"></div>';
+  html += '<div class="sharebar">' +
+    '<button class="btn primary" id="copySubmit">📋 复制这条提交（发给群/组织者）</button>' +
+    '<button class="btn" id="zipOneInline">📦 打包成 zip 文件</button>' +
+    '<span class="hint2">内容只存在你这台设备，不上传服务器 —— 想交给别人就用这两个按钮</span>' +
+    "</div></div>";
   if (checks.length){
     html += '<div class="work-sec"><h4>交之前自检</h4><ul class="checks">' +
       checks.map((c, i) => {
@@ -1917,6 +1952,126 @@ document.getElementById("gate").addEventListener("click", (e) => {
   }
 });
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeGate(); });
+
+/* ============ 分享与开始日期（由 build-page.js 注入） ============ */
+/* ---------- 计划开始日期 ---------- */
+function startKey(){ return state.startDate || FALLBACK_START; }
+function applyStartKey(key, quiet){
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(key)){ toast("日期格式不对"); return false; }
+  const d = new Date(key + "T00:00:00");
+  if (isNaN(d.getTime())){ toast("这不是一个有效日期"); return false; }
+  if (Object.keys(state.checkin || {}).length){
+    if (!confirm("你已经有签到记录。改开始日期后，原来签到的日期可能对不上新日历，继续吗？")) return false;
+  }
+  state.startDate = key;
+  // PLAN_START 是 const 绑定的 Date 对象，改内容是可以的
+  PLAN_START.setFullYear(d.getFullYear(), d.getMonth(), d.getDate());
+  PLAN_START.setHours(0, 0, 0, 0);
+  save();
+  renderPlan(); renderCheckin(); updateStats();
+  const wd = ["周日","周一","周二","周三","周四","周五","周六"][d.getDay()];
+  const t = todayIdx();
+  if (!quiet){
+    if (t < 0) toast("开始日期已设为 " + dstr(d) + " " + wd + "（还有 " + (0 - t) + " 天才开始）", 2600);
+    else if (t >= DAYS.length) toast("开始日期已设为 " + dstr(d) + "，计划已经走完了", 2600);
+    else toast("开始日期已设为 " + dstr(d) + " " + wd + "，今天是第 " + (t + 1) + " 天", 2600);
+  }
+  return true;
+}
+function initStartUI(){
+  const inp = document.getElementById("startDateInput");
+  if (inp){
+    inp.value = startKey();
+    inp.max = "2099-12-31";
+  }
+}
+
+/* ---------- 复制提交内容（发给群里/组织者） ---------- */
+function submissionText(id){
+  const i = WORK_IDX(id);
+  const d = DAYS[i], w = workAt(id);
+  const dt = dayDate(i);
+  const wd = ["周日","周一","周二","周三","周四","周五","周六"][dt.getDay()];
+  const L = [];
+  L.push("【Python 四周学习计划 · 作业提交】");
+  L.push("第 " + d.w + " 周 · D" + pad2(i + 1) + " · " + d.topic);
+  L.push("日期：" + dayKeyFromDate(dt) + " " + wd + " · " + d.len);
+  L.push("完成标志：" + d.goal);
+  L.push("提交状态：" + WORK_TAG[workStatusOf(id)]);
+  L.push("");
+  L.push("—— 我的代码 ——");
+  L.push((w.code || "").trim() || "（还没填）");
+  if ((w.out || "").trim()){
+    L.push("");
+    L.push("—— 运行输出 ——");
+    L.push(w.out.trim());
+  }
+  if ((w.note || "").trim()){
+    L.push("");
+    L.push("—— 卡住的地方 / 收获 ——");
+    L.push(w.note.trim());
+  }
+  const cs = (HOMEWORK[id] && HOMEWORK[id].checks) || [];
+  if (cs.length){
+    L.push("");
+    L.push("—— 自检 ——");
+    cs.forEach((c, ci) => L.push((w.checks[ci] ? "[x] " : "[ ] ") + c));
+  }
+  L.push("");
+  L.push("（由学习页 " + location.origin + location.pathname + " 生成）");
+  return L.join("\n");
+}
+function copyText(text){
+  const done = () => toast("已复制！粘贴到微信/QQ 发给对方就行 ✅", 2600);
+  const fallback = () => {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.left = "-9999px";
+    document.body.appendChild(ta);
+    ta.select();
+    let ok = false;
+    try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+    ta.remove();
+    if (ok) done(); else toast("复制失败，请手动选中下方代码框里的内容复制", 3000);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done).catch(fallback);
+  } else fallback();
+}
+function copySubmission(id){
+  if (!hasSubmitted(id) && !(workAt(id).note || "").trim() && !(workAt(id).out || "").trim()){
+    toast("这一天还是空的，先写点东西再复制吧", 2400);
+    return;
+  }
+  copyText(submissionText(id));
+}
+
+/* ---------- 事件 ---------- */
+document.getElementById("applyStart").addEventListener("click", () => {
+  const v = document.getElementById("startDateInput").value;
+  if (!v){ toast("先选一个日期"); return; }
+  applyStartKey(v);
+});
+document.getElementById("startToday").addEventListener("click", () => {
+  const d = new Date(); d.setHours(0, 0, 0, 0);
+  const k = dayKeyFromDate(d);
+  if (applyStartKey(k)) initStartUI();
+});
+document.getElementById("resetStart").addEventListener("click", () => {
+  if (Object.keys(state.checkin || {}).length && !confirm("会清不掉签到记录，只是把日历挪回下周一。继续吗？")) return;
+  const k = dayKeyFromDate(NEXT_MONDAY);
+  state.startDate = k;
+  const d = new Date(TODAY0); d.setDate(d.getDate() + ((TODAY0.getDay() === 1 ? 7 : (8 - TODAY0.getDay()) % 7 || 7)));
+  PLAN_START.setFullYear(d.getFullYear(), d.getMonth(), d.getDate());
+  PLAN_START.setHours(0, 0, 0, 0);
+  save(); renderPlan(); renderCheckin(); updateStats(); initStartUI();
+  toast("已恢复默认：从下周一（" + dstr(PLAN_START) + "）开始", 2600);
+});
+document.getElementById("workBody").addEventListener("click", (e) => {
+  if (e.target.id === "copySubmit"){ copySubmission(curId); return; }
+  if (e.target.id === "zipOneInline"){ exportZip("one", curId); return; }
+});
 
 /* ============ 教程 / 作业 / 模板 数据（由 lessons.js 生成） ============ */
 const TUTORIALS = {
@@ -2622,6 +2777,7 @@ const TEMPLATES = {
 load();
 initStartDate();
 initGate();
+initStartUI();
 renderNav();
 renderPlan();
 renderCheckin();
