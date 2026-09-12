@@ -1,0 +1,2639 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Python 四周学习计划 · 教程与作业</title>
+<!-- ==== SCENARIO-HOOK（测试时在这之前注入预置数据，页面脚本尚未执行） ==== -->
+<style>
+:root{
+  --bg:#eef2f8;
+  --ink:#0f172a;
+  --ink-2:#475569;
+  --ink-3:#7c8798;
+  --line:#e3e9f2;
+  --card:#ffffff;
+  --brand:#2563eb;
+  --brand-ink:#1d4ed8;
+  --brand-soft:#e8f0fe;
+  --done:#16a34a;
+  --doing:#d97706;
+  --shadow:0 1px 2px rgba(15,23,42,.06), 0 8px 24px rgba(15,23,42,.06);
+  --w1:#eff6ff; --w1d:#dbeafe; --w1t:#1d4ed8;
+  --w2:#fffbeb; --w2d:#fef3c7; --w2t:#b45309;
+  --w3:#f0fdf4; --w3d:#dcfce7; --w3t:#15803d;
+  --w4:#f6f7f9; --w4d:#e7eaee; --w4t:#475569;
+  --radius:16px;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"Segoe UI","Microsoft YaHei","PingFang SC","Hiragino Sans GB",system-ui,-apple-system,sans-serif;
+  line-height:1.6; font-size:15px;
+}
+button,input,select,textarea{font-family:inherit; font-size:inherit; color:inherit}
+button{cursor:pointer}
+a{color:var(--brand-ink)}
+
+/* ---------- top bar ---------- */
+.topbar{
+  position:sticky; top:0; z-index:40;
+  background:rgba(255,255,255,.86); backdrop-filter:saturate(1.6) blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.topbar-in{max-width:1180px; margin:0 auto; padding:8px 20px; display:flex; align-items:center; gap:12px; flex-wrap:wrap}
+.brand{display:flex; align-items:center; gap:9px; font-weight:700; letter-spacing:.2px; margin-right:auto}
+.brand .dot{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#2563eb,#38bdf8);display:grid;place-items:center;color:#fff;font-size:13px;font-weight:800;box-shadow:0 2px 8px rgba(37,99,235,.35)}
+.brand small{font-weight:500; color:var(--ink-3); font-size:12px}
+.btn{
+  border:1px solid var(--line); background:#fff; color:var(--ink-2);
+  padding:6px 12px; border-radius:10px; font-size:13px; font-weight:600;
+  transition:.15s ease; white-space:nowrap;
+}
+.btn:hover{border-color:#c7d2e5; color:var(--ink); box-shadow:0 2px 8px rgba(15,23,42,.07)}
+.btn.primary{background:var(--brand); border-color:var(--brand); color:#fff}
+.btn.primary:hover{background:var(--brand-ink); border-color:var(--brand-ink)}
+.btn.ghost{background:transparent}
+.search{position:relative}
+.search input{
+  width:216px; padding:6px 12px 6px 30px; border-radius:10px; border:1px solid var(--line);
+  background:#fff; outline:none; transition:.15s ease;
+}
+.search input:focus{border-color:#9dbdf5; box-shadow:0 0 0 3px rgba(37,99,235,.12); width:252px}
+.search::before{content:"⌕"; position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--ink-3); font-size:15px}
+
+/* ---------- layout ---------- */
+.wrap{max-width:1180px; margin:0 auto; padding:26px 20px 70px}
+
+/* hero */
+.hero{
+  background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 45%,#0ea5e9 100%);
+  color:#fff; border-radius:22px; padding:28px 30px 26px; position:relative; overflow:hidden;
+  box-shadow:0 18px 40px -18px rgba(30,58,138,.55);
+}
+.hero::after{
+  content:"🐍"; position:absolute; right:22px; top:6px; font-size:118px; opacity:.13; line-height:1;
+  transform:rotate(-8deg); pointer-events:none;
+}
+.hero h1{margin:0 0 6px; font-size:26px; letter-spacing:.5px}
+.hero p{margin:0; color:rgba(255,255,255,.86); font-size:13.5px; max-width:760px}
+.hero-meta{margin-top:14px; display:flex; flex-wrap:wrap; gap:8px}
+.chip{
+  background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.22);
+  padding:4px 11px; border-radius:999px; font-size:12.5px; backdrop-filter:blur(2px);
+}
+.overall{margin-top:20px; display:flex; align-items:center; gap:14px; flex-wrap:wrap}
+.overall .num{font-size:30px; font-weight:800; line-height:1; font-variant-numeric:tabular-nums}
+.overall .lbl{font-size:12.5px; color:rgba(255,255,255,.82)}
+.pbar{height:9px; border-radius:999px; background:rgba(255,255,255,.24); overflow:hidden; flex:1; min-width:180px}
+.pbar > i{display:block; height:100%; width:0; border-radius:999px; background:linear-gradient(90deg,#a7f3d0,#4ade80); transition:width .4s cubic-bezier(.2,.8,.2,1)}
+
+/* week nav */
+.weeknav{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:22px 0 6px}
+.wcard{
+  text-align:left; background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+  padding:13px 15px 12px; box-shadow:var(--shadow); border-top:4px solid var(--wc,var(--brand));
+  transition:.18s ease;
+}
+.wcard:hover{transform:translateY(-2px)}
+.wcard.active{outline:2px solid var(--wc,var(--brand)); outline-offset:1px}
+.wcard .wt{font-size:12px; font-weight:700; color:var(--wc,var(--brand)); letter-spacing:.5px}
+.wcard .wn{font-size:15px; font-weight:700; margin:1px 0 4px}
+.wcard .wd{font-size:11.5px; color:var(--ink-3)}
+.wcard .wp{margin-top:9px; display:flex; align-items:center; gap:8px}
+.wcard .wp .pbar{background:#eef2f8; min-width:0}
+.wcard .wp .pbar > i{background:var(--wc,var(--brand))}
+.wcard .wp span{font-size:11.5px; color:var(--ink-3); font-variant-numeric:tabular-nums; white-space:nowrap}
+
+/* week section */
+section.week{margin-top:22px}
+.whead{display:flex; align-items:baseline; gap:12px; margin:0 0 12px; padding-left:4px; flex-wrap:wrap}
+.whead h2{margin:0; font-size:18px; letter-spacing:.3px}
+.whead .tagline{font-size:12.5px; color:var(--ink-3)}
+.whead .sum{margin-left:auto; font-size:12.5px; color:var(--ink-3)}
+
+.days{display:flex; flex-direction:column; gap:11px}
+.day{
+  display:grid; grid-template-columns:96px minmax(0,1fr) 296px 262px;
+  background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+  box-shadow:var(--shadow); overflow:hidden; transition:.18s ease; position:relative;
+}
+.day::before{content:""; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--wc,var(--brand)); opacity:.9}
+.day:hover{box-shadow:0 2px 4px rgba(15,23,42,.06),0 14px 30px rgba(15,23,42,.09)}
+.when{
+  padding:14px 12px 14px 18px; background:linear-gradient(180deg,var(--wc,var(--brand)),var(--wcd,var(--brand)));
+  display:flex; flex-direction:column; justify-content:center; gap:2px;
+}
+.when .dow{font-size:17px; font-weight:800; color:var(--wct,var(--brand-ink)); line-height:1.2}
+.when .hr{font-size:11.5px; color:var(--wct,var(--brand-ink)); opacity:.85; font-variant-numeric:tabular-nums}
+.when .len{
+  margin-top:6px; align-self:flex-start; font-size:10.5px; font-weight:700; letter-spacing:.4px;
+  background:rgba(255,255,255,.75); color:var(--wct,var(--brand-ink)); padding:1px 7px; border-radius:999px;
+}
+.what{padding:14px 16px; border-right:1px dashed var(--line)}
+.what .topic{font-size:15.5px; font-weight:700; margin:0 0 4px; display:flex; align-items:center; gap:8px; flex-wrap:wrap}
+.what .topic .idx{font-size:10.5px; font-weight:700; color:var(--ink-3); background:#f4f7fb; border:1px solid var(--line); padding:0 6px; border-radius:999px; font-variant-numeric:tabular-nums}
+.what .task{margin:0 0 8px; font-size:13.5px; color:var(--ink-2)}
+.tags{display:flex; flex-wrap:wrap; gap:6px}
+code{
+  font-family:"Cascadia Code",Consolas,"SFMono-Regular",Menlo,monospace;
+  font-size:12.2px; background:#f4f7fb; border:1px solid #e6ecf6; color:#1e3a8a;
+  padding:1px 6px; border-radius:6px;
+}
+.goal{padding:14px 16px; border-right:1px dashed var(--line); background:#fcfdff}
+.goal .gl{font-size:10.5px; font-weight:700; color:var(--ink-3); letter-spacing:.6px}
+.goal .gt{font-size:13.5px; margin-top:3px; color:var(--ink)}
+.act{padding:14px 16px; display:flex; flex-direction:column; gap:9px; justify-content:center}
+.statuses{display:flex; gap:6px; flex-wrap:wrap}
+.st{
+  flex:1 1 auto; min-width:62px; border:1px solid var(--line); background:#fff; border-radius:9px; padding:5px 5px;
+  font-size:12px; font-weight:600; color:var(--ink-3); transition:.15s ease; white-space:nowrap;
+}
+.st:hover{border-color:#c7d2e5; color:var(--ink-2)}
+.st[data-s="todo"].on{background:#f1f5f9; border-color:#cbd5e1; color:#334155}
+.st[data-s="doing"].on{background:#fff7e6; border-color:#f6c667; color:#a16207}
+.st[data-s="done"].on{background:#ecfdf3; border-color:#86efac; color:#15803d}
+.note{
+  width:100%; resize:vertical; min-height:36px; max-height:120px; padding:7px 10px;
+  border:1px solid var(--line); border-radius:9px; background:#fbfcfe; font-size:12.8px; outline:none;
+  transition:.15s ease;
+}
+.note:focus{border-color:#9dbdf5; background:#fff; box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.day[data-s="doing"]{box-shadow:0 0 0 1.5px #fcd34d, var(--shadow)}
+.day[data-s="done"] .topic{color:var(--ink-3)}
+.day[data-s="done"] .topic .txt{text-decoration:line-through; text-decoration-thickness:1.5px; text-decoration-color:#a7b3c4}
+.day[data-s="done"] .what,.day[data-s="done"] .goal{opacity:.72}
+.day[data-s="done"] .when{filter:grayscale(.55) brightness(1.04)}
+.hide{display:none !important}
+
+/* notes panel */
+.panel{
+  margin-top:30px; background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+  box-shadow:var(--shadow); padding:20px 22px;
+}
+.panel h2{margin:0 0 4px; font-size:17px}
+.panel .hint{margin:0 0 14px; font-size:12.8px; color:var(--ink-3)}
+.tips{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:10px 22px; margin:0; padding:0; list-style:none}
+.tips li{font-size:13.4px; color:var(--ink-2); padding-left:24px; position:relative}
+.tips li::before{
+  content:attr(data-n); position:absolute; left:0; top:2px; width:17px; height:17px; border-radius:50%;
+  background:var(--brand-soft); color:var(--brand-ink); font-size:11px; font-weight:700;
+  display:grid; place-items:center;
+}
+footer{max-width:1180px; margin:0 auto; padding:0 20px 40px; color:var(--ink-3); font-size:12.4px; display:flex; gap:14px; flex-wrap:wrap}
+kbd{background:#fff; border:1px solid var(--line); border-bottom-width:2px; border-radius:5px; padding:0 5px; font-size:11.5px; font-family:inherit}
+
+/* toast */
+.toast{
+  position:fixed; left:50%; bottom:26px; transform:translate(-50%,18px);
+  background:#0f172a; color:#fff; padding:9px 16px; border-radius:11px; font-size:13px;
+  box-shadow:0 12px 30px rgba(15,23,42,.3); opacity:0; pointer-events:none; transition:.25s ease; z-index:60;
+}
+.toast.show{opacity:1; transform:translate(-50%,0)}
+
+/* empty state */
+.empty{display:none; text-align:center; padding:44px 20px; color:var(--ink-3); background:var(--card); border:1px dashed #cfd9e8; border-radius:var(--radius); margin-top:22px}
+.empty.show{display:block}
+
+@media (max-width:1080px){
+  .day{grid-template-columns:104px 1fr 320px}
+  .goal{display:none}
+  .day .act{grid-column:2 / -1; border-top:1px dashed var(--line); flex-direction:row; align-items:center; flex-wrap:wrap}
+  .day .act .statuses{min-width:230px}
+  .day .act .note{flex:1; min-width:200px}
+}
+@media (max-width:820px){
+  .weeknav{grid-template-columns:repeat(2,1fr)}
+  .day{grid-template-columns:1fr}
+  .when{flex-direction:row; align-items:center; gap:10px; padding:10px 16px}
+  .when .len{margin:0 0 0 auto}
+  .what{border-right:none; border-bottom:1px dashed var(--line)}
+  .goal{display:block; border-right:none}
+  .day .act{grid-column:1; border-top:none}
+  .hero{padding:22px 20px}
+  .hero h1{font-size:21px}
+  .hero::after{font-size:84px; right:6px}
+  .search{flex:1 1 130px; min-width:0}
+  .search input{width:100%}
+  .search input:focus{width:100%}
+  .brand small{display:none}
+  .btn{padding:6px 10px}
+}
+@media (max-width:600px){
+  .brand{font-size:14.5px}
+  .whead h2{font-size:16.5px}
+  .whead .tagline{flex:1 1 100%; font-size:12px}
+  .whead .sum{margin-left:0; flex:1 1 100%}
+  .overall{gap:10px}
+  .overall .num{font-size:26px}
+  .hero p{font-size:13px}
+}
+@media (max-width:520px){
+  .weeknav{grid-template-columns:1fr 1fr; gap:8px}
+  .st{font-size:11px}
+  .topbar-in{padding:8px 12px}
+  .wrap{padding:18px 12px 60px}
+}
+
+/* print */
+@media print{
+  body{background:#fff}
+  .topbar,.hero-actions,.act .note,.panel,.toast,footer{display:none !important}
+  .hero{background:#fff; color:#000; box-shadow:none; border:1.5px solid #999; padding:14px 16px}
+  .hero::after{display:none}
+  .hero p,.chip,.overall .lbl{color:#333}
+  .chip{border-color:#bbb; background:#f4f4f4}
+  .pbar{background:#e5e5e5}
+  .pbar > i{background:#444 !important}
+  .wrap{max-width:none; padding:0}
+  .weeknav{display:none}
+  .day{break-inside:avoid; page-break-inside:avoid; box-shadow:none; margin-bottom:6px}
+  .day .act{display:none}
+  .day{grid-template-columns:90px 1fr 300px}
+  .goal{display:block}
+  .what .topic .idx{display:none}
+  .when{filter:none !important}
+  @page{size:A4 landscape; margin:10mm}
+}
+
+/* ================= 详情抽屉 ================= */
+.drawer-mask{
+  position:fixed; inset:0; background:rgba(15,23,42,.42); backdrop-filter:blur(2px);
+  opacity:0; pointer-events:none; transition:.25s ease; z-index:70;
+}
+.drawer-mask.show{opacity:1; pointer-events:auto}
+.drawer{
+  position:fixed; top:0; right:0; bottom:0; width:min(820px,94vw); background:#fff; z-index:80;
+  transform:translateX(102%); transition:transform .3s cubic-bezier(.2,.8,.2,1);
+  display:flex; flex-direction:column; box-shadow:-24px 0 60px rgba(15,23,42,.22);
+}
+.drawer.show{transform:none}
+.dhead{
+  padding:16px 20px 13px; border-bottom:1px solid var(--line);
+  background:linear-gradient(180deg,var(--dw,#eff6ff),#fff); position:relative;
+}
+.dhead .dmeta{display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:12px; color:var(--ink-3); margin-bottom:5px}
+.dhead .dmeta b{color:var(--dwt,#1d4ed8)}
+.dhead h3{margin:0 0 6px; font-size:19px; padding-right:34px}
+.dhead .dgoal{font-size:13px; color:var(--ink-2); background:#fff; border:1px solid var(--line); border-radius:9px; padding:6px 10px; display:inline-block}
+.dclose{
+  position:absolute; right:14px; top:14px; width:30px; height:30px; border-radius:9px;
+  border:1px solid var(--line); background:#fff; color:var(--ink-3); font-size:16px; line-height:1;
+}
+.dclose:hover{color:var(--ink); border-color:#c7d2e5}
+.dtabs{display:flex; gap:6px; padding:10px 20px 0; border-bottom:1px solid var(--line); background:#fff; flex-wrap:wrap}
+.dtab{
+  border:1px solid transparent; border-bottom:none; background:transparent; color:var(--ink-3);
+  padding:7px 13px; border-radius:10px 10px 0 0; font-size:13.5px; font-weight:600; margin-bottom:-1px;
+}
+.dtab:hover{color:var(--ink-2); background:#f6f9fd}
+.dtab.on{color:var(--brand-ink); background:#fff; border-color:var(--line); box-shadow:0 2px 0 #fff}
+.dtab .dotmark{display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--done); margin-left:6px; vertical-align:middle}
+.dtab .dotmark.doing{background:var(--doing)}
+.dbody{flex:1; overflow:auto; padding:18px 22px 24px; scroll-behavior:smooth}
+.dpane{display:none}
+.dpane.on{display:block}
+.dfoot{
+  border-top:1px solid var(--line); padding:10px 20px; display:flex; gap:8px; align-items:center;
+  background:#fbfcfe; flex-wrap:wrap;
+}
+.dfoot .grow{margin-left:auto}
+.dfoot .hint{font-size:12px; color:var(--ink-3)}
+
+/* ---------- 教案排版（迷你 markdown） ---------- */
+.md h4{margin:20px 0 8px; font-size:15px; color:var(--ink); display:flex; align-items:center; gap:8px}
+.md h4:first-child{margin-top:2px}
+.md h4::before{content:""; width:4px; height:15px; border-radius:2px; background:var(--dw,var(--brand))}
+.md p{margin:6px 0; font-size:14px; color:var(--ink-2)}
+.md ul,.md ol{margin:6px 0; padding-left:22px}
+.md li{font-size:14px; color:var(--ink-2); margin:3px 0}
+.md li b,.md p b{color:var(--ink)}
+.md .say{
+  margin:9px 0; padding:9px 13px; border-radius:10px; font-size:13.5px; color:#78350f;
+  background:#fffbeb; border:1px solid #fde68a;
+}
+.md .say::before{content:"💡 ";}
+.md .warn{
+  margin:9px 0; padding:9px 13px; border-radius:10px; font-size:13.5px; color:#7f1d1d;
+  background:#fef2f2; border:1px solid #fecaca;
+}
+.md .warn::before{content:"⚠️ ";}
+.md .run{
+  margin:9px 0; padding:9px 13px; border-radius:10px; font-size:13.5px; color:#14532d;
+  background:#f0fdf4; border:1px solid #bbf7d0;
+}
+.md .run::before{content:"✅ ";}
+.md pre{
+  margin:10px 0; padding:12px 14px; background:#0f172a; color:#e2e8f0; border-radius:11px;
+  overflow:auto; font-family:"Cascadia Code",Consolas,Menlo,monospace; font-size:12.8px; line-height:1.65;
+}
+.md pre code{background:none; border:none; color:inherit; padding:0; font-size:inherit}
+.md p code,.md li code{font-size:12.4px}
+.md a{color:var(--brand-ink); text-decoration:underline; text-underline-offset:2px}
+.md a:hover{color:#0b3fa8}
+.mdtable{margin:10px 0; overflow-x:auto; border:1px solid var(--line); border-radius:11px}
+.mdtable table{border-collapse:collapse; width:100%; font-size:13.4px}
+.mdtable th{background:#f4f8fd; color:var(--ink); font-weight:700; text-align:left; padding:7px 11px; border-bottom:1px solid var(--line); white-space:nowrap}
+.mdtable td{padding:7px 11px; border-bottom:1px solid #f0f4fa; color:var(--ink-2); vertical-align:top}
+.mdtable tr:last-child td{border-bottom:none}
+.mdtable code{font-size:12.2px}
+
+/* ---------- 作业面板 ---------- */
+.work-sec{margin-bottom:18px}
+.work-sec > h4{margin:0 0 8px; font-size:15px; display:flex; align-items:center; gap:8px}
+.work-sec > h4 .cnt{
+  font-size:11px; font-weight:700; color:var(--brand-ink); background:var(--brand-soft);
+  padding:1px 7px; border-radius:999px;
+}
+.reqs{margin:0; padding-left:20px}
+.reqs li{font-size:14px; margin:5px 0; color:var(--ink-2)}
+.checks{list-style:none; margin:0; padding:0}
+.checks li{display:flex; gap:9px; align-items:flex-start; font-size:13.6px; color:var(--ink-2); margin:5px 0}
+.checks input{margin-top:4px; width:15px; height:15px; accent-color:var(--brand); flex:none}
+.checks li.done-check{color:var(--ink-3); text-decoration:line-through}
+.steps{margin:0; padding-left:20px}
+.steps li{font-size:13.8px; margin:6px 0; color:var(--ink-2)}
+.field{margin:14px 0}
+.field > label{display:block; font-size:12.5px; font-weight:700; color:var(--ink-3); margin-bottom:6px; letter-spacing:.3px}
+.wstatus{display:flex; gap:8px; flex-wrap:wrap}
+.wst{
+  border:1px solid var(--line); background:#fff; border-radius:10px; padding:7px 13px;
+  font-size:13px; font-weight:600; color:var(--ink-3); transition:.15s ease;
+}
+.wst:hover{border-color:#c7d2e5; color:var(--ink-2)}
+.wst[data-w="todo"].on{background:#f1f5f9; border-color:#cbd5e1; color:#334155}
+.wst[data-w="doing"].on{background:#fff7e6; border-color:#f6c667; color:#a16207}
+.wst[data-w="done"].on{background:#ecfdf3; border-color:#86efac; color:#15803d}
+.codearea{
+  width:100%; min-height:190px; padding:12px 13px; border:1px solid var(--line); border-radius:11px;
+  background:#fbfcfe; font-family:"Cascadia Code",Consolas,Menlo,monospace; font-size:12.9px;
+  line-height:1.65; resize:vertical; outline:none; transition:.15s ease; tab-size:4;
+}
+.codearea:focus{border-color:#9dbdf5; background:#fff; box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.codewrap{position:relative}
+.codewrap .tools{position:absolute; right:8px; top:8px; display:flex; gap:6px}
+.codewrap .tools button{
+  border:1px solid var(--line); background:#fff; color:var(--ink-3); border-radius:8px;
+  font-size:11.5px; padding:3px 9px; font-weight:600;
+}
+.codewrap .tools button:hover{color:var(--ink); border-color:#c7d2e5}
+.notearea{
+  width:100%; min-height:74px; padding:10px 12px; border:1px solid var(--line); border-radius:11px;
+  background:#fbfcfe; font-size:13.4px; resize:vertical; outline:none; transition:.15s ease;
+}
+.notearea:focus{border-color:#9dbdf5; background:#fff; box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.tplbox{
+  margin:10px 0 0; padding:10px 12px; border:1px dashed #cfd9e8; border-radius:11px;
+  background:#fafcff; font-size:13px; color:var(--ink-2);
+}
+.tplbox b{color:var(--ink)}
+.tplbox .mini{font-family:"Cascadia Code",Consolas,monospace; font-size:12.3px; background:#f1f5f9; border-radius:6px; padding:0 5px}
+.saveline{font-size:12px; color:var(--ink-3); margin-top:8px; display:flex; align-items:center; gap:8px; flex-wrap:wrap}
+.saveline .ok{color:var(--done); font-weight:600}
+.workbadge{
+  margin-top:7px; font-size:11.5px; font-weight:700; border-radius:999px; padding:2px 9px; display:inline-block;
+  background:#f1f5f9; color:#64748b; border:1px solid #e2e8f0;
+}
+.workbadge[data-w="doing"]{background:#fff7e6; color:#a16207; border-color:#f6c667}
+.workbadge[data-w="done"]{background:#ecfdf3; color:#15803d; border-color:#86efac}
+.act .row2{display:flex; gap:7px}
+.act .row2 .btn{flex:1; padding:6px 4px; font-size:12.5px; text-align:center}
+.duechip{
+  display:inline-block; font-size:11.5px; font-weight:700; color:#b45309;
+  background:#fffbeb; border:1px solid #fde68a; border-radius:999px; padding:1px 8px; margin:0 0 8px;
+}
+.lead{
+  margin:16px 0 0; font-size:13.4px; color:var(--ink-2); background:#fff; border:1px solid var(--line);
+  border-left:4px solid var(--brand); border-radius:12px; padding:10px 14px; box-shadow:var(--shadow);
+}
+.lead b{color:var(--brand-ink)}
+
+/* ================= 每日打卡签到 ================= */
+.checkin{
+  margin-top:18px; background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.26);
+  border-radius:16px; padding:14px 16px; backdrop-filter:blur(3px);
+}
+.cihead{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+.cihead .dot2{width:9px;height:9px;border-radius:50%;background:#4ade80;box-shadow:0 0 0 4px rgba(74,222,128,.25)}
+.cihead .t{font-size:14px; font-weight:700}
+.cihead .d{font-size:12.5px; color:rgba(255,255,255,.85)}
+.cihead .grow{margin-left:auto}
+.cihead .miss{font-size:12.5px; background:#fff3cd; color:#8a5a00; padding:3px 10px; border-radius:999px; font-weight:700}
+.cihead .allgood{font-size:12.5px; background:rgba(255,255,255,.22); padding:3px 10px; border-radius:999px}
+.cistrip{display:flex; gap:5px; margin-top:12px; overflow-x:auto; padding-bottom:4px}
+.cell{
+  flex:1 0 30px; min-width:30px; border-radius:9px; padding:5px 2px 4px; text-align:center;
+  background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.2); color:#fff;
+  transition:.15s ease; line-height:1.25;
+}
+.cell .cd{display:block; font-size:10px; opacity:.85; font-variant-numeric:tabular-nums}
+.cell .cn{display:block; font-size:10.5px; font-weight:700; font-variant-numeric:tabular-nums}
+.cell.done{background:#22c55e; border-color:#16a34a; color:#fff}
+.cell.miss{background:#f59e0b; border-color:#d97706; color:#3b2200}
+.cell.today{outline:2px solid #fff; outline-offset:1px; animation:pulse 2s infinite}
+.cell.future{opacity:.45; cursor:default}
+.cell:hover:not(.future){transform:translateY(-2px)}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,255,255,.5)}50%{box-shadow:0 0 0 6px rgba(255,255,255,0)}}
+.cifoot{margin-top:11px; display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+.cibtn{
+  background:#fff; color:#1d4ed8; border:none; border-radius:11px; padding:9px 18px;
+  font-size:14px; font-weight:800; box-shadow:0 4px 14px rgba(0,0,0,.18); transition:.16s ease;
+}
+.cibtn:hover{transform:translateY(-1px); box-shadow:0 8px 20px rgba(0,0,0,.24)}
+.cibtn.ghost{background:rgba(255,255,255,.2); color:#fff; font-weight:700; box-shadow:none; border:1px solid rgba(255,255,255,.4)}
+.cibtn:disabled{opacity:.5; cursor:not-allowed; transform:none}
+.cinote{font-size:12px; color:rgba(255,255,255,.9)}
+.ciok{display:flex; align-items:center; gap:8px; font-size:13.5px; font-weight:600; color:#eafff2}
+.ciok .big{font-size:18px}
+.cical{font-size:11.5px; color:rgba(255,255,255,.75); margin-top:7px}
+.cical b{color:#fff}
+
+/* 补签提醒弹窗 */
+.remind{
+  position:fixed; inset:0; z-index:90; display:none; align-items:center; justify-content:center;
+  background:rgba(15,23,42,.5); backdrop-filter:blur(3px); padding:20px;
+}
+.remind.show{display:flex}
+.remind-card{
+  width:min(540px,94vw); background:#fff; border-radius:18px; padding:24px 26px 20px;
+  box-shadow:0 30px 70px rgba(15,23,42,.35); animation:pop .28s cubic-bezier(.2,.9,.3,1.2);
+  max-height:86vh; overflow:auto;
+}
+.remind-card h3{margin:0 0 8px; font-size:19px; display:flex; align-items:center; gap:9px}
+.remind-card .rsub{font-size:13.4px; color:var(--ink-2); margin:0 0 14px}
+.misslist{display:flex; flex-direction:column; gap:7px; margin-bottom:16px}
+.missrow{display:flex; align-items:center; gap:10px; border:1px solid var(--line); border-radius:11px; padding:9px 12px; background:#fbfcfe}
+.missrow .md{font-size:12.5px; color:var(--ink-3); font-variant-numeric:tabular-nums; min-width:74px}
+.missrow .mt{font-size:13.4px; font-weight:600; flex:1}
+.missrow .btn{padding:4px 11px; font-size:12.5px}
+.missrow.ok{background:#f0fdf4; border-color:#bbf7d0}
+.remind-card .rfoot{display:flex; gap:8px; flex-wrap:wrap}
+@keyframes pop{from{transform:scale(.94) translateY(8px); opacity:0}to{transform:none; opacity:1}}
+
+/* 签到按钮 / 日期小标签（卡片内） */
+.act .row3{display:flex; gap:7px; margin-top:7px}
+.act .row3 .btn{flex:1; text-align:center; font-size:12.5px; padding:6px 4px}
+.act .row3 .btn.ci{background:#ecfdf3; border-color:#86efac; color:#15803d}
+.act .row3 .btn.ci:hover{border-color:#4ade80}
+.act .row3 .btn.ci.no{background:#fff; border-color:var(--line); color:var(--ink-3)}
+.dchip{
+  display:inline-block; font-size:10.5px; font-weight:700; color:var(--ink-3); background:#f1f5f9;
+  border:1px solid var(--line); border-radius:6px; padding:0 5px; margin-left:6px; font-variant-numeric:tabular-nums;
+}
+.dchip.today{background:#fef3c7; border-color:#fcd34d; color:#92400e}
+.when .dt{font-size:10.5px; opacity:.9; font-variant-numeric:tabular-nums; margin-top:2px}
+.when .todaytag{
+  position:absolute; top:8px; right:8px; font-size:10px; font-weight:800; color:#92400e;
+  background:#fde68a; border-radius:999px; padding:1px 7px;
+}
+.day.is-today{box-shadow:0 0 0 2px #f59e0b, var(--shadow)}
+.day .when{position:relative}
+
+/* 左下角鼓励弹窗 */
+.praisebox{
+  position:fixed; left:20px; bottom:20px; z-index:95; width:min(330px,86vw);
+  background:linear-gradient(135deg,#0f172a,#1e293b); color:#fff; border-radius:16px;
+  padding:15px 18px 15px 16px; box-shadow:0 18px 44px rgba(15,23,42,.4);
+  display:flex; gap:12px; align-items:flex-start;
+  transform:translateY(24px) scale(.96); opacity:0; pointer-events:none;
+  transition:.3s cubic-bezier(.2,.9,.3,1.2);
+}
+.praisebox.show{transform:none; opacity:1}
+.praisebox .em{font-size:26px; line-height:1}
+.praisebox .tx{flex:1}
+.praisebox .pt{font-size:14.5px; font-weight:800; margin-bottom:3px}
+.praisebox .ps{font-size:12.6px; color:#cbd5e1; line-height:1.55}
+.praisebox .pc{position:absolute; top:8px; right:10px; background:none; border:none; color:#94a3b8; font-size:14px}
+.praisebox.week{background:linear-gradient(135deg,#7c2d12,#b45309); box-shadow:0 18px 44px rgba(180,83,9,.45)}
+.praisebox.week .ps{color:#fde68a}
+
+/* ================= 交作业门禁 ================= */
+.st.locked{
+  opacity:.55; cursor:not-allowed; background:#f8fafc; border-style:dashed; white-space:nowrap;
+}
+.st.locked:hover{border-color:var(--line); color:var(--ink-3)}
+.gate-note{
+  margin:9px 0 0; font-size:12px; line-height:1.5; color:#92400e;
+  background:#fffbeb; border:1px solid #fde68a; border-radius:9px;
+  padding:5px 10px; display:inline-flex; align-items:center; gap:6px; max-width:100%;
+}
+.gate-note .ico{flex:none; font-size:12.5px}
+.gate-note b{color:#7c2d12}
+.gate .remind-card{max-width:520px}
+.gate-list{margin:0 0 14px; padding-left:20px}
+.gate-list li{font-size:13.6px; color:var(--ink-2); margin:5px 0}
+.gate-list code{font-size:12.4px}
+.force-link{
+  display:block; width:100%; text-align:left; background:none; border:none; color:var(--ink-3);
+  font-size:12px; text-decoration:underline; text-underline-offset:2px; padding:8px 0 0; cursor:pointer;
+}
+.force-link:hover{color:var(--ink-2)}
+.setrow{display:flex; align-items:flex-start; gap:9px; font-size:13.4px; color:var(--ink-2); margin-top:4px}
+.setrow input{margin-top:4px; width:15px; height:15px; accent-color:var(--brand); flex:none}
+.setrow .sub{font-size:12px; color:var(--ink-3); display:block; margin-top:2px}
+.gatebadge{
+  display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:700;
+  color:#b45309; background:#fffbeb; border:1px solid #fde68a; border-radius:999px; padding:1px 8px;
+}
+/* 撒彩带 */
+.confetti{
+  position:fixed; top:-14px; width:9px; height:14px; border-radius:2px; z-index:99;
+  pointer-events:none; animation:fall 1.9s cubic-bezier(.3,.7,.6,1) forwards;
+}
+@keyframes fall{
+  0%{transform:translateY(0) rotate(0); opacity:1}
+  100%{transform:translateY(92vh) rotate(540deg); opacity:0}
+}
+@media (max-width:600px){
+  .cistrip{gap:4px}
+  .cell{flex:1 0 26px; min-width:26px; padding:4px 1px}
+  .cell .cd,.cell .cn{font-size:9.5px}
+  .praisebox{left:10px; right:10px; bottom:10px; width:auto}
+  .checkin{padding:12px 13px}
+}
+
+@media (max-width:820px){
+  .drawer{width:100vw; height:92vh; top:auto; border-radius:18px 18px 0 0; transform:translateY(102%)}
+  .drawer.show{transform:none}
+  .dbody{padding:15px 16px 20px}
+  .dhead{padding:14px 16px 11px}
+  .dtabs{padding:9px 14px 0}
+  .dfoot{padding:9px 14px}
+}
+@media print{
+  .drawer,.drawer-mask{display:none !important}
+  .act .row2{display:none}
+  .checkin,.praisebox,.remind{display:none !important}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-in">
+    <div class="brand">
+      <span class="dot">Py</span>
+      <span>Python 四周学习计划<br><small>28 天 · 从零到第一个小项目</small></span>
+    </div>
+    <div class="search"><input id="q" type="search" placeholder="搜索主题 / 任务 / 备注" title="按主题、任务、完成标志或你自己的备注筛选" autocomplete="off"></div>
+    <button class="btn" id="onlyOpen" title="只显示未完成的计划项">只看未完成</button>
+    <button class="btn" id="exportBtn">导出进度 CSV</button>
+    <button class="btn" id="exportWork">导出作业包</button>
+    <button class="btn" id="printBtn">打印</button>
+    <button class="btn ghost" id="resetBtn" title="清空所有勾选与备注">重置</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <header class="hero">
+    <h1>Python 四周学习计划 · 打卡表</h1>
+    <p>工作日每天 30 分钟（20:00–20:30），周末每天 2 小时（09:00–11:00）。四周共 28 天、约 26 小时，终点是一个完整的小项目 + README。进度会自动保存在本机浏览器里。</p>
+    <div class="hero-meta">
+      <span class="chip">第 1 周 · 基础入门</span>
+      <span class="chip">第 2 周 · 条件判断</span>
+      <span class="chip">第 3 周 · 循环结构</span>
+      <span class="chip">第 4 周 · 复习与项目</span>
+    </div>
+    <div class="overall">
+      <div>
+        <div class="num" id="ovNum">0%</div>
+        <div class="lbl">总进度 · 已完成 <b id="ovDone">0</b> / 28 天</div>
+      </div>
+      <div class="pbar"><i id="ovBar"></i></div>
+      <div class="lbl" id="ovTime">已投入约 0 小时</div>
+
+    <!-- 每日打卡签到 -->
+    <section class="checkin" id="checkin">
+      <div class="cihead" id="ciHead"></div>
+      <div class="cistrip" id="ciStrip" role="group" aria-label="28 天签到日历"></div>
+      <div class="cifoot" id="ciFoot"></div>
+    </section>
+    </div>
+  </header>
+
+  <nav class="weeknav" id="weeknav"></nav>
+
+  <p class="lead">点每张卡片右下角的 <b>📖 教程</b> 看当天怎么学，<b>📝 作业</b> 直接在本页写代码提交 —— 内容自动存在本机浏览器里。</p>
+  <main id="plan"></main>
+
+  <div class="empty" id="empty">没有匹配的计划项，换个关键字试试。</div>
+
+  <section class="panel">
+    <h2>怎么用这张表</h2>
+    <p class="hint">写给你的执行说明 —— 计划不难，难的是不断线。</p>
+    <ul class="tips">
+      <li data-n="1">每天固定时段学习：工作日 20:00–20:30、周末 09:00–11:00，写进日历更不容易断。</li>
+      <li data-n="2">每行右侧三态按钮：<b>未开始 / 进行中 / 已完成</b>，学完当天点一下，顶部总进度会实时更新。</li>
+      <li data-n="3">卡住的点、报错信息、想补的知识写进“备注”，周日复盘时统一处理。</li>
+      <li data-n="4">每个周六是动手日，周日必须收尾：写笔记 + 上传 GitHub，四周后自然形成作品集。</li>
+      <li data-n="5">进度落后时优先保周末的 2 小时 —— 那两天决定这周是否真的学会。</li>
+      <li data-n="6">第 4 周的项目从“猜数字 / 计算器 / 单位换算”中选一个，功能越少越容易做完。</li>
+      <li data-n="7">快捷键：<kbd>/</kbd> 定位搜索框，<kbd>Esc</kbd> 清空搜索，<kbd>Ctrl</kbd>+<kbd>P</kbd> 打印。</li>
+      <li data-n="8">进度存在本机浏览器（localStorage），换电脑请先用“导出进度 CSV”备份。</li>
+    </ul>
+    <div class="setrow" style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line)">
+      <input type="checkbox" id="allowNoWork">
+      <span><b>允许不交作业直接标记完成</b>
+        <span class="sub">默认关闭 —— 开着门禁才拦得住"假装学会"。只有真遇到意外（生病、断网、电脑坏了）才建议临时打开；开门禁期间标记的完成不会发鼓励，并会在当天备注里留痕。</span>
+      </span>
+    </div>
+  </section>
+</div>
+
+<footer>
+  <span>数据来源：4 周 28 天 Python 学习计划</span>
+  <span>·</span>
+  <span>单文件离线版，直接用浏览器打开即可</span>
+</footer>
+
+<!-- 补签提醒 -->
+<div class="remind" id="remind" role="dialog" aria-modal="true" aria-label="补签提醒">
+  <div class="remind-card">
+    <h3>⏰ 有学习日没签到</h3>
+    <p class="rsub" id="remindSub"></p>
+    <div class="misslist" id="missList"></div>
+    <div class="rfoot">
+      <button class="btn primary" id="remindAll">全部补签</button>
+      <button class="btn" id="remindClose">稍后再说</button>
+    </div>
+    <p class="cical" style="color:var(--ink-3)">补签只是把记录补上，<b>当天该学的内容还是要补回来</b> —— 点卡片上的 📖 教程就能看到那天的任务。</p>
+  </div>
+</div>
+
+<!-- 交作业门禁提醒 -->
+<div class="remind gate" id="gate" role="dialog" aria-modal="true" aria-label="还不能标记完成">
+  <div class="remind-card">
+    <h3>🔒 这一天的作业还没交</h3>
+    <p class="rsub" id="gateSub"></p>
+    <ul class="gate-list" id="gateList"></ul>
+    <div class="rfoot">
+      <button class="btn primary" id="gateGo">去交作业</button>
+      <button class="btn" id="gateCancel">先去写代码</button>
+    </div>
+    <button class="force-link" id="gateForce">确实交不了？点这里记录原因，直接标记完成</button>
+  </div>
+</div>
+
+<!-- 详情抽屉：每天的具体教程 + 作业提交 -->
+<div class="drawer-mask" id="drawerMask"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-label="每日教程与作业">
+  <div class="dhead">
+    <button class="dclose" id="drawerClose" title="关闭（Esc）">✕</button>
+    <div class="dmeta" id="dMeta"></div>
+    <h3 id="dTitle"></h3>
+    <div class="dgoal" id="dGoal"></div>
+  </div>
+  <div class="dtabs" id="dTabs">
+    <button class="dtab on" data-tab="lesson">📖 今日教程</button>
+    <button class="dtab" data-tab="work">📝 作业提交<span class="dotmark" id="tabDot" hidden></span></button>
+    <button class="dtab" data-tab="code">💾 我的代码</button>
+  </div>
+  <div class="dbody">
+    <section class="dpane on" id="paneLesson"><div class="md" id="lessonBody"></div></section>
+    <section class="dpane" id="paneWork"><div id="workBody"></div></section>
+    <section class="dpane" id="paneCode"><div id="codeBody"></div></section>
+  </div>
+  <div class="dfoot">
+    <span class="hint" id="dfootHint"></span>
+    <span class="grow"></span>
+    <button class="btn" id="drawerPrev">← 上一天</button>
+    <button class="btn" id="drawerNext">下一天 →</button>
+  </div>
+</aside>
+
+<!-- 左下角鼓励弹窗 -->
+<div class="praisebox" id="praisebox" role="status" aria-live="polite"></div>
+
+<footer>
+  <span>数据来源：4 周 28 天 Python 学习计划</span>
+  <span>·</span>
+  <span>单文件离线版，直接用浏览器打开即可</span>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============ 数据 ============ */
+const WEEKS = [
+  { id: 1, name: "基础入门", color: "#2563eb", soft: "#dbeafe", text: "#1d4ed8",
+    focus: "环境、变量、输入输出、运算符、字符串",
+    deliver: "个人介绍生成器 + 加减计算器" },
+  { id: 2, name: "条件判断", color: "#d97706", soft: "#fde68a", text: "#b45309",
+    focus: "if / if-else / elif / 比较运算符 / 逻辑运算符",
+    deliver: "猜数字（条件版）+ 成绩等级判断" },
+  { id: 3, name: "循环结构", color: "#16a34a", soft: "#bbf7d0", text: "#15803d",
+    focus: "while / for-range / break-continue / 嵌套循环",
+    deliver: "完整猜数字游戏 + 九九乘法表" },
+  { id: 4, name: "复习与项目", color: "#64748b", soft: "#e2e8f0", text: "#475569",
+    focus: "三轮复习 + 项目设计、编码、完善、复盘",
+    deliver: "完整小项目 + README（已上传）" }
+];
+
+/* 时长单位：小时 */
+const DAYS = [
+  // ---------- 第 1 周 ----------
+  { w:1, dow:"周一", time:"20:00-20:30", len:"30分钟", hours:0.5,
+    topic:"环境搭建", task:"安装 Python 和 VS Code；运行 Hello World", goal:"能成功打印 Hello World" },
+  { w:1, dow:"周二", time:"20:00-20:30", len:"30分钟", hours:0.5,
+    topic:"变量与数据类型", task:"学习 `int` / `float` / `str` / `bool`；定义变量并打印", goal:"能写出 5 个不同类型的变量" },
+  { w:1, dow:"周三", time:"20:00-20:30", len:"30分钟", hours:0.5,
+    topic:"输入输出与注释", task:"学习 `input` / `print` / 注释；写问候程序", goal:"输入姓名后能输出问候语" },
+  { w:1, dow:"周四", time:"20:00-20:30", len:"30分钟", hours:0.5,
+    topic:"基本运算符", task:"学习 `+` `-` `*` `/` `//` `%` `**`；做简单运算", goal:"能计算两个数的加减乘除" },
+  { w:1, dow:"周五", time:"20:00-20:30", len:"30分钟", hours:0.5,
+    topic:"字符串基础", task:"学习索引 / 切片 / 拼接 / `f-string`", goal:"能用 f-string 格式化输出" },
+  { w:1, dow:"周六", time:"09:00-11:00", len:"2小时", hours:2,
+    topic:"综合练习", task:"写“个人介绍生成器”和“加减计算器”", goal:"两个小脚本能运行" },
+  { w:1, dow:"周日", time:"09:00-11:00", len:"2小时", hours:2,
+    topic:"复习 + 整理", task:"复习本周内容；写笔记；上传 GitHub；规划下周", goal:"笔记和代码已上传" },
+  // ---------- 第 2 周 ----------
+  { w:2, dow:"周一", time:"20:00-20:30", len:"30分钟", hours:0.5,
+    topic:"if 基本语法", task:"学习单分支 `if`；写判断是否成年", goal:"能写出一个 if 判断" },
+  { w:2, dow:"周二", time:"20:00-20:30", len:"30分钟", hours:0.5,
+    topic:"if-else", task:"学习双分支；写奇偶数判断", goal:"能判断奇偶数" },
+  { w:2, dow:"周三", time:"20:00-20:30", len:"30分钟", hours:0.5,
+    topic:"elif 多分支", task:"学习多分支；写成绩等级判断", goal:"能输出 A/B/C/D 等级" },
+  { w:2, dow:"周四", time:"20:00-20:30", len:"30分钟", hours:0.5,
+    topic:"比较运算符", task:"学习 `==` `!=` `>` `<` `>=` `<=`", goal:"能组合条件做判断" },
+  { w:2, dow:"周五", time:"20:00-20:30", len:"30分钟", hours:0.5,
+    topic:"逻辑运算符", task:"学习 `and` `or` `not`；写登录条件判断", goal:"能写出复合条件" },
+  { w:2, dow:"周六", time:"09:00-11:00", len:"2小时", hours:2,
+    topic:"猜数字条件版", task:"固定一个数字；用 `if`/`elif`/`else` 比较大小", goal:"能提示“大了 / 小了 / 猜对”" },
+  { w:2, dow:"周日", time:"09:00-11:00", len:"2小时", hours:2,
+    topic:"复习 + 整理", task:"复习条件判断；优化成绩等级判断；写笔记", goal:"代码和笔记已整理" },
+  // ---------- 第 3 周 ----------
+  { w:3, dow:"周一", time:"20:00-20:30", len:"30分钟", hours:0.5,
+    topic:"while 循环", task:"学习 `while` 语法；写 1 到 10 累加", goal:"能写出 while 循环" },
+  { w:3, dow:"周二", time:"20:00-20:30", len:"30分钟", hours:0.5,
+    topic:"for 循环与 range", task:"学习 `for` 和 `range`；遍历列表", goal:"能用 for 打印列表元素" },
+  { w:3, dow:"周三", time:"20:00-20:30", len:"30分钟", hours:0.5,
+    topic:"break 和 continue", task:"学习循环控制；写跳过偶数的循环", goal:"能正确使用 break / continue" },
+  { w:3, dow:"周四", time:"20:00-20:30", len:"30分钟", hours:0.5,
+    topic:"嵌套循环", task:"学习循环嵌套；打印小星星图案", goal:"能打印三角形星星" },
+  { w:3, dow:"周五", time:"20:00-20:30", len:"30分钟", hours:0.5,
+    topic:"循环 + 条件综合", task:"用循环和条件写 1 到 100 内奇数和", goal:"能算出正确结果" },
+  { w:3, dow:"周六", time:"09:00-11:00", len:"2小时", hours:2,
+    topic:"完整猜数字游戏", task:"用 `random` 生成随机数；循环 + 条件实现多次猜测", goal:"游戏能反复猜直到猜对" },
+  { w:3, dow:"周日", time:"09:00-11:00", len:"2小时", hours:2,
+    topic:"乘法表 + 复习", task:"打印九九乘法表；复习循环；写笔记", goal:"乘法表和笔记完成" },
+  // ---------- 第 4 周 ----------
+  { w:4, dow:"周一", time:"20:00-20:30", len:"30分钟", hours:0.5,
+    topic:"复习变量与数据类型", task:"做 5 道变量和类型小题", goal:"能独立完成小题" },
+  { w:4, dow:"周二", time:"20:00-20:30", len:"30分钟", hours:0.5,
+    topic:"复习条件判断", task:"做 5 道 `if`/`elif` 小题", goal:"能独立完成小题" },
+  { w:4, dow:"周三", time:"20:00-20:30", len:"30分钟", hours:0.5,
+    topic:"复习循环", task:"做 5 道 `for`/`while` 小题", goal:"能独立完成小题" },
+  { w:4, dow:"周四", time:"20:00-20:30", len:"30分钟", hours:0.5,
+    topic:"项目设计", task:"从猜数字 / 计算器 / 单位换算中选一个；写功能清单", goal:"确定项目要做什么" },
+  { w:4, dow:"周五", time:"20:00-20:30", len:"30分钟", hours:0.5,
+    topic:"项目编码", task:"完成核心功能；先让程序能跑起来", goal:"核心功能可运行" },
+  { w:4, dow:"周六", time:"09:00-11:00", len:"2小时", hours:2,
+    topic:"项目完善", task:"加错误处理；加循环菜单；加注释", goal:"项目体验更完整" },
+  { w:4, dow:"周日", time:"09:00-11:00", len:"2小时", hours:2,
+    topic:"整理 + 复盘", task:"写 README；上传 GitHub；复盘本月", goal:"完整小项目 + README 已上传" }
+];
+
+const STATUS = [
+  { key:"todo",  label:"未开始", icon:"○" },
+  { key:"doing", label:"进行中", icon:"◐" },
+  { key:"done",  label:"已完成", icon:"●" }
+];
+const STORE_KEY = "py-plan-4w-v1";
+
+/* ============ 状态 ============ */
+const state = { status:{}, notes:{}, filter:"", onlyOpen:false, work:{}, checkin:{}, added:{}, praised:{}, startDate:null, setting:{} };
+/* 唯一 ID：w<周>d<1..7>，由 DAYS 的全局下标推导（每 7 天一周） */
+const DOW_OF = (i) => (i % 7) + 1;
+const dayIdAt = (i) => `w${DAYS[i].w}d${DOW_OF(i)}`;
+const dayAt = (id) => DAYS[Number(String(id).replace(/^w\d+d/, "")) - 1 + (Number(String(id).match(/^w(\d+)/)[1]) - 1) * 7];
+
+function load(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    if (raw){
+      const s = JSON.parse(raw);
+      if (s && typeof s === "object"){
+        if (s.status) state.status = s.status;
+        if (s.notes) state.notes = s.notes;
+        if (s.work) state.work = s.work;              // 作业提交（代码 / 输出 / 备注 / 自检）
+        if (s.checkin) state.checkin = s.checkin;     // 每日签到：date -> 时间戳
+        if (s.added) state.added = s.added;           // 通过补签补上的那几天
+        if (s.praised) state.praised = s.praised;     // 已表扬过的任务，避免重复弹
+        if (s.startDate) state.startDate = s.startDate;
+        if (s.setting) state.setting = s.setting;    // 交作业门禁开关等设置
+      }
+    }
+  }catch(e){ /* 忽略损坏的本地数据 */ }
+}
+function save(){
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify({ status:state.status, notes:state.notes, work:state.work, checkin:state.checkin, added:state.added, praised:state.praised, startDate:state.startDate, setting:state.setting, savedAt:new Date().toISOString() })); }
+  catch(e){ toast("本地保存失败，请用“导出进度 CSV”备份"); }
+}
+
+/* ============ 工具 ============ */
+const esc = (s) => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+const pad2 = (n) => String(n).padStart(2, "0");
+function toast(msg, ms = 1700){
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => t.classList.remove("show"), ms);
+}
+/* 把 `code` 转成 <code>，其余转义 */
+function richText(s){
+  return esc(s).replace(/`([^`]+)`/g, "<code>$1</code>");
+}
+function download(name, text, mime = "text/csv;charset=utf-8"){
+  const blob = new Blob([text], { type:mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+}
+const statusOf = (id) => state.status[id] || "todo";
+
+/* ============ 渲染 ============ */
+/* 每周（第 1 周索引 0..6，第 2 周 7..13 …）在 DAYS 中的起止 */
+const weekSlice = (w) => ({ start:(w - 1) * 7, end:w * 7 });
+
+function weekStats(w){
+  const { start, end } = weekSlice(w);
+  let done = 0, hours = 0;
+  for (let i = start; i < end; i++){
+    const s = statusOf(dayIdAt(i));
+    if (s === "done") done++;
+    if (s !== "todo") hours += DAYS[i].hours;
+  }
+  return { total:end - start, done, hours };
+}
+
+function renderNav(){
+  const nav = document.getElementById("weeknav");
+  nav.innerHTML = WEEKS.map(w => {
+    const st = weekStats(w.id);
+    const pct = Math.round(st.done / st.total * 100);
+    return `<button class="wcard" data-week="${w.id}" style="--wc:${w.color}">
+      <div class="wt">第 ${w.id} 周</div>
+      <div class="wn">${esc(w.name)}</div>
+      <div class="wd">${esc(w.focus)}</div>
+      <div class="wp"><div class="pbar"><i style="width:${pct}%"></i></div><span>${st.done}/${st.total}</span></div>
+    </button>`;
+  }).join("");
+}
+
+function renderPlan(){
+  const plan = document.getElementById("plan");
+  let html = "";
+  WEEKS.forEach(w => {
+    const { start, end } = weekSlice(w.id);
+    const st = weekStats(w.id);
+    const hh = st.hours % 1 === 0 ? st.hours : st.hours.toFixed(1);
+    html += `<section class="week" id="week-${w.id}" data-week="${w.id}">
+      <div class="whead">
+        <h2>第 ${w.id} 周 · ${esc(w.name)}</h2>
+        <span class="tagline">${esc(w.focus)} ｜ 周末交付：${esc(w.deliver)}</span>
+        <span class="sum">本周 ${st.done}/${st.total} 完成 · 已投入约 ${hh} 小时</span>
+      </div>
+      <div class="days">`;
+    for (let i = start; i < end; i++){
+      const d = DAYS[i];
+      const id = dayIdAt(i);
+      const s = statusOf(id);
+      const wstat = workStatusOf(id);
+      const globalNo = i + 1;
+      const saved = hasWork(id);
+      const dt = dayDate(i);
+      const isToday = i === todayIdx();
+      const ciOn = isChecked(i);
+      const gated = !hasSubmitted(id) && (typeof gateOn !== "function" || gateOn());
+      html += `<article class="day${isToday ? " is-today" : ""}" id="${id}" data-s="${s}" data-id="${id}"
+          style="--wc:${w.soft};--wcd:${w.color};--wct:${w.text}">
+        <div class="when">
+          ${isToday ? '<span class="todaytag">今天</span>' : ""}
+          <div class="dow">${d.dow}</div>
+          <div class="dt">${dstrShort(dt)}</div>
+          <div class="hr">${d.time}</div>
+          <div class="len">${d.len}</div>
+        </div>
+        <div class="what">
+          <h3 class="topic"><span class="idx">D${pad2(globalNo)}</span><span class="txt">${richText(d.topic)}</span>
+            <span class="dchip${isToday ? " today" : ""}">${dstrShort(dt)} ${WEEKDAY_CN[dt.getDay()]}</span></h3>
+          <p class="task">${richText(d.task)}</p>
+          ${gated && s !== "done" ? '<div class="gate-note"><span class="ico">🔒</span><span>交了作业（粘贴代码 <b>或</b> 运行输出）才能标记「已完成」</span></div>' : ""}
+          ${d.due ? '<span class="duechip">截止 ' + esc(d.due) + "</span>" : ""}
+          <div class="row2">
+            <button class="btn" data-learn="${id}">📖 教程</button>
+            <button class="btn" data-work="${id}">📝 作业</button>
+          </div>
+          <div class="row3">
+            <button class="btn ci${ciOn ? "" : " no"}" data-checkin="${id}" title="${ciOn ? (madeUp(i) ? "已补签" : "已签到") : "点这里签到"}">${ciOn ? (madeUp(i) ? "🩹 已补签" : "✅ 已签到") : "📍 签到"}</button>
+          </div>
+        </div>
+        <div class="goal">
+          <div class="gl">完成标志</div>
+          <div class="gt">${richText(d.goal)}</div>
+          <div class="workbadge" data-w="${wstat}">${workLabel(wstat)}${saved && wstat === "todo" ? "（有草稿）" : ""}</div>
+          ${gated && s !== "done" ? '<div class="gatebadge">🔒 待交作业</div>' : ""}
+        </div>
+        <div class="act">
+          <div class="statuses">
+            ${STATUS.map(x => {
+              const lock = (x.key === "done" && gated && s !== "done");
+              return `<button class="st${s === x.key ? " on" : ""}${lock ? " locked" : ""}" data-s="${x.key}" data-target="${id}"
+               title="${lock ? "先交作业，才能标记完成" : x.label}">${lock ? "🔒" : x.icon} ${lock ? "待交" : x.label}</button>`;
+            }).join("")}
+          </div>
+        </div>
+      </article>`;
+    }
+    html += `</div></section>`;
+  });
+  plan.innerHTML = html;
+}
+
+function updateStats(){
+  let done = 0, hours = 0, touched = 0;
+  DAYS.forEach((d, i) => {
+    const s = statusOf(dayIdAt(i));
+    if (s === "done") done++;
+    if (s !== "todo"){ touched++; hours += d.hours; }
+  });
+  const pct = Math.round(done / DAYS.length * 100);
+  document.getElementById("ovNum").textContent = pct + "%";
+  document.getElementById("ovDone").textContent = done;
+  document.getElementById("ovBar").style.width = pct + "%";
+  const hh = hours % 1 === 0 ? hours : hours.toFixed(1);
+  document.getElementById("ovTime").textContent =
+    touched === 0 ? "还没开始，从 D01 环境搭建开始吧" : `已投入约 ${hh} 小时 · 进行中 ${touched - done} 天`;
+  // 周卡片
+  document.querySelectorAll(".wcard").forEach(card => {
+    const st = weekStats(Number(card.dataset.week));
+    card.querySelector(".pbar > i").style.width = Math.round(st.done / st.total * 100) + "%";
+    card.querySelector(".wp span").textContent = `${st.done}/${st.total}`;
+  });
+  document.querySelectorAll("section.week").forEach(sec => {
+    const st = weekStats(Number(sec.dataset.week));
+    const hh2 = st.hours % 1 === 0 ? st.hours : st.hours.toFixed(1);
+    sec.querySelector(".sum").textContent = `本周 ${st.done}/${st.total} 完成 · 已投入约 ${hh2} 小时`;
+  });
+}
+
+function applyFilter(){
+  const q = state.filter.trim().toLowerCase();
+  let visible = 0, total = 0;
+  document.querySelectorAll("section.week").forEach(sec => {
+    let secVisible = 0;
+    sec.querySelectorAll(".day").forEach(el => {
+      total++;
+      const id = el.dataset.id;
+      const day = dayAt(id);
+      const hay = (el.textContent + " " + (state.notes[id] || "")).toLowerCase();
+      const hitQ = !q || hay.includes(q);
+      const hitOpen = !state.onlyOpen || statusOf(id) !== "done";
+      const show = hitQ && hitOpen;
+      el.classList.toggle("hide", !show);
+      if (show){ visible++; secVisible++; }
+    });
+    sec.classList.toggle("hide", secVisible === 0);
+    const tag = sec.querySelector(".whead .tagline");
+    if (tag) tag.style.opacity = secVisible === 0 ? ".4" : "1";
+  });
+  document.getElementById("empty").classList.toggle("show", visible === 0);
+  return { visible, total };
+}
+
+/* ============ 事件 ============ */
+document.getElementById("plan").addEventListener("click", (e) => {
+  const btn = e.target.closest(".st");
+  if (!btn) return;
+  const id = btn.dataset.target, next = btn.dataset.s;
+  // 门禁：没交作业就不让标"已完成"（点已完成的按钮会弹提示）
+  if (next === "done" && statusOf(id) !== "done" && typeof hasSubmitted === "function" && !hasSubmitted(id)){
+    if (typeof gateOn === "function" && !gateOn()){ if (typeof forceDone === "function") forceDone(id, "门禁已关闭"); return; }
+    if (typeof openGate === "function") openGate(id, "plan");
+    return;
+  }
+  if (statusOf(id) === next) state.status[id] = "todo"; else state.status[id] = next;
+  const el = document.getElementById(id);
+  const s = statusOf(id);
+  el.dataset.s = s;
+  el.querySelectorAll(".st").forEach(b => b.classList.toggle("on", b.dataset.s === s));
+  save(); updateStats(); applyFilter();
+  if (state.onlyOpen && s === "done") toast("已标记完成，该行已从“只看未完成”中隐藏");
+  if (typeof renderCheckin === "function") renderCheckin();
+  if (typeof maybePraise === "function") maybePraise(id);
+});
+
+const noteTimers = {};
+document.getElementById("plan").addEventListener("input", (e) => {
+  const ta = e.target.closest(".note");
+  if (!ta) return;
+  const id = ta.dataset.note;
+  clearTimeout(noteTimers[id]);
+  noteTimers[id] = setTimeout(() => {
+    state.notes[id] = ta.value;
+    save();
+    if (state.filter) applyFilter();
+  }, 450);
+});
+
+document.getElementById("weeknav").addEventListener("click", (e) => {
+  const card = e.target.closest(".wcard");
+  if (!card) return;
+  document.querySelectorAll(".wcard").forEach(c => c.classList.toggle("active", c === card));
+  const sec = document.getElementById("week-" + card.dataset.week);
+  if (sec) sec.scrollIntoView({ behavior:"smooth", block:"start" });
+});
+
+const qInput = document.getElementById("q");
+qInput.addEventListener("input", () => { state.filter = qInput.value; applyFilter(); });
+qInput.addEventListener("keydown", (e) => { if (e.key === "Escape"){ qInput.value = ""; state.filter = ""; applyFilter(); } });
+
+document.getElementById("onlyOpen").addEventListener("click", (e) => {
+  state.onlyOpen = !state.onlyOpen;
+  e.currentTarget.classList.toggle("primary", state.onlyOpen);
+  e.currentTarget.textContent = state.onlyOpen ? "显示全部" : "只看未完成";
+  applyFilter();
+});
+
+document.getElementById("printBtn").addEventListener("click", () => window.print());
+
+document.getElementById("exportBtn").addEventListener("click", () => {
+  const head = ["周次","星期","时间","时长","学习主题","具体任务","完成标志","完成情况","备注"];
+  const label = { todo:"未开始", doing:"进行中", done:"已完成" };
+  const q = (v) => `"${String(v == null ? "" : v).replace(/"/g, '""')}"`;
+  const lines = [head.map(q).join(",")];
+  DAYS.forEach((d, i) => {
+    const id = dayIdAt(i);
+    lines.push([`第${d.w}周`, d.dow, d.time, d.len, d.topic, d.task, d.goal,
+      label[statusOf(id)], state.notes[id] || ""].map(q).join(","));
+  });
+  const done = DAYS.filter((d, i) => statusOf(dayIdAt(i)) === "done").length;
+  lines.push("");
+  lines.push([q(`统计：已完成 ${done}/${DAYS.length} 天`), q(`导出时间 ${new Date().toLocaleString("zh-CN")}`)].join(","));
+  download(`Python学习计划_进度_${new Date().toISOString().slice(0, 10)}.csv`, "\ufeff" + lines.join("\r\n"));
+  toast("已导出 CSV（Excel 可直接打开）");
+});
+
+document.getElementById("resetBtn").addEventListener("click", () => {
+  if (!confirm("确定清空所有完成状态和备注吗？此操作不可撤销。")) return;
+  state.status = {}; state.notes = {};
+  try{ localStorage.removeItem(STORE_KEY); }catch(e){}
+  renderPlan(); updateStats(); applyFilter(); save();
+  toast("已重置为初始状态");
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== qInput && !/^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName)){
+    e.preventDefault(); qInput.focus();
+  }
+});
+
+/* 自适应备注框高度 */
+document.getElementById("plan").addEventListener("focusin", (e) => {
+  const ta = e.target.closest(".note");
+  if (!ta) return;
+  ta.rows = 2;
+  ta.style.height = "auto";
+  ta.style.height = Math.min(ta.scrollHeight, 120) + "px";
+});
+'use strict';
+// preload.js —— 注入到最终页面的基础数据：状态存储结构、代码文件名表、反引号常量。
+// 由 build-page.js 直接拼接进页面 <script>，请勿单独引用。
+
+/* 状态：status/notes 是计划打卡；work 是作业提交（代码 / 输出 / 备注 / 自检） */
+state.work = state.work || {};
+
+/* 每天建议保存的代码文件名（用于 zip 打包与 GitHub 目录结构） */
+const CODE_NAMES = [
+  /* 第 1 周 */
+  "hello", "variables", "greeting", "operators", "strings", "intro_calculator", "review_notes",
+  /* 第 2 周 */
+  "if_adult", "if_else_odd", "grade", "compare", "login", "guess_cond", "grade_v2",
+  /* 第 3 周 */
+  "while_sum", "for_range", "skip_even", "star_triangle", "odd_sum", "guess_number", "multiplication",
+  /* 第 4 周 */
+  "review_types", "review_if", "review_loop", "project_plan", "project_core", "project_final", "final_readme"
+];
+
+/* 反引号（避免在生成器模板字符串里转义） */
+const BT = String.fromCharCode(96);
+
+/* ==== 读取本地数据（必须在打卡模块之前，它要用 state.startDate 算起点） ==== */
+load();
+
+/* ============ 教程与作业（由 build-page.js 注入） ============ */
+
+/* ---------- 迷你 Markdown 渲染 ---------- */
+function mdInline(s){
+  return esc(s)
+    .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
+    .replace(/\x60([^\x60]+)\x60/g, "<code>$1</code>")
+    .replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>");
+}
+function mdCells(line){
+  return line.replace(/^\s*\|/, "").replace(/\|\s*$/, "").split("|").map(c => c.trim());
+}
+function mdToHtml(md){
+  const lines = String(md).replace(/\r/g, "").split("\n");
+  let out = "", list = null, para = [], code = null, table = null;
+  const flushPara = () => { if (para.length){ out += "<p>" + para.join(" ") + "</p>"; para = []; } };
+  const closeList = () => { if (list){ out += "</" + list + ">"; list = null; } };
+  const closeTable = () => {
+    if (!table) return;
+    const head = table[0], rows = table.slice(1);
+    out += '<div class="mdtable"><table><thead><tr>' +
+      head.map(c => "<th>" + mdInline(c) + "</th>").join("") + "</tr></thead><tbody>" +
+      rows.map(r => "<tr>" + head.map((_, i) => "<td>" + mdInline(r[i] || "") + "</td>").join("") + "</tr>").join("") +
+      "</tbody></table></div>";
+    table = null;
+  };
+  const closeAll = () => { flushPara(); closeList(); closeTable(); };
+  for (const raw of lines){
+    const line = raw.replace(/\s+$/, "");
+    if (code !== null){
+      if (/^\x60\x60\x60/.test(line.trim())){ out += "<pre><code>" + esc(code.join("\n")) + "</code></pre>"; code = null; }
+      else code.push(raw);
+      continue;
+    }
+    if (/^\x60\x60\x60/.test(line.trim())){ closeAll(); code = []; continue; }
+    if (line.trim() === ""){ closeAll(); continue; }
+    // 表格：连续的 | … | 行
+    if (/^\s*\|.*\|\s*$/.test(line)){
+      flushPara(); closeList();
+      if (/^\s*\|[\s:|-]+\|\s*$/.test(line)) continue;   // 分隔行 |---|---|
+      if (!table) table = [];
+      table.push(mdCells(line));
+      continue;
+    }
+    if (table) closeTable();
+    let m;
+    if ((m = line.match(/^#{1,6}\s+(.*)$/))){ closeAll(); out += "<h4>" + mdInline(m[1]) + "</h4>"; continue; }
+    if ((m = line.match(/^\s*>\s?(.*)$/))){ flushPara(); closeList(); out += '<div class="say">' + mdInline(m[1]) + "</div>"; continue; }
+    if ((m = line.match(/^\s*(?:[-*•])\s+(.*)$/))){ flushPara(); if (list !== "ul"){ closeList(); out += "<ul>"; list = "ul"; } out += "<li>" + mdInline(m[1]) + "</li>"; continue; }
+    if ((m = line.match(/^\s*\d+[.、)]\s+(.*)$/))){ flushPara(); if (list !== "ol"){ closeList(); out += "<ol>"; list = "ol"; } out += "<li>" + mdInline(m[1]) + "</li>"; continue; }
+    para.push(mdInline(line.trim()));
+  }
+  if (code !== null) out += "<pre><code>" + esc(code.join("\n")) + "</code></pre>";
+  flushPara(); closeList(); closeTable();
+  return out;
+}
+
+/* ---------- 作业数据存取 ---------- */
+const WORK_TAG = { todo:"未提交", doing:"草稿中", done:"已提交" };
+const WORK_IDX = (id) => Number(String(id).match(/^w(\d+)d(\d)$/)[1] - 1) * 7 + Number(String(id).match(/^w(\d+)d(\d)$/)[2]) - 1;
+const workStatusOf = (id) => (state.work[id] && state.work[id].status) || "todo";
+const workLabel = (s) => WORK_TAG[s] || "未提交";
+const hasWork = (id) => { const w = state.work[id]; return !!(w && (w.code || "").trim()); };
+const workAt = (id) => state.work[id] || (state.work[id] = { status:"todo", code:"", out:"", note:"", attachment:"", checks:{}, savedAt:"" });
+
+function saveWorkNow(){
+  const w = state.work[curId];
+  if (w) w.savedAt = new Date().toLocaleTimeString("zh-CN", { hour12:false });
+  save();
+  refreshWorkUi();
+}
+function refreshWorkUi(){
+  if (!curId) return;
+  const id = curId, w = workAt(id);
+  const badge = document.querySelector("#" + id + " .workbadge");
+  if (badge){ badge.dataset.w = w.status; badge.textContent = workLabel(w.status) + (hasWork(id) && w.status === "todo" ? "（有草稿）" : ""); }
+  const dot = document.getElementById("tabDot");
+  if (dot){ dot.hidden = w.status === "todo"; dot.classList.toggle("doing", w.status === "doing"); }
+  const saved = document.getElementById("savedLine");
+  if (saved) saved.innerHTML = w.savedAt
+    ? '<span class="ok">✓ 已自动保存</span> 最后保存 ' + esc(w.savedAt) + ' · 代码 ' + w.code.length + ' 字符'
+    : '内容会自动保存在本机浏览器里，随时可以回来接着写。';
+  const foot = document.getElementById("dfootHint");
+  if (foot){ foot.textContent = "第 " + (WORK_IDX(id) + 1) + " / 28 天 · " + WORK_TAG[w.status]; }
+}
+
+/* ---------- 打开抽屉 ---------- */
+let curId = null, curTab = "lesson";
+function openDay(id, tab){
+  const i = DAYS.findIndex((d, k) => dayIdAt(k) === id);
+  if (i < 0) return;
+  const d = DAYS[i], w = WEEKS[d.w - 1];
+  curId = id; curTab = tab || "lesson";
+  const dr = document.getElementById("drawer");
+  dr.style.setProperty("--dw", w.soft);
+  dr.style.setProperty("--dwt", w.text);
+  document.getElementById("dMeta").innerHTML =
+    '<b>第 ' + d.w + ' 周 · ' + esc(w.name) + '</b><span>·</span><span>' + esc(d.dow) + ' ' + esc(d.time) + '</span><span>·</span><span>' + esc(d.len) + '</span><span>·</span><span>D' + pad2(i + 1) + '</span>';
+  document.getElementById("dTitle").textContent = d.topic;
+  document.getElementById("dGoal").innerHTML = "完成标志：" + richText(d.goal);
+  renderLesson(id); renderWork(id); renderCode(id);
+  switchTab(curTab);
+  dr.classList.add("show");
+  document.getElementById("drawerMask").classList.add("show");
+  document.body.style.overflow = "hidden";
+  const dbody = document.querySelector("#drawer .dbody");
+  if (dbody) dbody.scrollTop = 0;
+  document.getElementById("dfootHint").textContent = "第 " + (i + 1) + " / 28 天 · " + WORK_TAG[workStatusOf(id)];
+}
+function closeDrawer(){
+  document.getElementById("drawer").classList.remove("show");
+  document.getElementById("drawerMask").classList.remove("show");
+  document.body.style.overflow = "";
+  curId = null;
+}
+function switchTab(tab){
+  curTab = tab;
+  document.querySelectorAll(".dtab").forEach(b => b.classList.toggle("on", b.dataset.tab === tab));
+  document.getElementById("paneLesson").classList.toggle("on", tab === "lesson");
+  document.getElementById("paneWork").classList.toggle("on", tab === "work");
+  document.getElementById("paneCode").classList.toggle("on", tab === "code");
+}
+
+/* ---------- 教程面板 ---------- */
+function renderLesson(id){
+  const t = TUTORIALS[id];
+  const d = DAYS[WORK_IDX(id)];
+  let html = "";
+  if (!t){ html = '<p>这一天的教程正在补写中。</p>'; }
+  else {
+    html += '<div class="run"><b>今天要达成的效果：</b>' + esc(d.goal) + '</div>';
+    html += mdToHtml(t);
+  }
+  document.getElementById("lessonBody").innerHTML = html;
+}
+
+/* ---------- 作业面板 ---------- */
+function renderWork(id){
+  const hw = HOMEWORK[id] || {};
+  const w = workAt(id);
+  const reqs = hw.reqs || [];
+  const checks = hw.checks || [];
+  const box = document.getElementById("workBody");
+  let html = "";
+  if (hw.title) html += '<div class="work-sec"><h4>📝 ' + esc(hw.title) + '</h4></div>';
+  if (reqs.length){
+    html += '<div class="work-sec"><h4>任务要求<span class="cnt">' + reqs.length + ' 条</span></h4><ol class="reqs">' +
+      reqs.map(r => "<li>" + mdInline(r) + "</li>").join("") + "</ol></div>";
+  }
+  if (hw.steps && hw.steps.length){
+    html += '<div class="work-sec"><h4>提交步骤</h4><ol class="steps">' +
+      hw.steps.map(s => "<li>" + mdInline(s) + "</li>").join("") + "</ol></div>";
+  }
+  html += '<div class="work-sec"><h4>提交表单</h4>' +
+    '<div class="field"><label>提交状态</label><div class="wstatus">' +
+      ["todo","doing","done"].map(k =>
+        '<button class="wst' + (w.status === k ? " on" : "") + '" data-w="' + k + '">' + WORK_TAG[k] + "</button>").join("") +
+    "</div></div>" +
+    '<div class="field"><label>① 粘贴你的代码（必填）</label><div class="codewrap">' +
+      '<div class="tools"><button id="codeFill">填入起始模板</button><button id="codeClear">清空</button></div>' +
+      '<textarea class="codearea" id="codeInput" spellcheck="false" placeholder="把你写好的 .py 代码粘在这里…">' + esc(w.code) + "</textarea>" +
+    "</div></div>" +
+    '<div class="field"><label>② 程序运行输出（可选，把终端里看到的结果粘过来）</label>' +
+      '<textarea class="notearea" id="outInput" spellcheck="false" placeholder="例如：\nHello World\n请猜一个数字：7">' + esc(w.out || "") + "</textarea></div>" +
+    '<div class="field"><label>③ 卡住的地方 / 今天的收获（可选）</label>' +
+      '<textarea class="notearea" id="noteInput" placeholder="哪一步卡了多久、报了什么错，周日复盘用">' + esc(w.note || "") + "</textarea></div>";
+  if (hw.attach){
+    html += '<div class="tplbox">🔗 <b>建议一并保存的附件：</b>' + esc(hw.attach) + "<br>" +
+      '<span class="mini">在项目文件夹里执行： git add . &amp;&amp; git commit -m "D' + pad2(WORK_IDX(id) + 1) + ' ' + esc(DAYS[WORK_IDX(id)].topic) + '"</span></div>';
+  }
+  html += '<div class="saveline" id="savedLine"></div></div>';
+  if (checks.length){
+    html += '<div class="work-sec"><h4>交之前自检</h4><ul class="checks">' +
+      checks.map((c, i) => {
+        const on = !!w.checks[i];
+        return '<li class="' + (on ? "done-check" : "") + '"><input type="checkbox" data-check="' + i + '"' + (on ? " checked" : "") + "><span>" + mdInline(c) + "</span></li>";
+      }).join("") + "</ul></div>";
+  }
+  if (hw.hint){
+    html += '<div class="warn" style="margin-top:6px">' + mdInline(hw.hint) + "</div>";
+  }
+  box.innerHTML = html;
+  refreshWorkUi();
+}
+
+/* ---------- 我的代码面板 ---------- */
+function renderCode(id){
+  const w = workAt(id);
+  const d = DAYS[WORK_IDX(id)];
+  const file = "d" + pad2(WORK_IDX(id) + 1) + "_" + CODE_NAMES[WORK_IDX(id)];
+  const box = document.getElementById("codeBody");
+  box.innerHTML =
+    '<div class="work-sec"><h4>💾 今天的代码文件</h4>' +
+    '<p style="font-size:13.6px;color:var(--ink-2)">建议保存为 <code>' + esc(file) + '</code>，放在 <code>week' + d.w + '/</code> 目录里。' +
+    '点击下面的按钮可以把「已提交」的代码打包成 zip，解压后就是标准的项目目录结构，直接拖进 GitHub 仓库即可。</p>' +
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">' +
+      '<button class="btn primary" id="zipOne">打包今天（zip）</button>' +
+      '<button class="btn" id="zipWeek">打包本周（zip）</button>' +
+      '<button class="btn" id="zipAll">打包全部 28 天（zip）</button>' +
+    "</div>" +
+    '<div class="tplbox">📦 zip 内含：<b>' + esc(file) + '</b>、每天的 <span class="mini">README.md</span>（任务、完成标志、你的备注）' +
+    "，以及仓库根目录的 <span class=\"mini\">README.md</span>。上传 GitHub 时用它最省事。</div>" +
+    '<div style="margin-top:14px"><label style="display:block;font-size:12.5px;font-weight:700;color:var(--ink-3);margin-bottom:6px">代码预览</label>' +
+    '<div class="md">' + (w.code.trim() ? "<pre><code>" + esc(w.code) + "</code></pre>" : '<p style="color:var(--ink-3)">还没有提交代码。去「📝 作业提交」把代码粘进去吧。</p>') + "</div></div>";
+  const z1 = document.getElementById("zipOne");
+  const zw = document.getElementById("zipWeek");
+  const za = document.getElementById("zipAll");
+  if (z1) z1.addEventListener("click", () => exportZip("one", id));
+  if (zw) zw.addEventListener("click", () => exportZip("week", id));
+  if (za) za.addEventListener("click", () => exportZip("all", id));
+}
+
+/* ---------- 真实 zip 打包（仅 CRC32 + deflate，浏览器原生能力） ---------- */
+const CRC_TABLE = (() => {
+  const t = new Uint32Array(256);
+  for (let n = 0; n < 256; n++){ let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; }
+  return t;
+})();
+function crc32(bytes){
+  let c = 0xffffffff;
+  for (let i = 0; i < bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xff] ^ (c >>> 8);
+  return (c ^ 0xffffffff) >>> 0;
+}
+function zipFiles(entries){
+  const enc = new TextEncoder();
+  const parts = [], central = [], chunks = [];
+  let offset = 0;
+  entries.forEach(([name, text, date]) => {
+    const nameBuf = enc.encode(name);
+    const data = enc.encode(text);
+    const crc = crc32(data);
+    const dt = date || new Date();
+    const dosTime = ((dt.getHours() << 11) | (dt.getMinutes() << 5) | Math.floor(dt.getSeconds() / 2)) & 0xffff;
+    const dosDate = (((dt.getFullYear() - 1980) << 9) | ((dt.getMonth() + 1) << 5) | dt.getDate()) & 0xffff;
+    const lh = new DataView(new ArrayBuffer(30));
+    lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true);
+    lh.setUint16(8, 0, true); lh.setUint16(10, dosTime, true); lh.setUint16(12, dosDate, true);
+    lh.setUint32(14, crc, true); lh.setUint32(18, data.length, true); lh.setUint32(22, data.length, true);
+    lh.setUint16(26, nameBuf.length, true); lh.setUint16(28, 0, true);
+    chunks.push(new Uint8Array(lh.buffer), nameBuf, data);
+    const ch = new DataView(new ArrayBuffer(46));
+    ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true);
+    ch.setUint16(8, 0x0800, true); ch.setUint16(10, 0, true); ch.setUint16(12, dosTime, true);
+    ch.setUint16(14, dosDate, true); ch.setUint32(16, crc, true); ch.setUint32(20, data.length, true);
+    ch.setUint32(24, data.length, true); ch.setUint16(28, nameBuf.length, true);
+    ch.setUint32(42, offset, true);
+    central.push(new Uint8Array(ch.buffer), nameBuf);
+    offset += 30 + nameBuf.length + data.length;
+  });
+  const centralSize = central.reduce((s, b) => s + b.length, 0);
+  const end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true);
+  end.setUint16(8, entries.length, true); end.setUint16(10, entries.length, true);
+  end.setUint32(12, centralSize, true); end.setUint32(16, offset, true);
+  return new Blob([...chunks, ...central, new Uint8Array(end.buffer)], { type:"application/zip" });
+}
+function exportZip(scope, id){
+  const i = id ? WORK_IDX(id) : 0;
+  let idxs = [];
+  if (scope === "one") idxs = [i];
+  else if (scope === "week"){ const ws = (i - i % 7); idxs = [0,1,2,3,4,5,6].map(k => ws + k); }
+  else idxs = DAYS.map((d, k) => k);
+  const entries = [];
+  const covered = idxs.filter(k => hasWork(dayIdAt(k)));
+  if (!covered.length){ toast("这一范围内还没有提交任何代码，先去 📝 作业 里写点什么吧"); return; }
+  const rootReadme = ["# Python 四周学习计划 · 我的代码",
+    "",
+    "生成时间：" + new Date().toLocaleString("zh-CN"),
+    "进度：已完成 " + DAYS.filter((d, k) => statusOf(dayIdAt(k)) === "done").length + " / 28 天 ｜ 已提交代码 " +
+      DAYS.filter((d, k) => hasWork(dayIdAt(k))).length + " 天",
+    ""];
+  covered.forEach(k => {
+    const d = DAYS[k], dId = dayIdAt(k), w = workAt(dId);
+    entries.push(["week" + d.w + "/d" + pad2(k + 1) + "_" + CODE_NAMES[k] + ".py",
+      w.code.replace(/\s+$/, "") + "\n", new Date()]);
+    const rd = ["# D" + pad2(k + 1) + " · " + d.topic, "",
+      "- 周次：" + d.w + "　星期：" + d.dow + "　时间：" + d.time + "　时长：" + d.len,
+      "- 具体任务：" + d.task,
+      "- 完成标志：" + d.goal,
+      "- 提交状态：" + WORK_TAG[w.status] + (w.savedAt ? "（" + w.savedAt + "）" : ""), ""];
+    if ((w.out || "").trim()) rd.push("## 运行输出", "", "\x60\x60\x60", w.out.replace(/\s+$/, ""), "\x60\x60\x60", "");
+    if ((w.note || "").trim()) rd.push("## 卡住的地方 / 收获", "", w.note.trim(), "");
+    const cs = (HOMEWORK[dId] && HOMEWORK[dId].checks) || [];
+    if (cs.length){
+      rd.push("## 自检清单", "");
+      cs.forEach((c, ci) => rd.push("- [" + (w.checks[ci] ? "x" : " ") + "] " + c));
+      rd.push("");
+    }
+    entries.push(["week" + d.w + "/d" + pad2(k + 1) + "_README.md", rd.join("\n") + "\n"]);
+  });
+  covered.forEach(k => {
+    const d = DAYS[k], w = workAt(dayIdAt(k));
+    rootReadme.push("- D" + pad2(k + 1) + " 第" + d.w + "周 " + d.dow + " · " + d.topic + " —— " + WORK_TAG[w.status]);
+  });
+  entries.push(["README.md", rootReadme.join("\n") + "\n"]);
+  const name = scope === "one" ? "d" + pad2(i + 1) + "_" + CODE_NAMES[i]
+    : scope === "week" ? "week" + DAYS[i].w
+    : "python-4weeks";
+  const blob = zipFiles(entries);
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = name + ".zip";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+  toast("已打包 " + covered.length + " 天的代码为 " + name + ".zip");
+}
+
+/* ---------- 导出全部作业为 Markdown ---------- */
+function exportWorkMd(){
+  const lines = ["# Python 四周学习计划 · 作业提交记录", "",
+    "导出时间：" + new Date().toLocaleString("zh-CN"), ""];
+  let n = 0;
+  DAYS.forEach((d, k) => {
+    const id = dayIdAt(k), w = workAt(id);
+    if (w.status === "todo" && !hasWork(id) && !(w.note || "").trim()) return;
+    n++;
+    lines.push("## D" + pad2(k + 1) + " · 第" + d.w + "周 " + d.dow + " · " + d.topic, "",
+      "- 提交状态：" + WORK_TAG[w.status],
+      "- 完成标志：" + d.goal, "");
+    if ((w.code || "").trim()) lines.push("\x60\x60\x60python", w.code.replace(/\s+$/, ""), "\x60\x60\x60", "");
+    if ((w.out || "").trim()) lines.push("**运行输出**", "", "\x60\x60\x60", w.out.replace(/\s+$/, ""), "\x60\x60\x60", "");
+    if ((w.note || "").trim()) lines.push("**卡住的地方 / 收获**：" + w.note.trim(), "");
+  });
+  if (!n){ toast("还没有任何提交记录"); return; }
+  const blob = new Blob([lines.join("\n")], { type:"text/markdown;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "Python作业提交记录_" + new Date().toISOString().slice(0, 10) + ".md";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+  toast("已导出 " + n + " 天的作业记录");
+}
+
+/* ---------- 抽屉事件 ---------- */
+document.getElementById("plan").addEventListener("click", (e) => {
+  const l = e.target.closest("[data-learn]");
+  if (l){ openDay(l.dataset.learn, "lesson"); return; }
+  const w = e.target.closest("[data-work]");
+  if (w){ openDay(w.dataset.work, "work"); return; }
+});
+document.getElementById("drawerClose").addEventListener("click", closeDrawer);
+document.getElementById("drawerMask").addEventListener("click", closeDrawer);
+document.getElementById("dTabs").addEventListener("click", (e) => {
+  const b = e.target.closest(".dtab");
+  if (b) switchTab(b.dataset.tab);
+});
+document.getElementById("drawerPrev").addEventListener("click", () => {
+  const i = WORK_IDX(curId);
+  if (i > 0) openDay(dayIdAt(i - 1), curTab);
+});
+document.getElementById("drawerNext").addEventListener("click", () => {
+  const i = WORK_IDX(curId);
+  if (i < DAYS.length - 1) openDay(dayIdAt(i + 1), curTab);
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && curId) closeDrawer();
+});
+
+document.getElementById("workBody").addEventListener("click", (e) => {
+  const b = e.target.closest(".wst");
+  if (b){ const wid = curId; if (b.dataset.w === "done" && !hasSubmitted(wid)){ openGate(wid, "work"); return; } workAt(wid).status = b.dataset.w; saveWorkNow(); if (typeof maybePraise === "function") maybePraise(wid); if (typeof renderCheckin === "function") renderCheckin(); if (typeof renderPlan === "function") renderPlan(); return; }
+  if (e.target.id === "codeFill"){
+    const tpl = (TEMPLATES[curId] || "").replace(/\s+$/, "");
+    if (!tpl){ toast("这一天没有现成模板，按教程自己写吧"); return; }
+    const ta = document.getElementById("codeInput");
+    if (ta.value.trim() && !confirm("会覆盖当前内容，继续吗？（原内容已在浏览器里留过草稿）")) return;
+    ta.value = tpl; workAt(curId).code = tpl; saveWorkNow(); renderCode(curId);
+    toast("已填入起始模板，改成你自己的版本再提交");
+    return;
+  }
+  if (e.target.id === "codeClear"){
+    if (!confirm("清空这一天的代码？")) return;
+    document.getElementById("codeInput").value = "";
+    workAt(curId).code = ""; saveWorkNow(); renderCode(curId);
+  }
+});
+document.getElementById("workBody").addEventListener("input", (e) => {
+  const t = e.target;
+  if (!curId) return;
+  const w = workAt(curId);
+  if (t.id === "codeInput") w.code = t.value;
+  else if (t.id === "outInput") w.out = t.value;
+  else if (t.id === "noteInput") w.note = t.value;
+  else return;
+  clearTimeout(saveWorkNow._t);
+  const wid2 = curId;
+  saveWorkNow._t = setTimeout(() => { saveWorkNow(); renderCode(curId); if (typeof renderPlan === "function") renderPlan(); if (t.id === "codeInput" && typeof maybePraise === "function") maybePraise(wid2); }, 600);
+});
+document.getElementById("workBody").addEventListener("change", (e) => {
+  const c = e.target.closest("input[data-check]");
+  if (!c || !curId) return;
+  const w = workAt(curId);
+  w.checks[c.dataset.check] = c.checked;
+  c.closest("li").classList.toggle("done-check", c.checked);
+  saveWorkNow();
+});
+document.getElementById("exportWork").addEventListener("click", exportWorkMd);
+
+/* ==== SCENARIO-HOOK（测试时可在这一行前注入预置数据） ==== */
+
+/* ============ 每日打卡签到（由 build-page.js 注入） ============ */
+const WEEKDAY_CN = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
+const dayDate = (i) => { const d = new Date(PLAN_START); d.setDate(d.getDate() + i); return d; };
+const dayKey = (i) => { const d = dayDate(i); return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()); };
+const todayKey = () => { const n = new Date(); return n.getFullYear() + "-" + pad2(n.getMonth() + 1) + "-" + pad2(n.getDate()); };
+const dstr = (d) => (d.getMonth() + 1) + "月" + d.getDate() + "日";
+const dstrShort = (d) => (d.getMonth() + 1) + "/" + d.getDate();
+
+function startOfToday(){ const n = new Date(); n.setHours(0, 0, 0, 0); return n; }
+/* 今天对应第几天（0-27）；还没开营返回 -1，结营之后返回 28 */
+function todayIdx(){
+  const diff = Math.round((startOfToday() - PLAN_START) / 86400000);
+  return diff < 0 ? -1 : diff > DAYS.length - 1 ? DAYS.length : diff;
+}
+const isChecked = (i) => !!state.checkin[dayKey(i)];
+const madeUp = (i) => !!state.added[dayKey(i)];
+const checkedCount = () => DAYS.reduce((n, d, i) => n + (isChecked(i) ? 1 : 0), 0);
+/* 连签天数：从今天往前数连续签到的日子；今天还没签就从昨天开始数 */
+function missedSince(t){
+  const last = Math.min(t, DAYS.length) - 1;
+  const out = [];
+  for (let i = 0; i <= last; i++) if (!isChecked(i)) out.push(i);
+  return out;
+}
+function missedIdx(){ return missedSince(todayIdx()); }
+/* 连签天数：从 ref 往前数连续签到的日子；ref 那天还没签就从 ref-1 开始数 */
+function streakSince(ref){
+  let n = 0, i = ref - 1;
+  if (i >= DAYS.length) i = DAYS.length - 1;
+  if (i >= 0 && !isChecked(i)) i--;
+  while (i >= 0 && isChecked(i)){ n++; i--; }
+  return n;
+}
+function streak(){ return streakSince(todayIdx()); }
+
+/* ---------- 签到 ---------- */
+function doCheckin(i){
+  const key = dayKey(i);
+  if (state.checkin[key]){ toast("这一天已经签过啦"); return; }
+  const t = todayIdx();
+  if (i > t){ toast("还没到这一天，到那天再签吧 😉"); return; }
+  const today = (i === t);
+  state.checkin[key] = Date.now();
+  if (!today) state.added[key] = true;
+  save();
+  renderCheckin(); renderPlan(); updateStats();
+  if (today){
+    toast("已完成今日打卡，开始你今天的学习吧！", 2600);
+    celebrate(9);          // 当日签到：撒一把彩带
+  } else {
+    toast("已补签 " + dstr(dayDate(i)) + "（补签没有当日礼花，内容记得补上哦）", 2800);
+  }
+  refreshRemind();
+}
+
+/* 计划起点：优先用存储里的日期（首次打开时写入"下一个周一"）；
+   若因为 localStorage 不可用等原因没存上，就用内置的下周一兜底。 */
+const TODAY0 = (() => { const n = new Date(); n.setHours(0, 0, 0, 0); return n; })();
+const NEXT_MONDAY = (() => {
+  const d = new Date(TODAY0);
+  const dow = d.getDay();                       // 0=周日
+  d.setDate(d.getDate() + (dow === 1 ? 7 : (8 - dow) % 7 || 7));
+  return d;
+})();
+const FALLBACK_START = "2026-09-14";
+const dayKeyFromDate = (d) => d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
+/* 首次打开：把起点记进存储（之后即便再打开也不会变） */
+function initStartDate(){
+  if (!state.startDate){
+    state.startDate = dayKeyFromDate(NEXT_MONDAY);
+    save();
+  }
+}
+const PLAN_START = (() => {
+  const key = (state.startDate && /^\d{4}-\d{2}-\d{2}$/.test(state.startDate)) ? state.startDate : FALLBACK_START;
+  const p = key.split("-");
+  const d = new Date(TODAY0);
+  d.setFullYear(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+  d.setHours(0, 0, 0, 0);
+  return d;
+})();
+/* 打开页面时把今天的卡片滚到视野里 */
+function scrollToToday(){
+  const t = todayIdx();
+  if (t < 0 || t >= DAYS.length) return;
+  const el = document.getElementById(dayIdAt(t));
+  if (el && el.scrollIntoView) setTimeout(() => { try { el.scrollIntoView({ behavior:"smooth", block:"center" }); } catch (e) {} }, 400);
+}
+
+/* ---------- 撒彩带（纯 CSS，无外部依赖） ---------- */
+function celebrate(n){
+  const colors = ["#22c55e", "#3b82f6", "#f59e0b", "#ec4899", "#a855f7", "#14b8a6"];
+  for (let k = 0; k < (n || 8); k++){
+    const s = document.createElement("span");
+    s.className = "confetti";
+    s.style.left = (12 + Math.random() * 76) + "vw";
+    s.style.background = colors[Math.floor(Math.random() * colors.length)];
+    s.style.animationDelay = (Math.random() * 0.28).toFixed(2) + "s";
+    s.style.transform = "rotate(" + Math.floor(Math.random() * 360) + "deg)";
+    document.body.appendChild(s);
+    setTimeout(() => s.remove(), 2300);
+  }
+}
+
+/* ---------- 左下角鼓励弹窗 ---------- */
+const DAY_PRAISE = [
+  ["🎉", "这一天的任务完成了！", "写得漂亮。今天的 30 分钟没有白花，明天继续 —— 习惯就是这么长出来的。"],
+  ["👏", "漂亮，又拿下一关！", "把「学完」变成「交完」，你就已经超过大多数人了。去喝口水，奖励一下自己。"],
+  ["🔥", "连击保持中！", "今天的代码已经存进作业本了。进步不是一天练成的，但每天都能练一点。"],
+  ["🌟", "打卡 + 完成，双杀！", "签到只是坐到桌前，把任务做完才是真的赚到。你今天两样都做到了。"],
+  ["🚀", "进度又往前推了一格", "回头看第一天的 Hello World，你会发现已经走了很远。"],
+  ["💪", "完成得干脆利落", "记住现在这个「我居然写出来了」的感觉，下周会用到。"],
+  ["🧠", "又给大脑装了一块新砖", "不用记住所有细节，能自己写出来就是真的学会了。"]
+];
+const WEEK_PRAISE = [
+  ["🏆", "整整一周全部完成！", "7 天，一天没落下。你的代码已经能跑出真实功能了 —— 这一步很多人卡了半年。"],
+  ["🥇", "第 {w} 周通关！", "小结一下：{focus}。带着这些去下一周，会轻松很多。"],
+  ["🎯", "一周满勤！", "把笔记和代码传上 GitHub 吧，这是你这周最实在的战利品。"]
+];
+let praiseTimer = null;
+function showPraise(emoji, title, sub, isWeek){
+  const box = document.getElementById("praisebox");
+  if (!box) return;
+  box.className = "praisebox" + (isWeek ? " week" : "");
+  box.innerHTML = '<span class="em">' + emoji + '</span><div class="tx"><div class="pt">' + esc(title) + '</div>' +
+    '<div class="ps">' + esc(sub) + '</div></div><button class="pc" data-praise-close title="关闭">✕</button>';
+  void box.offsetWidth;                                  // 强制一次重排，保证过渡一定触发
+  box.classList.add("show");
+  clearTimeout(praiseTimer);
+  praiseTimer = setTimeout(() => box.classList.remove("show"), isWeek ? 12000 : 9000);
+}
+function closePraise(){ const b = document.getElementById("praisebox"); if (b) b.classList.remove("show"); }
+/* 任务完成时调用：夸的是"被你完成的那一天"，不是"今天"；
+   所以提前预习完成、补做落下的任务，也一样会有鼓励。 */
+function maybePraise(id){
+  if (id){
+    const i = DAYS.findIndex((d, k) => dayIdAt(k) === id);
+    if (i >= 0) return praiseFor(i);
+  }
+  return praiseFor(todayIdx());
+}
+function praiseFor(t){
+  if (t < 0 || t >= DAYS.length) return false;
+  const id = dayIdAt(t);
+  const taskDone = statusOf(id) === "done" || workStatusOf(id) === "done";
+  if (!taskDone) return false;
+  const pk = "d" + t;
+  if (state.praised[pk]) return false;
+  state.praised[pk] = true;
+  const p = DAY_PRAISE[t % DAY_PRAISE.length];
+  showPraise(p[0], p[1], p[2], false);
+  celebrate(6);
+  const w = DAYS[t].w, wi = w - 1;
+  const wk = "w" + w;
+  if (!state.praised[wk] && weekStats(w).done === 7){
+    state.praised[wk] = true;
+    const wp = WEEK_PRAISE[wi % WEEK_PRAISE.length];
+    setTimeout(() => {
+      showPraise(wp[0], wp[1].replace("{w}", w), wp[2].replace("{focus}", WEEKS[wi].focus), true);
+      celebrate(16);
+    }, 2600);
+  }
+  save();
+  return true;
+}
+
+/* ---------- 渲染签到面板 ---------- */
+function renderCheckin(){
+  const t = todayIdx();
+  const total = checkedCount();
+  const miss = missedIdx();
+  const head = document.getElementById("ciHead");
+  const foot = document.getElementById("ciFoot");
+  const strip = document.getElementById("ciStrip");
+  const when = t < 0
+    ? "距开营还有 " + (0 - t) + " 天（" + dstr(PLAN_START) + " 周一正式开始）"
+    : t >= DAYS.length
+      ? "28 天计划已走完，随时可以回来复习"
+      : "今天是第 " + (t + 1) + " 天 · " + dstr(dayDate(t)) + " " + WEEKDAY_CN[dayDate(t).getDay()] + " · 今日任务：" + DAYS[t].topic;
+
+  head.innerHTML = '<span class="dot2"></span>' +
+    '<span class="t">每日打卡签到</span>' +
+    '<span class="d">' + esc(when) + '</span>' +
+    '<span class="grow"></span>' +
+    (t < 0 ? '<span class="allgood">开营倒计时</span>'
+      : miss.length ? '<span class="miss">有 ' + miss.length + " 天没签到</span>"
+      : '<span class="allgood">签到全勤 ✓</span>');
+
+  let cells = "";
+  DAYS.forEach((d, i) => {
+    const date = dayDate(i);
+    const cls = ["cell"];
+    if (isChecked(i)) cls.push("done");
+    else if (t > i) cls.push("miss");
+    if (i === t) cls.push("today");
+    if (i > t) cls.push("future");
+    const title = "第 " + (i + 1) + " 天 D" + pad2(i + 1) + " · " + dstr(date) + " " + WEEKDAY_CN[date.getDay()] +
+      " · " + d.topic + " | " + (isChecked(i) ? (madeUp(i) ? "已补签" : "已签到") : i > t ? "还没到" : t === i ? "点我签到" : "缺签，可补签");
+    cells += '<button class="' + cls.join(" ") + '" data-ci="' + i + '" title="' + esc(title) + '">' +
+      '<span class="cd">' + dstrShort(date) + "</span>" +
+      '<span class="cn">' + (isChecked(i) ? "✓" : i > t ? pad2(i + 1) : "!") + "</span></button>";
+  });
+  strip.innerHTML = cells;
+
+  const todayChecked = t >= 0 && t < DAYS.length && isChecked(t);
+  const previewCount = DAYS.reduce((n, d, i) => n + ((statusOf(dayIdAt(i)) !== "todo" || workStatusOf(dayIdAt(i)) !== "todo") ? 1 : 0), 0);
+  if (t < 0){
+    foot.innerHTML = '<button class="cibtn" disabled>未到开营日</button>' +
+      '<span class="cinote">下周一（' + dstr(PLAN_START) + '）开始，每天 20:00-20:30 签到打卡' +
+      (previewCount ? ' —— 你已经提前完成 <b>' + previewCount + '</b> 天了，很棒 👍' : "") + '</span>';
+  } else if (t >= DAYS.length){
+    foot.innerHTML = '<span class="ciok"><span class="big">🎓</span> 28 天计划已完成，共签到 ' + total + ' 天</span>';
+  } else if (todayChecked){
+    foot.innerHTML = '<span class="ciok"><span class="big">✅</span> 今日已打卡（' +
+      new Date(state.checkin[dayKey(t)]).toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" }) +
+      '）· 累计签到 ' + total + ' / 28 天 · 连续 ' + streak() + ' 天</span>' +
+      (miss.length ? '<span class="grow"></span><button class="cibtn ghost" data-open-remind>补签缺的 ' + miss.length + ' 天</button>' : "");
+  } else {
+    foot.innerHTML = '<button class="cibtn" data-do-checkin>今天打卡签到</button>' +
+      (miss.length ? '<button class="cibtn ghost" data-open-remind>补签缺的 ' + miss.length + ' 天</button>' : "") +
+      '<span class="cinote">签到后开始 D' + pad2(t + 1) + '：' + esc(DAYS[t].topic) + "（完成标志：" + esc(DAYS[t].goal) + "）</span>";
+  }
+}
+
+/* ---------- 补签弹窗 ---------- */
+function refreshRemind(){
+  const miss = missedIdx();
+  const card = document.getElementById("remind");
+  if (!card) return 0;
+  if (!miss.length || t00Blocked()){ card.classList.remove("show"); return 0; }
+  const list = document.getElementById("missList");
+  list.innerHTML = miss.map((i) => {
+    const d = dayDate(i);
+    return '<div class="missrow" data-row="' + i + '">' +
+      '<span class="md">' + dstrShort(d) + " " + WEEKDAY_CN[d.getDay()] + "</span>" +
+      '<span class="mt">D' + pad2(i + 1) + " · " + esc(DAYS[i].topic) + "</span>" +
+      '<button class="btn" data-fix="' + i + '">补签</button>' +
+      '<button class="btn" data-learn2="' + dayIdAt(i) + '">去学</button></div>';
+  }).join("");
+  document.getElementById("remindSub").innerHTML = "有 <b>" + miss.length + "</b> 个学习日没有签到（" +
+    miss.slice(0, 6).map((i) => dstrShort(dayDate(i))).join("、") + (miss.length > 6 ? " 等" : "") +
+    "）。补签后记得把那天的内容补上。";
+  card.classList.add("show");
+  return miss.length;
+}
+function t00Blocked(){ return todayIdx() < 0; }
+function openRemind(){ if (refreshRemind()) return true; toast("没有缺签的日子，全勤中 💯"); return false; }
+function closeRemind(){ const c = document.getElementById("remind"); if (c) c.classList.remove("show"); }
+/* 打开页面时就检查：有缺签则弹提醒 */
+function autoRemind(){
+  const miss = missedIdx();
+  if (!miss.length) return;
+  const today = todayKey();
+  let nudged = null;
+  try { nudged = localStorage.getItem("py-plan-nudge"); } catch (e) {}
+  const first = nudged !== today;
+  const hasTodayUnchecked = miss.indexOf(todayIdx()) >= 0;
+  if (first || hasTodayUnchecked){
+    try { localStorage.setItem("py-plan-nudge", today); } catch (e) {}
+    setTimeout(() => refreshRemind(), 700);
+  }
+}
+
+/* ---------- 事件绑定 ---------- */
+document.getElementById("ciStrip").addEventListener("click", (e) => {
+  const c = e.target.closest("[data-ci]");
+  if (c) doCheckin(Number(c.dataset.ci));
+});
+document.getElementById("ciFoot").addEventListener("click", (e) => {
+  if (e.target.closest("[data-do-checkin]")) doCheckin(todayIdx());
+  else if (e.target.closest("[data-open-remind]")) openRemind();
+});
+document.getElementById("remind").addEventListener("click", (e) => {
+  const fix = e.target.closest("[data-fix]");
+  if (fix){
+    const i = Number(fix.dataset.fix);
+    doCheckin(i);
+    const row = document.querySelector('#missList .missrow[data-row="' + i + '"]');
+    if (row && isChecked(i)){ row.classList.add("ok"); fix.textContent = "已补签"; fix.disabled = true; }
+    if (!missedIdx().length){ setTimeout(closeRemind, 500); }
+    return;
+  }
+  const learn = e.target.closest("[data-learn2]");
+  if (learn){ closeRemind(); openDay(learn.dataset.learn2, "lesson"); return; }
+  if (e.target.id === "remindAll"){ missedIdx().forEach((i) => doCheckin(i)); closeRemind(); toast("全部补签完成，欠的课记得补上 📚", 2600); return; }
+  if (e.target.id === "remindClose" || e.target === e.currentTarget) closeRemind();
+});
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeRemind(); });
+document.getElementById("plan").addEventListener("click", (e) => {
+  if (e.target.closest("[data-checkin]")){
+    const id = e.target.closest("[data-checkin]").dataset.checkin;
+    doCheckin(DAYS.findIndex((d, k) => dayIdAt(k) === id));
+  }
+});
+document.getElementById("praisebox").addEventListener("click", (e) => {
+  if (e.target.closest("[data-praise-close]")) closePraise();
+});
+
+/* ============ 交作业门禁（由 build-page.js 注入） ============ */
+/* 判定"这一天算不算交过作业"：代码框有内容、或填了运行输出、或作业状态选了已提交 */
+function hasSubmitted(id){
+  const w = state.work[id];
+  if (!w) return false;
+  return !!((w.code || "").trim() || (w.out || "").trim() || w.status === "done");
+}
+/* 缺什么，逐条列出来（用于提示文案） */
+function missingFor(id){
+  const w = workAt(id);
+  const need = [];
+  if (!(w.code || "").trim()) need.push({ k:"code", t:"把这一天的 Python 代码粘进「① 粘贴你的代码」" });
+  if (!(w.out || "").trim()) need.push({ k:"out", t:"把程序跑出来的结果粘进「② 程序运行输出」—— 这是你确实跑过的证据" });
+  if (!(w.status === "done")) need.push({ k:"status", t:"在作业页把提交状态点成「已提交」" });
+  return { need, strict:"code" };
+}
+/* 门禁总开关：默认开启；关闭后可以直接标完成（会在备注里记录） */
+function gateOn(){ return state.setting.allowNoWork !== true; }
+
+/* ---------- 弹窗 ---------- */
+function openGate(id, mode){
+  const d = DAYS[WORK_IDX(id)];
+  const g = document.getElementById("gate");
+  if (!g) return;
+  g.dataset.target = id;
+  g.dataset.mode = mode || "plan";
+  const miss = missingFor(id);
+  document.getElementById("gateSub").innerHTML =
+    "<b>D" + pad2(WORK_IDX(id) + 1) + " · " + esc(d.topic) + "</b> 的作业还是空的。" +
+    (mode === "work" ? "先把作业交了，才能把它标成「已完成」。" : "交完作业再回来点「已完成」吧。");
+  const items = mode === "work"
+    ? ["至少填一项：代码 或 运行输出", "点下面的「去交作业」补上"]
+    : miss.need.map((n) => n.t);
+  document.getElementById("gateList").innerHTML = items.map((t) => "<li>" + t + "</li>").join("");
+  g.classList.add("show");
+}
+function closeGate(){
+  const g = document.getElementById("gate");
+  if (g) g.classList.remove("show");
+}
+
+/* ---------- 标记完成（带门禁） ---------- */
+function tryMarkDone(id, silent){
+  if (!gateOn()) return forceDone(id, "门禁已关闭");
+  if (hasSubmitted(id)) return true;
+  if (!silent) openGate(id, "plan");
+  return false;
+}
+/* 强制标记完成：记录原因，并在签到备注里留痕 */
+function forceDone(id, why){
+  state.status[id] = "done";
+  const stamp = new Date().toLocaleDateString("zh-CN") + " 未交作业标记完成";
+  state.notes[id] = (state.notes[id] ? state.notes[id] + " ｜ " : "") + stamp + (why ? "（" + why + "）" : "");
+  state.praised["force" + WORK_IDX(id)] = true;   // 这种情况不发鼓励
+  save();
+  renderPlan(); updateStats(); if (typeof renderCheckin === "function") renderCheckin();
+  return true;
+}
+
+/* ---------- 设置：允许跳过门禁 ---------- */
+function toggleAllowNoWork(on){
+  state.setting.allowNoWork = !!on;
+  save();
+  renderPlan();
+  toast(on ? "已关闭门禁：可以直接标记完成（作业仍建议补交）" : "已开启门禁：必须交作业才能标记完成", 2600);
+}
+/* 初始化开关的勾选状态（门禁默认开启 → 复选框不勾） */
+function initGate(){
+  const cb = document.getElementById("allowNoWork");
+  if (cb) cb.checked = state.setting.allowNoWork === true;
+}
+document.getElementById("allowNoWork").addEventListener("change", (e) => toggleAllowNoWork(e.target.checked));
+
+/* ---------- 事件 ---------- */
+document.getElementById("gate").addEventListener("click", (e) => {
+  const g = document.getElementById("gate");
+  const id = g.dataset.target;
+  if (e.target === g){ closeGate(); return; }
+  if (e.target.id === "gateCancel"){ closeGate(); return; }
+  if (e.target.id === "gateGo"){
+    closeGate();
+    openDay(id, "work");
+    toast("把代码和运行结果填进去，点「已提交」", 2400);
+    return;
+  }
+  if (e.target.id === "gateForce"){
+    const why = prompt("写一句原因（会记在当天的备注里，比如：那天生病了 / 电脑坏了）：");
+    if (why === null) return;
+    forceDone(id, (why || "").trim() || "未填写原因");
+    closeGate();
+    toast("已强制标记完成，并记下原因。下次尽量补交作业 🙂", 2600);
+  }
+});
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeGate(); });
+
+/* ============ 教程 / 作业 / 模板 数据（由 lessons.js 生成） ============ */
+const TUTORIALS = {
+ "w1d1": "\n### 为什么要先搭环境\n写 Python 需要两样东西：**解释器**（真正跑代码的程序）和**编辑器**（写代码的地方）。装好这两样，后面 27 天都在这套工具里度过，所以今天值得多花 10 分钟。\n\n### 第一步：装 Python（10 分钟）\n1. 打开 [python.org/downloads/windows](https://www.python.org/downloads/windows/)，下载最新的 **Windows installer (64-bit)**（3.12 以上都行，别纠结版本）。\n2. 双击安装，**第一屏最底部必须勾上 `Add python.exe to PATH`** —— 忘了勾，以后再终端里敲 `python` 会找不到。\n3. 点 `Install Now`，默认路径即可，**安装路径不要带中文和空格**。\n4. 装完点 `Close`。\n\n> 装的时候勾 PATH 是新手第一大坑，看到这一条请停下来确认一遍。\n\n```bat\npython --version\n```\n在任意终端（Win+R 输入 cmd）里敲上面这行，出现 `Python 3.x.x` 就对了。这一步没通过，后面全部白搭，先修这个。\n\n### 第二步：装 VS Code + Python 扩展（8 分钟）\n1. 打开 [code.visualstudio.com](https://code.visualstudio.com/) 下载安装，一路下一步。建议勾选「添加到 PATH」和「资源管理器右键菜单」。\n2. 打开 VS Code，按 `Ctrl+Shift+X` 打开扩展面板，搜 `Python`，装**作者是 Microsoft** 的那个。\n3. （可选）搜 `Chinese (Simplified)` 装中文语言包，重启后菜单变中文。\n\n### 第三步：建自己的代码文件夹\n`文件 → 打开文件夹`，新建并打开一个专门放代码的目录，例如 `D:\\Python学习\\week1`。\n**别把代码散在桌面**：每周一个子文件夹，最后直接打包上传 GitHub，省事。\n\n### 第四步：写下并运行第一个程序\n在左侧文件区右键 → 新建文件，命名 `hello.py`（扩展名必须是 `.py`），输入：\n\n```python\nprint(\"Hello World\")\nprint(\"我是 ZERO，今天开始学 Python\")\n```\n\n保存（`Ctrl+S`，标签页上的小圆点消失才算存了），然后运行，三种方式任选：\n\n| 方式 | 操作 | 说明 |\n| --- | --- | --- |\n| 运行按钮 | 右上角 ▶（先在下拉里选 Run Python File） | 最省事，推荐 |\n| 终端命令 | `Ctrl+` + ` python hello.py` | 最通用，和以后工作一样 |\n| 交互模式 | 终端敲 `python` 进入 `>>>`，逐行输入，`exit()` 退出 | 适合试语法、算数 |\n\n### 看懂这条语句\n- `print` 是**函数**，括号里放什么，就打印什么；\n- 引号里的内容叫**字符串**，中文、英文、数字都可以；\n- 引号必须是英文的 `\"...\"` 或 `'...'`，用了中文引号会报 `SyntaxError`。\n\n### 今天必须认识的三个报错\n- `'python' 不是内部或外部命令` → 装的时候没勾 PATH，重跑安装包选 Modify 补上；\n- `can't open file 'hello.py'` → 终端当前目录不对，先 `cd /d D:\\Python学习\\week1`，或直接用 ▶ 运行；\n- `SyntaxError: invalid syntax` → 少括号、少引号，或者用了中文标点。\n\n> 报错不是失败，是 Python 在告诉你哪一行不对。**先读最后一行**（错误类型），再看倒数第二三行的行号。\n",
+ "w1d2": "\n### 变量：给数据起个名字\n```python\nage = 20\n```\n这行的意思是：把右边的 `20` 存起来，起名叫 `age`。以后写 `age` 就等于写 `20`。\n注意 `=` 在这里读作\"赋值\"，**不是数学上的等于**。\n\n### 四种最基本的数据类型\n| 类型 | 写法 | 例子 | 用途 |\n| --- | --- | --- | --- |\n| `int` 整数 | 不带小数点 | `10` `-3` | 年龄、个数、次数 |\n| `float` 小数 | 带小数点 | `9.9` `3.14` | 身高、价格、平均值 |\n| `str` 字符串 | 用引号包起来 | `\"ZERO\"` `\"你好\"` | 姓名、句子、任何文字 |\n| `bool` 布尔 | 只有两个值 | `True` `False` | 判断结果、开关状态 |\n\n**引号是字符串的身份证**：`20` 是数字，可以加减乘除；`\"20\"` 是文字，`\"20\" + 1` 会报错。这是新人最容易踩的坑之一。\n\n### print 的两种写法\n```python\nname = \"ZERO\"\nage = 20\nprint(name, age)                    # 逗号分隔，输出: ZERO 20\nprint(f\"我叫{name}，今年{age}岁\")     # f-string，最推荐\n```\nf-string 前面那个 `f` 千万别漏，漏了就变成原样输出大括号。\n\n### 用 type() 看真实类型\n```python\nprint(type(20))       # <class 'int'>\nprint(type(\"20\"))     # <class 'str'>\nprint(type(True))     # <class 'bool'>\n```\n**不确定一个东西是什么类型，就 type() 一下**，这是排查问题的常用手段。\n\n### 变量命名规则\n- 只能用字母、数字、下划线，且不能以数字开头（`2name` 错，`name2` 对）；\n- 区分大小写：`Age` 和 `age` 是两个不同的变量；\n- 别用 `print`、`if`、`for` 这些**关键字**当变量名；\n- 养成习惯：名字要能看懂，`user_age` 比 `a` 好一万倍。\n\n> 变量名用英文小写加下划线（snake_case）是 Python 社区的通用风格，现在开始就这么写，以后看别人的代码会顺很多。\n",
+ "w1d3": "\n### input()：让程序会问问题\n```python\nname = input(\"请输入你的名字：\")\nprint(\"你好，\" + name)\n```\n运行后程序会停下来等你打字，回车之后才继续。终端里显示的不是输出，是**提示语**。\n\n### 重要：input() 拿到的永远是字符串\n```python\nage = input(\"你几岁？\")     # 输入 20，但 age 是 \"20\" 不是 20\nprint(age + 1)             # 报错 TypeError\n```\n要参与计算必须转换：\n\n| 想要类型 | 写法 | 说明 |\n| --- | --- | --- |\n| 整数 | `int(input(\"年龄：\"))` | 输入 `20` 得到 20 |\n| 小数 | `float(input(\"身高：\"))` | 输入 `1.75` 得到 1.75 |\n| 字符串 | `input(\"姓名：\")` | 不用转，本来就是 |\n\n这条规则要记牢，第 2 周做判断、第 3 周做循环都会用到。\n\n### 注释：写给未来的自己\n```python\n# 这是单行注释，Python 不会执行这一行\nage = 20  # 行末也可以写注释\n\n\"\"\"\n三个引号是多行注释，\n用来解释一段代码的整体思路。\n\"\"\"\n```\n注释不是废话：**写清\"为什么这么写\"比\"这行做了什么\"更有价值**。以后你回头看自己的代码，只有注释能救你。\n\n### 一个完整的小程序\n```python\n# 问候程序：问名字和年龄，输出一句问候\nname = input(\"请输入你的名字：\")\nage = int(input(\"请输入你的年龄：\"))\n\nprint(f\"你好，{name}！\")\nprint(f\"你今年{age}岁，明年就{age + 1}岁了。\")\n```\n\n> 提示：如果程序运行报 `ValueError: invalid literal for int()`，说明你在提示里输入了字母或中文，int() 转不了。\n",
+ "w1d4": "\n### 七个运算符，一次认全\n| 运算符 | 名称 | 例子 | 结果 |\n| --- | --- | --- | --- |\n| `+` | 加 | `7 + 2` | 9 |\n| `-` | 减 | `7 - 2` | 5 |\n| `*` | 乘 | `7 * 2` | 14 |\n| `/` | 除 | `7 / 2` | **3.5**（永远得到小数） |\n| `//` | 整除 | `7 // 2` | 3（只要整数部分） |\n| `%` | 取余 | `7 % 2` | 1（余数） |\n| `**` | 幂 | `7 ** 2` | 49 |\n\n**`/` 和 `//` 的区别是新人第一个惊讶点**：Python 里 `/` 的结果永远是小数，`10 / 2` 得到 `5.0` 而不是 `5`。\n\n### 取余 % 是宝藏\n```python\nprint(10 % 2)   # 0  -> 偶数\nprint(11 % 2)   # 1  -> 奇数\n```\n判断奇偶、控制循环节奏、做周期性任务，全靠 `%`。第 2 周判断奇偶会立刻用到。\n\n### 运算优先级\n```python\nprint(2 + 3 * 4)      # 14，先乘除后加减\nprint((2 + 3) * 4)    # 20，括号最优先\n```\n**不确定优先级就加括号**，可读性也更好。\n\n### 字符串也能 + 和 *\n```python\nprint(\"Py\" + \"thon\")    # Python，拼接\nprint(\"ab\" * 3)         # ababab，重复\n```\n但 `\"20\" + 1` 会报错：**字符串和数字不能直接混算**，要 `int(\"20\") + 1`。\n\n### 变量自增的简写\n```python\nscore = 10\nscore = score + 5   # 15，最啰嗦但最好懂\nscore += 5          # 20，等价写法，以后会经常见\n```\n\n> 算除法前想一下除数是不是 0：`5 / 0` 会报 `ZeroDivisionError`，程序直接崩。\n",
+ "w1d5": "\n### 字符串就是字符的排队\n```python\ns = \"Python\"\n# 索引:  0=P  1=y  2=t  3=h  4=o  5=n\n# 反向: -6=P -5=y -4=t -3=h -2=o -1=n\nprint(s[0])     # P\nprint(s[-1])    # n，最后一个\nprint(len(s))   # 6，长度\n```\n**索引从 0 开始**，这是所有编程语言的惯例。`s[6]` 会报 `IndexError: string index out of range` —— 越界了。\n\n### 切片：一次拿一段\n格式是 `s[起点:终点]`，**取起点不取终点**（左闭右开）：\n```python\ns = \"Python\"\nprint(s[0:2])   # Py\nprint(s[2:])    # thon，从 2 到结尾\nprint(s[:3])    # Pyt，从头到 3 之前\nprint(s[-3:])   # hon，最后三个\nprint(s[::2])   # Pto，隔一个取一个\n```\n记不住就记一句话：\"**含头不含尾**\"。\n\n### 拼接与重复\n```python\nfirst = \"Py\"\nsecond = \"thon\"\nprint(first + second)    # Python\nprint(\"-\" * 20)          # 一条分割线，很好用\n```\n\n### f-string：今天最重要的一个\n```python\nname = \"ZERO\"\nscore = 95.5\nprint(f\"{name} 的成绩是 {score} 分\")          # ZERO 的成绩是 95.5 分\nprint(f\"{name} 的成绩是 {score:.1f} 分\")      # 保留 1 位小数: 95.5\nprint(f\"{name} 的成绩是 {score:.0f} 分\")      # 不要小数: 96（会四舍五入）\nprint(f\"{'右对齐':>10}|\")                     # 右对齐，做表格用\n```\n`{score:.2f}` 这种写法叫**格式说明**，做计算器、成绩单时天天用。\n\n### 常用小方法\n```python\ns = \"  Hello Python  \"\nprint(s.strip())        # 去掉首尾空格\nprint(s.upper())        # 全大写\nprint(s.lower())        # 全小写\nprint(s.replace(\"Python\", \"World\"))   # 替换\nprint(\"Py\" in s)        # True，判断包不包含\n```\n\n> 字符串是**不可变**的：`s[0] = \"J\"` 会报错。要改只能用切片/替换拼出新字符串。\n",
+ "w1d6": "\n### 今天不学新语法，只做两件事\n周六是**动手日**：把周一到周五学的五样东西（变量、输入输出、运算符、字符串、f-string）串成两个能跑的小脚本。\n\n### 项目一：个人介绍生成器\n思路：用 `input` 问三个信息，用 f-string 排版输出一张\"名片\"。\n```python\nname = input(\"姓名：\")\ncity = input(\"城市：\")\nhobby = input(\"爱好：\")\n\nline = \"=\" * 30\nprint(line)\nprint(f\"  姓名：{name}\")\nprint(f\"  城市：{city}\")\nprint(f\"  爱好：{hobby}\")\nprint(line)\n```\n小升级（量力而行）：\n- 加上年龄，并算出「明年多少岁」；\n- 用 `len(name)` 输出名字长度；\n- 用 `{hobby:>8}` 把内容对齐成右侧整齐的样式。\n\n### 项目二：加减计算器\n```python\nline = \"-\" * 30\nprint(line)\nprint(\"简易计算器（只做加减）\")\nprint(line)\n\na = float(input(\"第一个数：\"))\nop = input(\"运算符（+ 或 -）：\")\nb = float(input(\"第二个数：\"))\n\nif op == \"+\":\n    result = a + b\nelse:\n    result = a - b\n\nprint(f\"{a} {op} {b} = {result:.2f}\")\nprint(line)\n```\n`if/else` 是下周的内容，**今天照抄能跑就行**，下周你会真正理解它。\n\n### 卡住时按这个顺序排查\n1. 报错**最后一行**是什么类型？`SyntaxError` 看符号，`ValueError` 看输入，`NameError` 看变量名拼写；\n2. 报错里的行号指的是**你文件里的第几行**，直接跳过去看；\n3. 还是不行就 `print()` 打出来看看：想知道 `a` 是什么，就 `print(a, type(a))`。\n\n### 完成标准\n两个脚本都能独立运行、输入合理数据能得到正确输出，**代码用 VS Code 保存成 .py 文件**（别只在终端里敲）。\n",
+ "w1d7": "\n### 今天三件事：复习、归档、规划\n\n### 一、复习：用\"输出倒逼输入\"\n不要重看教程，而是**盖住答案自己写一遍**：\n1. 让用户输入姓名，输出 `你好，XXX！`；\n2. 输入半径，用 `3.14 * r ** 2` 输出圆面积（保留 2 位小数）；\n3. `\"hello world\"` 取出 `world` 这个词（提示：切片从 6 开始）。\n\n写不出来再回头看对应那天的教程，**看懂了不等于写得出来**，这一步是分水岭。\n\n### 二、整理笔记：三行就够\n在 `week1/notes.md` 里按天写：\n```\n## D1 环境搭建\n- 学会了：装 Python 要勾 PATH，运行用 ▶\n- 卡住过：终端目录不对导致找不到文件\n- 待确认：无\n```\n**记\"卡住过什么\"比记知识点更值钱**，因为那是你专属的坑点清单。\n\n### 三、上传 GitHub（第一次会慢，之后 1 分钟）\n1. 注册/登录 [github.com](https://github.com)，右上角 `+` → `New repository`；\n2. 仓库名 `python-learning`，选 **Public**，勾上 `Add a README file`，创建；\n3. 装 [Git](https://git-scm.com/download/win)，一路默认；\n4. 在 `D:\\Python学习` 目录里打开终端，依次执行：\n```bat\ngit init\ngit add .\ngit commit -m \"第1周：环境搭建与基础语法\"\ngit branch -M main\ngit remote add origin https://github.com/你的用户名/python-learning.git\ngit push -u origin main\n```\n5. 第一次 push 会弹出登录窗口，按提示授权即可。\n\n> 以后每周日只要三条命令：`git add .` → `git commit -m \"本周内容\"` → `git push`。\n> push 报 `rejected` 就先 `git pull --rebase` 再 push。\n\n### 四、规划下周\n下周开始学 **if 条件判断**，是编程真正开始\"有脑子\"的第一周。提前想好：你希望用条件判断做出什么？（比如：根据分数自动评级、判断能否打折）\n带着这个问题进第 2 周，学习动力完全不同。\n",
+ "w2d1": "\n### if：让程序会做选择\n```python\nage = 20\nif age >= 18:\n    print(\"已成年\")\nprint(\"这行无论如何都会执行\")\n```\n三行代码里有**两个绝对不能错的地方**：\n1. `if` 那行结尾的 **冒号 `:`**；\n2. 下一行必须**缩进 4 个空格**（VS Code 里按一次 Tab）。\n\nPython 靠缩进判断\"哪几行属于 if\"。缩进错了程序不会报错，但行为完全不是你要的 —— 这比报错更危险。\n\n### if 的执行逻辑\n- 条件成立（结果是 `True`）→ 执行缩进的代码块；\n- 条件不成立（`False`）→ 整块跳过，继续往下走；\n- 没有 `else` 时，\"什么都不做\"也是完全正常的结果。\n\n### 条件表达式：结果是 True 或 False\n| 写法 | 含义 |\n| --- | --- |\n| `age >= 18` | 大于等于 |\n| `age > 18` | 大于 |\n| `age == 18` | **等于**（两个等号！） |\n| `age != 18` | 不等于 |\n| `age < 18` | 小于 |\n\n**`=` 是赋值，`==` 才是比较**。写成 `if age = 18:` 会报 `SyntaxError`。\n\n### 常见的三个错误\n```python\n# 1. 忘了冒号\nif age >= 18          # SyntaxError: expected ':'\n    print(\"成年\")\n\n# 2. 缩进不一致（Tab 和空格混用）\nif age >= 18:\n\tprint(\"成年\")      # IndentationError\n\n# 3. 条件写成了字符串\nif age >= \"18\":       # TypeError: '>=' not supported between int and str\n    print(\"成年\")\n```\n第三条的根因是 `input()` 返回的是字符串，比较前要 `int()` 转换。\n\n> 缩进统一用**4 个空格**（VS Code 默认就是），永远不要混 Tab。\n",
+ "w2d2": "\n### if-else：两条路必须选一条\n```python\nnumber = int(input(\"请输入一个整数：\"))\n\nif number % 2 == 0:\n    print(\"这是偶数\")\nelse:\n    print(\"这是奇数\")\n```\n- `if` 条件成立 → 走 if 分支；不成立 → 走 `else` 分支；\n- **两者必执行其一**，这是它和单分支最大的区别；\n- `else` 后面**也要冒号**，且它自己不写条件。\n\n### 奇偶判断为什么用 % 2\n```python\nprint(8 % 2)   # 0 -> 偶数\nprint(7 % 2)   # 1 -> 奇数\n```\n能不能被 2 整除，就看余数是不是 0。这个思路还能判断\"能否被 3 整除\"\"是不是闰年\"等等。\n\n### 缩进决定归属：对比这两段\n```python\n# A：第三行属于 if\nif number % 2 == 0:\n    print(\"偶数\")\n    print(\"偶数分支里的话\")\n\n# B：第三行不属于 if，无论如何都打印\nif number % 2 == 0:\n    print(\"偶数\")\nprint(\"无论如何都打印\")\n```\n**每写完一个 if，都数一下缩进**，这是最常见的 bug 来源。\n\n### 嵌套 if（了解即可，第 3 周会大量用）\n```python\nif number > 0:\n    if number % 2 == 0:\n        print(\"正偶数\")\n    else:\n        print(\"正奇数\")\nelse:\n    print(\"不是正数\")\n```\n\n> 输入 `0` 会打印\"这是偶数\" —— 因为 `0 % 2 == 0`。想一想这符合你的预期吗？如果不，怎么改？\n",
+ "w2d3": "\n### elif：多个条件的正确写法\n```python\nscore = int(input(\"请输入成绩（0-100）：\"))\n\nif score >= 90:\n    grade = \"A\"\nelif score >= 80:\n    grade = \"B\"\nelif score >= 70:\n    grade = \"C\"\nelif score >= 60:\n    grade = \"D\"\nelse:\n    grade = \"E\"\n\nprint(f\"等级：{grade}\")\n```\n\n### 为什么不需要写 `score < 90`\nPython **从上往下依次判断，遇到第一个成立的就把整条链走完**。\n所以进到 `elif score >= 80` 时，已经隐含了 `score < 90`。\n**顺序决定结果**：如果把 `>= 60` 写在最前面，所有人都会得到 D —— 这是最经典的错误。\n\n### if / elif / else 三者关系\n| 关键字 | 数量 | 条件 |\n| --- | --- | --- |\n| `if` | 恰好 1 个，必须放最前 | 必须有 |\n| `elif` | 0 到多个 | 必须有 |\n| `else` | 0 或 1 个，只能放最后 | 不能写条件 |\n\n### 用 if 也能写，但差别很大\n```python\n# 用独立的 if：每个条件都会被检查，可能命中多个\nif score >= 90:\n    print(\"A\")\nif score >= 80:\n    print(\"B\")\n# 输入 95 会同时打印 A 和 B —— 通常不是你要的\n```\n**要\"只命中一个\"就用 elif**，要\"多个条件都检查\"才用并列的 if。\n\n### 顺序写错了怎么发现\n输入几个边界值测一下：`100`、`90`、`89`、`60`、`59`。\n**边界值最容易暴露逻辑错误**，这个习惯从今天开始养成。\n\n> 成绩还应该处理非法输入（比如 -10 或 200）。第 4 周做项目时会专门加\"输入校验\"。\n",
+ "w2d4": "\n### 比较运算符回顾\n| 运算符 | 读法 | 例子 | 结果 |\n| --- | --- | --- | --- |\n| `==` | 等于 | `5 == 5` | True |\n| `!=` | 不等于 | `5 != 3` | True |\n| `>` `<` | 大于 / 小于 | `5 > 3` | True |\n| `>=` `<=` | 大于等于 / 小于等于 | `5 >= 5` | True |\n\n最容易错的是 `>=`：在 Python 里**先写 `>` 再写 `=`**（写成 `=>` 会报错）。\n\n### 比较的结果就是布尔值\n```python\nresult = 5 > 3\nprint(result)          # True\nprint(type(result))    # <class 'bool'>\n```\n所以 `if` 后面根本不需要写 `== True`：\n\n```python\nis_adult = age >= 18\nif is_adult:           # 好写法\n    print(\"成年\")\n\nif is_adult == True:   # 能跑但啰嗦，不推荐\n    print(\"成年\")\n```\n\n### 链式比较（Python 特色）\n```python\nscore = 85\nprint(60 <= score < 90)     # True，等价于 60 <= score and score < 90\n```\n写范围判断时非常清爽。\n\n### 浮点数比较的陷阱\n```python\nprint(0.1 + 0.2 == 0.3)     # False！计算机存小数有精度误差\nprint(abs((0.1 + 0.2) - 0.3) < 1e-9)   # True，正确做法：比较差值\n```\n**小数永远不要用 `==` 判断相等**，用「差值足够小」。\n\n### 字符串也能比较\n```python\nprint(\"apple\" == \"apple\")   # True\nprint(\"apple\" < \"banana\")   # True，按字母序比\nprint(\"10\" > \"9\")           # True！字符串是逐字符比较，\"1\" < \"9\"\n```\n所以 `input()` 拿到的字符串**一定要转成数字再比大小**。\n\n> 今天的关键动作：写一个程序，输入三个数，判断第一个数是不是最大的。\n",
+ "w2d5": "\n### 三个逻辑运算符\n| 运算符 | 含义 | 成立条件 |\n| --- | --- | --- |\n| `and` | 并且 | 两边都 True |\n| `or` | 或者 | 至少一边 True |\n| `not` | 非 | 取反 |\n\n```python\nage = 20\nhas_ticket = True\n\nif age >= 18 and has_ticket:\n    print(\"可以入场\")\n\nif age < 12 or age > 65:\n    print(\"可以买优惠票\")\n\nif not has_ticket:\n    print(\"请先买票\")\n```\n\n### 复合条件的真值表（记住这四行）\n```python\nprint(True and True)     # True\nprint(True and False)    # False\nprint(False or True)     # True\nprint(False or False)    # False\n```\n\n### 优先级：not > and > or\n```python\nprint(True or False and False)    # True，因为 and 先算 -> True or False\nprint((True or False) and False)  # False，括号改变了顺序\n```\n**复合条件一定加括号**，既清楚又不会错。\n\n### 实战：登录条件判断\n```python\nusername = input(\"用户名：\")\npassword = input(\"密码：\")\n\nif username == \"admin\" and password == \"123456\":\n    print(\"登录成功\")\nelif username != \"admin\":\n    print(\"用户名不存在\")\nelse:\n    print(\"密码错误\")\n```\n注意这里的 `elif` 顺序：**先判断哪个条件更能说明问题**，用户体验会更好。\n\n### 短路特性（顺手了解）\n```python\nx = 0\nif x != 0 and 10 / x > 1:    # x 为 0 时，右边根本不会被计算，不会崩\n    print(\"ok\")\n```\nPython 从左往右算，**左边已经能定论时右边就不执行了**，这叫短路。以后写防御性代码会用上。\n\n> 硬核提醒：`=` 和 `==` 在复合条件里更容易写错，写完读一遍：`if a == 1 and b == 2:`。\n",
+ "w2d6": "\n### 今天的综合练习：猜数字（条件版）\n先不引入随机数，**把答案写死**，专注练条件判断的分支设计。\n\n### 第一步：写清判断逻辑\n- 猜的数 > 答案 → 提示\"大了\"；\n- 猜的数 < 答案 → 提示\"小了\"；\n- 相等 → 提示\"猜对了\"。\n\n```python\nanswer = 42\nguess = int(input(\"猜一个数字（1-100）：\"))\n\nif guess > answer:\n    print(\"大了\")\nelif guess < answer:\n    print(\"小了\")\nelse:\n    print(\"猜对了！\")\n```\n\n### 第二步：加上边界与激励\n```python\nif guess > answer:\n    if guess - answer <= 5:\n        print(\"大了一点点，很接近了\")\n    else:\n        print(\"大了，差得有点远\")\n```\n**嵌套 if 的原则**：外层管大类，内层管细节。嵌套别超过两层，否则要考虑重构。\n\n### 第三步：自查三种情况\n分别输入 `42`、`80`、`10`，确认三种分支都能走到。\n**如果某个分支怎么都走不到，说明逻辑写错了**（或答案写错了）。\n\n### 常见问题\n- 忘了 `int()`：`guess > answer` 直接报 `TypeError`；\n- `elif guess < answer` 写成了 `elif guess > answer`：第二个分支永远不会执行；\n- 用 `=` 代替 `==` 做相等判断 → `SyntaxError`。\n\n> 今天这个程序只有 8 行，但它包含了条件判断的全部套路。第 3 周我们会加上 `while` 让它能反复猜、加上 `random` 让它真的随机。\n",
+ "w2d7": "\n### 一、复习：把\"能看懂\"变成\"能写出\"\n1. 输入一个数，判断是正数、负数还是零（三种分支，用 elif）；\n2. 输入年份，判断是不是闰年（能被 4 整除但不能被 100 整除，或者能被 400 整除）；\n3. 输入身高体重，计算 BMI，用 elif 输出\"偏瘦 / 正常 / 偏胖\"。\n\n第 2 题的完整判断条件是：\n\n```python\nif (year % 4 == 0 and year % 100 != 0) or year % 400 == 0:\n    print(\"闰年\")\nelse:\n    print(\"平年\")\n```\n**这是一个典型的\"不写括号就容易错\"的例子**，注意 `or` 两边的处理。\n\n### 二、优化成绩等级判断（本周的作业成品）\n回头看周三写的 grade 程序，做三件事：\n1. **加输入校验**：分数不在 0-100 之间要提示\"输入不合法\"；\n2. **加容错**：用 `try/except` 处理输入了字母的情况（先照抄，第 4 周会讲原理）；\n3. **加输出信息**：除了等级，再输出\"距离下一等级还差几分\"。\n\n```python\ntry:\n    score = int(input(\"请输入成绩（0-100）：\"))\nexcept ValueError:\n    print(\"请输入数字！\")\nelse:\n    if score < 0 or score > 100:\n        print(\"分数要在 0 到 100 之间\")\n    elif score >= 90:\n        print(\"A 优秀\")\n    elif score >= 80:\n        print(\"B 良好\")\n    elif score >= 70:\n        print(\"C 中等\")\n    elif score >= 60:\n        print(\"D 及格\")\n    else:\n        print(\"E 需要努力\")\n```\n\n### 三、笔记 + 上传\n```\n## D8-D14 条件判断\n- 学会了：if/elif/else 只会命中一个分支；and/or/not 组合条件\n- 卡住过：elif 顺序写错导致所有人都得 D\n- 心得：缩进决定代码归属，写完必须数一遍\n```\n然后：`git add .` → `git commit -m \"第2周：条件判断\"` → `git push`\n\n### 下周一预告\n进入**循环**，程序终于能\"重复做事\"。你可以先想一个问题：如果要让猜数字能一直猜到对，该怎么写？\n",
+ "w3d1": "\n### while：条件成立就一直做\n```python\ni = 1              # ① 起点\nwhile i <= 10:     # ② 条件\n    print(i)\n    i += 1         # ③ 变化量\nprint(\"结束\")\n```\n**三个零件缺一不可**，尤其第 ③ 个：没有它，条件永远成立，程序永远转下去。\n\n### 死循环：新人第一课\n把 `i += 1` 注释掉再运行，你会看到数字一直打印 —— 这就是死循环。\n**终端卡住时按 `Ctrl + C` 强制停止**，这不是电脑坏了。\n\n### 1 到 10 累加（今天的核心）\n```python\ni = 1\ntotal = 0\nwhile i <= 10:\n    total += i      # 等价于 total = total + i\n    i += 1\nprint(total)        # 55\n```\n**自己验算一遍**：前 5 个数 1+2+3+4+5=15，全部加起来 55。程序算出来不是 55，就说明逻辑错了。\n\n### 累加器的固定套路\n```python\naccumulator = 0            # 1. 在循环之外定义累加器\nwhile 条件:\n    accumulator += 某个值   # 2. 循环里累加\n    # 更新变化量\nprint(accumulator)         # 3. 循环结束后输出\n```\n这个套路以后算总分、算平均值、统计个数都用它。\n\n### 三个常见的写法错误\n```python\ntotal = 0                  # 错：累加器写在循环里，每次都被清零\nwhile i <= 10:\n    total = 0\n    total += i\n\ntotal = i                  # 错：把\"最后一个 i\"当成总和\n```\n\n### 什么时候用 while\n- 循环次数**不确定**（比如\"直到用户输入正确\"）→ 用 while；\n- 循环次数**确定**（比如\"重复 10 次\"）→ 下周二的 for 更合适。\n\n> 今天动手：把范围改成 1 到 100，答案应该是 5050。算对了再往下走。\n",
+ "w3d2": "\n### for：最适合\"遍历\"的循环\n```python\nfor i in range(1, 6):\n    print(i)          # 1 2 3 4 5\n```\n读法：**对于 range(1,6) 里的每一个 i，做下面缩进的事**。\n\n### range 的三种用法（含头不含尾！）\n| 写法 | 产生的数 | 个数 |\n| --- | --- | --- |\n| `range(5)` | 0 1 2 3 4 | 5 |\n| `range(1, 6)` | 1 2 3 4 5 | 5 |\n| `range(1, 10, 2)` | 1 3 5 7 9 | 5 |\n| `range(5, 0, -1)` | 5 4 3 2 1 | 5 |\n\n**`range(1, 5)` 只到 4** —— 这是最常被记错的一点，和字符串切片一样\"含头不含尾\"。\n\n### 遍历列表\n```python\nfruits = [\"苹果\", \"香蕉\", \"橙子\"]\nfor fruit in fruits:\n    print(f\"我喜欢吃{fruit}\")\n\n# 同时要序号时用 enumerate\nfor index, fruit in enumerate(fruits, start=1):\n    print(f\"{index}. {fruit}\")\n```\n\n### 用 for 改写昨天的累加\n```python\ntotal = 0\nfor i in range(1, 11):\n    total += i\nprint(total)      # 55\n```\n**对比昨天那段 while，for 少了\"起点\"和\"变化量\"两行** —— 因为 for 自动帮你管了。\n\n### for 和 while 怎么选\n- 知道要循环多少次 → `for i in range(n)`；\n- 要在列表/字符串里逐个处理 → `for x in 容器`；\n- 循环到某个条件满足才停 → `while`。\n\n### tab 补全的小技巧\n在 VS Code 里输入 `for` 会弹出代码片段，按 Tab 直接生成循环骨架，**空格和冒号都不会漏**。\n\n> 动手：用 for 打印 1 到 100 里所有的偶数（两种写法：`range(2, 101, 2)` 和 `if i % 2 == 0`）。\n",
+ "w3d3": "\n### break：立刻结束整个循环\n```python\nfor i in range(1, 100):\n    if i == 5:\n        break\n    print(i)        # 1 2 3 4\n```\n`break` 之后，**循环里剩下的代码和剩余的循环次数全部不做了**，直接跳到循环外面。\n\n### continue：跳过这一轮，继续下一轮\n```python\nfor i in range(1, 11):\n    if i % 2 == 0:\n        continue\n    print(i)        # 1 3 5 7 9\n```\n区别一句话：**break 是\"不干了\"，continue 是\"这轮不算，下轮继续\"**。\n\n### 在 while 里用 break\n```python\nwhile True:                  # 看起来是死循环\n    cmd = input(\"输入命令（q 退出）：\")\n    if cmd == \"q\":\n        break                # 靠 break 出去\n    print(f\"执行：{cmd}\")\n```\n`while True` + `break` 是非常常用的套路：**循环次数不确定时，用它在中间判断退出**。第 20 天的猜数字游戏就是这么写的。\n\n### 循环的 else（了解，能读懂就行）\n```python\nfor i in range(3):\n    if i == 5:\n        break\nelse:\n    print(\"循环正常跑完，没被 break 打断\")\n```\n\n### 别踩的坑\n```python\nfor i in range(5):\n    if i == 2:\n        break\n    print(i)\nprint(i)     # 2，break 之后 i 保留跳出时的值\n```\n- `break` 和 `continue` **只影响它所在的那一层循环**（第 18 天讲嵌套时会再提醒）；\n- 循环外的 `print(i)` 能拿到 i，是因为 Python 的循环变量不会\"消失\"。\n\n> 动手：写一个循环，打印 1 到 20，遇到 15 就停止；再写一个版本，跳过所有能被 3 整除的数。\n",
+ "w3d4": "\n### 嵌套循环：外层一行，内层一列\n```python\nfor i in range(1, 4):        # 外层：控制\"第几行\"\n    for j in range(1, 4):    # 内层：控制\"这一行有几个\"\n        print(\"*\", end=\"\")\n    print()                  # 每行结束后换行\n```\n输出：\n```\n***\n***\n***\n```\n**理解要点**：外层走 1 次，内层要把自己走完；所以总共执行 3 × 3 = 9 次内层代码。\n\n### `end=\"\"` 是什么\n`print()` 默认在结尾加换行。`print(\"*\", end=\"\")` 表示**结尾不加任何东西**，这样星星才会打在同一行。\n想加分隔就用 `print(\"*\", end=\" \")`。\n\n### 打印三角形（今天的作业）\n```python\nn = 5\nfor i in range(1, n + 1):        # 第 i 行\n    for j in range(i):           # 第 i 行打 i 个星\n        print(\"*\", end=\"\")\n    print()\n```\n输出：\n```\n*\n**\n***\n****\n*****\n```\n**内层的范围用 i 而不是固定值** —— 这是三角形能\"长大\"的关键。\n\n### 再来个倒三角形\n```python\nfor i in range(5, 0, -1):\n    print(\"*\" * i)\n```\n小技巧：`\"*\" * i` 直接得到 i 个星，比内层循环更简洁。\n\n### 常见问题\n- 忘了 `print()` → 全部打在一行；\n- 内层用了 `print(\"*\")` 而不是 `end=\"\"` → 每个星一行；\n- 外层内层都用同一个变量名 `i` → 逻辑混乱（能跑但极易出错，**内外层变量名要区分开**）。\n\n> 进阶（选做）：打印一个金字塔，第 i 行先打若干个空格再打星。\n",
+ "w3d5": "\n### 今天把循环和条件合起来用\n```python\ntotal = 0\nfor i in range(1, 101):\n    if i % 2 == 1:        # 只挑奇数\n        total += i\nprint(total)              # 2500\n```\n思路：**循环负责\"走过每个数\"，条件负责\"挑出想要的\"**，这是绝大多数数据处理程序的骨架。\n\n### 三种写法，结果应该一样\n```python\n# 写法一：先循环后判断\ntotal = 0\nfor i in range(1, 101):\n    if i % 2 == 1:\n        total += i\n\n# 写法二：直接生成奇数\ntotal = 0\nfor i in range(1, 101, 2):\n    total += i\n\n# 写法三：用 sum 一行搞定\ntotal = sum(range(1, 101, 2))\n```\n**先写清楚的那一种，再考虑简写**。三种写法都写一遍，对 `range` 的理解会深一层。\n\n### 常用统计模板\n```python\nnumbers = [3, 8, 12, 5, 20, 7]\ncount = 0      # 计数\ntotal = 0      # 累加\nmax_n = numbers[0]   # 最大值（先假设第一个最大）\n\nfor n in numbers:\n    total += n\n    if n > max_n:\n        max_n = n\n    if n % 2 == 0:\n        count += 1\n\nprint(f\"总和 {total}，最大 {max_n}，偶数 {count} 个，平均 {total / len(numbers):.1f}\")\n```\n**这段模板请务必自己敲一遍**，第 4 周做项目时统计菜单、算总分都用它。\n\n### 累积乘法（阶乘）\n```python\nresult = 1               # 注意：乘法要从 1 开始，不能从 0\nfor i in range(1, 6):\n    result *= i\nprint(result)            # 120 = 5!\n```\n**累加从 0 开始，累乘从 1 开始** —— 从 0 开始乘，结果永远是 0。\n\n> 动手：算 1 到 100 里所有能被 3 整除的数的和（答案 1683）。\n",
+ "w3d6": "\n### 今天做出第一个\"完整\"的程序\n完整 = 真的随机 + 能反复猜 + 会反馈 + 猜到就结束。\n\n### 第一步：随机数\n```python\nimport random\n\nanswer = random.randint(1, 100)     # 含 1 和 100\nprint(answer)                        # 调试时先打印出来看看\n```\n`import` 要写在文件最上方。`randint(a, b)` 生成的是**包含 a 和 b** 的整数。\n\n### 第二步：加上循环，反复猜\n```python\nimport random\n\nanswer = random.randint(1, 100)\ncount = 0\n\nwhile True:\n    guess = int(input(\"猜一个 1-100 的数字：\"))\n    count += 1\n\n    if guess > answer:\n        print(\"大了\")\n    elif guess < answer:\n        print(\"小了\")\n    else:\n        print(f\"猜对了！你一共猜了 {count} 次\")\n        break\n```\n结构要看清：**`while True` 提供\"反复\"，`if/elif/else` 提供\"判断\"，`break` 提供\"结束\"** —— 三周学的东西在这里汇合。\n\n### 第三步：让它更友好（今天的加分项）\n```python\nimport random\n\nanswer = random.randint(1, 100)\ncount = 0\nlow, high = 1, 100            # 记录已知范围，给提示\n\nprint(\"我想好了一个 1-100 的数字，你来猜！\")\n\nwhile True:\n    guess = int(input(f\"在 {low}-{high} 之间猜一个：\"))\n    count += 1\n\n    if guess < 1 or guess > 100:\n        print(\"请输入 1 到 100 之间的数\")\n        continue\n    if guess > answer:\n        print(\"大了\")\n        high = min(high, guess - 1)\n    elif guess < answer:\n        print(\"小了\")\n        low = max(low, guess + 1)\n    else:\n        print(f\"猜对了！用了 {count} 次\")\n        break\n```\n小升级里用到了 `continue`（不合法输入不计次数）和 `min/max`（更新已知范围），**能看懂就够，不用背**。\n\n### 调试技巧\n随机数最难调，因为它每次都不一样。**先临时把 `answer` 写成固定的 `42`**，等逻辑跑通了再换回 `random`。\n\n### 测试清单\n- [ ] 猜大、猜小、猜中三种反馈都正确；\n- [ ] 猜到之后程序真的退出（不是继续转）；\n- [ ] 次数统计正确；\n- [ ] 输入 0 或 200 有提示，程序不崩。\n\n> 这就是你第 4 周项目的候选之一。做完把它存成 `guess_number.py`，周日传 GitHub。\n",
+ "w3d7": "\n### 一、今天的主角：九九乘法表\n```python\nfor i in range(1, 10):\n    for j in range(1, 10):\n        print(f\"{j}x{i}={i * j}\", end=\"\t\")\n    print()\n```\n`\\t` 是制表符，用来对齐列。\n\n### 进阶：下三角（真正的九九乘法表）\n```python\nfor i in range(1, 10):\n    for j in range(1, i + 1):        # 关键：内层只到 i\n        print(f\"{j}x{i}={i * j}\", end=\"\t\")\n    print()\n```\n输出：\n```\n1x1=1\n1x2=2   2x2=4\n1x3=3   2x3=6   3x3=9\n...\n```\n**内层范围随外层变化**，这是嵌套循环最实用的技巧，和周三的三角形是同一个思路。\n\n### 对齐不好看怎么办\n```python\nprint(f\"{j}x{i}={i*j:2d}\", end=\"  \")    # :2d 表示占 2 个字符宽，右对齐\n```\n格式说明里 `2d` 的 2 是宽度、d 是整数。数字不齐时用它。\n\n### 二、循环复习三连\n1. 用 while 和 for 各写一遍 1 到 100 的和；\n2. 打印 1 到 50 中所有能被 7 整除的数；\n3. 求 1 到 10 的阶乘（120），再用循环打印 1! 到 5! 的每一行。\n\n### 三、笔记 + 上传\n```\n## D15-D21 循环\n- 学会了：while 三件套；range 含头不含尾；break 与 continue 的区别\n- 卡住过：忘写 i += 1 导致死循环，用 Ctrl+C 停下来的\n- 心得：嵌套循环里内外层变量名要区分开\n```\n`git add .` → `git commit -m \"第3周：循环结构\"` → `git push`\n\n### 下周一预告\n第 4 周先做三轮复习（变量/条件/循环各 5 道小题），然后**自己设计并实现一个小项目**。\n周末那两天要交的是「完整小项目 + README」，所以这周日的任务就是把前三周的代码整理干净。\n",
+ "w4d1": "\n### 今天的规则：关掉教程，自己写\n复习日不看新知识，**只看题目 → 自己写 → 卡住了再查**。5 道题，每题限时 5 分钟。\n\n### 五道小题\n1. 定义 5 个不同类型的变量（`int` / `float` / `str` / `bool` / `list`），全部打印出来；\n2. 输入两个数字，输出和、差、积、商（商保留 2 位小数）；\n3. 输入姓名和年龄，输出 `我叫小明，今年20岁，明年21岁`；\n4. 用 `type()` 打印第 1 题每个变量的类型；\n5. 输入一个字符串，输出长度、第一个字符、最后一个字符。\n\n### 关键知识点回顾\n| 内容 | 要点 |\n| --- | --- |\n| 变量 | 名字要能看懂；`=` 是赋值 |\n| 类型转换 | `int()` `float()` `str()`；`input()` 永远是字符串 |\n| f-string | 前面必须有 `f`；`{值:.2f}` 保留两位小数 |\n| 字符串 | 索引从 0 开始，`s[-1]` 是最后一个 |\n| 查看类型 | `type(x)` |\n\n### 参考答案（**先自己写完再看**）\n```python\nnum = 10\nprice = 9.9\nname = \"ZERO\"\nis_student = True\nscores = [90, 85, 77]\nprint(num, price, name, is_student, scores)\n\na = float(input(\"第一个数：\"))\nb = float(input(\"第二个数：\"))\nprint(f\"和={a + b} 差={a - b} 积={a * b} 商={a / b:.2f}\")\n\nname = input(\"姓名：\")\nage = int(input(\"年龄：\"))\nprint(f\"我叫{name}，今年{age}岁，明年{age + 1}岁\")\n\nprint(type(num), type(price), type(name), type(is_student), type(scores))\n\ns = input(\"输入一段文字：\")\nprint(f\"长度 {len(s)}，首字符 {s[0]}，末字符 {s[-1]}\")\n```\n\n### 三个高频错点\n- `\"20\" + 1` → `TypeError`，字符串和数字不能直接相加；\n- `print(\"{age} 岁\")` → 忘了 `f`，原样输出大括号；\n- `len(10)` → 数字没有长度，会报 `TypeError`。\n\n> 做不出来不是记忆力问题，而是**手练得不够**。哪一题卡住，就回去把对应那天的模板重敲一遍。\n",
+ "w4d2": "\n### 五道条件判断题\n1. 输入一个数，判断正数 / 负数 / 零（用 elif）；\n2. 输入年份，判断闰年（能被 4 整除不能被 100 整除，或能被 400 整除）；\n3. 输入成绩，输出 A/B/C/D/E 等级，并校验 0-100 范围；\n4. 输入用户名和密码，用 and 组合条件判断登录是否成功；\n5. 输入三个数，找出最大的那个（用 if/elif/else 或 and 组合）。\n\n### 关键知识点回顾\n| 内容 | 要点 |\n| --- | --- |\n| 结构 | `if` → `elif`（多个）→ `else`（0 或 1 个） |\n| 顺序 | **从上往下，命中第一个就结束**，顺序决定结果 |\n| 缩进 | 决定代码块归属，统一 4 个空格 |\n| 组合 | `and` `or` `not`，复合条件要加括号 |\n| 比较 | `==` 才是等于；范围判断可用 `60 <= x < 90` |\n\n### 参考答案要点\n```python\n# 第 1 题\nn = float(input(\"输入一个数：\"))\nif n > 0:\n    print(\"正数\")\nelif n < 0:\n    print(\"负数\")\nelse:\n    print(\"零\")\n\n# 第 2 题\nyear = int(input(\"年份：\"))\nif (year % 4 == 0 and year % 100 != 0) or year % 400 == 0:\n    print(\"闰年\")\nelse:\n    print(\"平年\")\n\n# 第 5 题\na, b, c = 3, 8, 5\nif a >= b and a >= c:\n    print(a)\nelif b >= a and b >= c:\n    print(b)\nelse:\n    print(c)\n```\n\n### 最容易错的地方\n- `elif` 顺序写反（比如把 `>= 60` 放在 `>= 90` 前面）；\n- 该用 `elif` 的地方用了独立的 `if`，导致打印多个结果；\n- `and` 和 `or` 混用不加括号。\n\n> **边界值测试法**：写完条件判断，一定要试 0、刚好等于边界、刚好差 1 的数（比如 59/60/61）。\n",
+ "w4d3": "\n### 五道循环题\n1. 用 while 求 1 到 100 的和（5050）；\n2. 用 for 打印列表里每个元素和它的序号；\n3. 打印 1 到 50 中所有能被 7 整除的数；\n4. 打印一个 5 行的三角形星星（嵌套循环）；\n5. 用循环判断一个数是不是质数（只能被 1 和自身整除）。\n\n### 关键知识点回顾\n| 内容 | 要点 |\n| --- | --- |\n| while | 起点、条件、变化量，**变化量忘了 = 死循环** |\n| for / range | 含头不含尾：`range(1, 5)` 是 1-4 |\n| break | 立即结束整个循环 |\n| continue | 跳过本轮，进入下一轮 |\n| 嵌套 | 外层管行、内层管列；变量名要区分 |\n\n### 参考答案要点\n```python\n# 第 2 题\nfruits = [\"苹果\", \"香蕉\", \"橙子\"]\nfor i, fruit in enumerate(fruits, start=1):\n    print(f\"{i}. {fruit}\")\n\n# 第 5 题：质数判断\nn = int(input(\"输入一个大于 1 的整数：\"))\nis_prime = True\nfor i in range(2, n):\n    if n % i == 0:\n        is_prime = False\n        break                # 找到一个因子就够，不用再算\nif n <= 1:\n    print(\"不是质数\")\nelif is_prime:\n    print(\"是质数\")\nelse:\n    print(\"不是质数\")\n```\n第 5 题用到了**\"标志变量\"**（`is_prime`）和 **break 提前结束** —— 这是很实用的组合套路。\n\n### 三个高频错点\n- `while` 里忘了改变化量 → 死循环，`Ctrl+C` 停；\n- 累乘从 0 开始 → 结果永远是 0（应该从 1 开始）；\n- `range` 少算一个数 → 想包含 10 就要写 `range(1, 11)`。\n\n> 循环是三周里最容易\"看着会、写着错\"的部分。**五题全对再进入项目阶段**，否则项目会写得很痛苦。\n",
+ "w4d4": "\n### 今天不写代码，只做决策\n选一个项目，**把功能清单写在纸上/文件里**。项目做不完的最大原因是\"想做的太多\"。\n\n### 三个候选项目对比\n| 项目 | 难度 | 需要的知识 | 建议 |\n| --- | --- | --- | --- |\n| 猜数字游戏 | ★ | 循环 + 条件 + random | 已经写过，适合想快速收尾 |\n| 简易计算器 | ★★ | 函数未学也能做，用 if 分支 + 循环菜单 | **推荐**，功能边界清晰 |\n| 单位换算器 | ★★ | 条件判断 + 字典（可现学） | 适合喜欢\"有用工具\"的人 |\n\n### 功能清单怎么定\n原则：**核心 3 条 + 加分 2 条，做完核心就算成功**。\n\n以计算器为例：\n```\n核心功能（必做）\n1. 支持 + - * / 四则运算\n2. 循环菜单，算完一次可以继续算，选 0 退出\n3. 除法遇到 0 要给提示，不能让程序崩\n\n加分功能（选做）\n4. 支持连续运算（用上一次的结果继续算）\n5. 记录并显示本次运行算过几次\n```\n\n以猜数字为例：\n```\n核心功能\n1. 随机生成 1-100 的数，反复猜直到猜对\n2. 提示大了/小了，猜对显示次数\n3. 非法输入（字母、超出范围）要有提示\n\n加分功能\n4. 限制最多 7 次，超了显示答案\n5. 猜对后询问\"再来一局吗\"\n```\n\n### 今天要交的东西\n- [ ] 选定一个项目，写下项目名和一句话简介；\n- [ ] 核心功能 3 条（每条都能用一句话验证\"做到了没有\"）；\n- [ ] 加分功能 2 条；\n- [ ] 用伪代码（中文描述）写出主流程，例如：\n```\n显示菜单\n当用户没有选择退出时：\n    读入选择\n    如果是 1 就做加法\n    ...\n    问是否继续\n```\n\n> 判据：**如果你说不清\"怎么算做完了\"，说明需求还没想清楚**。今天宁可多想 10 分钟。\n",
+ "w4d5": "\n### 目标：让程序先\"能跑起来\"\n今天不追求完善，**只要求主流程走通**。丑一点、缺边界处理都没关系。\n\n### 推荐结构：主循环 + 分支\n```python\n# 简易计算器 · 核心版\nprint(\"=\" * 32)\nprint(\"  简易计算器\")\nprint(\"=\" * 32)\n\nwhile True:\n    print(\"\\n1. 加法   2. 减法   3. 乘法   4. 除法   0. 退出\")\n    choice = input(\"请选择：\")\n\n    if choice == \"0\":\n        print(\"再见！\")\n        break\n\n    a = float(input(\"第一个数：\"))\n    b = float(input(\"第二个数：\"))\n\n    if choice == \"1\":\n        print(f\"结果：{a + b:.2f}\")\n    elif choice == \"2\":\n        print(f\"结果：{a - b:.2f}\")\n    elif choice == \"3\":\n        print(f\"结果：{a * b:.2f}\")\n    elif choice == \"4\":\n        print(f\"结果：{a / b:.2f}\")\n    else:\n        print(\"没有这个选项\")\n```\n\n### 写代码的顺序（重要）\n1. **先写最外层骨架**：菜单 + 主循环 + 输入选择，跑一遍确认菜单能循环；\n2. **再填一个分支**（比如只做加法），跑通；\n3. **最后复制出其他分支**，改运算符；\n4. 每一步都运行一次 —— **不要一次写完 60 行再运行**，那样出错很难定位。\n\n### 调试三板斧\n```python\nprint(\">>> 我走到这里了\")        # 1. 打印路标，看执行到哪一步\nprint(choice, type(choice))       # 2. 打印变量值，看是不是你以为的\nprint(len(choice))                # 3. 字符串看不清就打印长度\n```\n\n### 今天可能的坑\n- 只输入一次就算完，不能继续 → 检查 `while True` 是否包住了整个流程；\n- 选择 1 却没反应 → 检查 `choice` 是字符串 `\"1\"` 还是数字 `1`；\n- 除法输入 0 直接崩 → 今天先记下，明天加错误处理。\n\n> 完成标准：**能连续做三次不同的运算，选 0 能正常退出**。做到这一条，今天就算过关。\n",
+ "w4d6": "\n### 目标：从\"能跑\"到\"好用\"\n今天三件事：错误处理、循环菜单优化、注释与结构。\n\n### 一、错误处理：让程序不崩\n```python\ntry:\n    a = float(input(\"第一个数：\"))\nexcept ValueError:\n    print(\"请输入数字！\")\n    continue                     # 回到菜单，重新来\n```\n它的意思是：**尝试执行 try 里的代码，如果出现 ValueError 就跳到 except 里**，而不是让程序崩掉。\n\n常见异常类型：\n\n| 异常 | 什么时候出现 | 怎么处理 |\n| --- | --- | --- |\n| `ValueError` | `int(\"abc\")` 转换失败 | 提示重新输入 |\n| `ZeroDivisionError` | 除以 0 | 判断除数是否为 0 |\n| `KeyError` | 字典里没有这个键 | 用 `in` 先判断 |\n\n除零的两种写法：\n```python\nif b == 0:\n    print(\"除数不能为 0\")\nelse:\n    print(a / b)\n```\n\n### 二、循环菜单：能优雅退出\n```python\nwhile True:\n    ...\n    again = input(\"继续吗？（y/n）：\").strip().lower()\n    if again != \"y\":\n        break\n```\n`.strip()` 去掉空格、`.lower()` 统一小写，这样用户输入 `Y`、` y ` 都能识别 —— **这是很实用的健壮性细节**。\n\n### 三、加注释：让代码能被人读懂\n```python\n# ============================================\n# 简易计算器 v1.0\n# 功能：四则运算、循环菜单、错误处理\n# 作者：ZERO    日期：2026-09\n# ============================================\n\ndef show_menu():\n    \"\"\"打印菜单（第 5 周会讲函数，这里先了解）\"\"\"\n    print(\"1. 加法  2. 减法  3. 乘法  4. 除法  0. 退出\")\n```\n注释写三样：**文件是干什么的、关键步骤为什么这么做、临时没解决的 TODO**。\n```python\n# TODO: 以后加一个\"连续运算\"功能\n```\n\n### 四、今天的验收\n- [ ] 输入字母不崩溃，能重新输入；\n- [ ] 除以 0 有提示；\n- [ ] 选 0 能退出，选 y 能继续；\n- [ ] 文件头有注释说明，关键行有注释；\n- [ ] 整份代码在 VS Code 里格式化过（`Shift+Alt+F`）。\n\n> 别忘了：每加一个功能就运行一次。**程序从 10 行长到 60 行，全靠\"小步验证\"**。\n",
+ "w4d7": "\n### 今天收尾，把项目变成作品\n\n### 一、写 README.md（最重要的交付物）\nREADME 是别人打开你仓库看到的第一份文件。模板：\n\n```markdown\n# 简易计算器\n\n一个用 Python 写的命令行计算器，支持四则运算、循环菜单和错误处理。\n\n## 功能\n- 支持 + - * / 四则运算，结果保留两位小数\n- 算完一次可以继续算，输入 0 退出\n- 输入非数字、除以 0 都有友好提示\n\n## 运行方式\n\\`\\`\\`bash\npython calculator.py\n\\`\\`\\`\n\n## 使用示例\n\\`\\`\\`\n1. 加法   2. 减法   3. 乘法   4. 除法   0. 退出\n请选择：1\n第一个数：12\n第二个数：8\n结果：20.00\n\\`\\`\\`\n\n## 用到的知识\n变量与类型、f-string、if/elif/else、while 循环、try/except\n\n## 我踩过的坑\n- 除法遇到 0 会崩，用 if 判断解决\n- 一开始没写 while True，算一次就退出了\n\n## 后续计划\n- [ ] 支持连续运算\n- [ ] 增加乘方和开方\n```\n\n**「我踩过的坑」这一段最值钱**，它证明你真的动手写过，而不是复制了一个教程。\n\n### 二、整理目录结构\n```\npython-learning/\n├── README.md              # 项目总说明\n├── week1/\n│   ├── hello.py\n│   └── calculator.py\n├── week2/\n├── week3/\n├── week4/\n│   └── final_project/\n│       ├── calculator.py\n│       └── README.md\n└── notes.md               # 四周的学习笔记\n```\n\n### 三、上传 GitHub\n```bat\ngit add .\ngit commit -m \"第4周：完成计算器项目 + README\"\ngit push\n```\n刷新仓库页面，确认文件都在、README 能正常显示（GitHub 会自动渲染 Markdown）。\n\n### 四、复盘：回答这五个问题\n1. 四周里哪一天最卡？现在回头看还难吗？\n2. 哪个知识点当时听懂了、写的时候却写不出来？\n3. 我的代码里重复最多的写法是什么？（提示：以后可以用函数和循环消除）\n4. 如果重做这个项目，哪里会做得不一样？\n5. 下一个四周想学什么？（函数、列表字典、文件读写、爬虫…）\n\n把这五个答案写进 `notes.md`，**这是四周学习里最属于你自己的东西**。\n\n### 五、下一步往哪走\n推荐顺序：**函数 → 列表与字典进阶 → 文件读写 → 异常处理 → 面向对象**。\n你现在已经具备了自学这些的基础：会看报错、会查文档、会跑通一个完整程序。\n\n> 最后一件小事：把仓库链接发给自己或朋友看一眼。**有人看过的代码，才会被你真的当回事。**\n"
+};
+const HOMEWORK = {
+ "w1d1": {
+  "title": "安装 Python 与 VS Code，跑通 Hello World",
+  "reqs": [
+   "装好 Python（安装时勾选 Add python.exe to PATH），终端执行 `python --version` 能输出版本号。",
+   "装好 VS Code 并安装 Microsoft 的 Python 扩展。",
+   "新建 `week1/hello.py`，至少打印 3 行内容（Hello World + 一句自我介绍）。",
+   "用 VS Code 运行它，并让输出出现在终端里。"
+  ],
+  "steps": [
+   "在 VS Code 终端执行 `python check_env.py` 自检（模板可在“填入起始模板”里取）。",
+   "把你写好的 hello.py 代码粘贴到下框。",
+   "把终端里看到的输出也粘到「程序运行输出」，方便日后对照。",
+   "点「已提交」，再到卡片上把当天状态点成已完成。"
+  ],
+  "checks": [
+   "`python --version` 有输出",
+   "hello.py 能在 VS Code 里跑出 3 行",
+   "我知道报错时先看最后一行"
+  ],
+  "attach": "hello.py、check_env.py",
+  "hint": "如果安装卡在 PATH 上，重跑安装包选 Modify 补勾；这一步不解决，后面 27 天都会受影响。"
+ },
+ "w1d2": {
+  "title": "5 个不同类型的变量 + 用 type() 验证",
+  "reqs": [
+   "定义 5 个变量，分别覆盖 `int`、`float`、`str`、`bool` 四种类型（第 5 个可以用另一种写法，比如多个整数）。",
+   "用 `print` 一次打印全部变量。",
+   "对每个变量用 `type()` 打印类型，确认和你以为的一致。",
+   "至少写 3 行注释，说明每个变量代表什么现实含义。"
+  ],
+  "steps": [
+   "写好后运行，确认没有报错。",
+   "粘贴代码与输出。",
+   "在备注里写下：哪一次 `type()` 的结果出乎你的意料。"
+  ],
+  "checks": [
+   "4 种基本类型都出现了",
+   "用到了 `type()`",
+   "变量名是看得懂的英文"
+  ],
+  "attach": "variables.py",
+  "hint": "典型错误：`\"20\" + 1` 会报 TypeError —— 字符串和数字不能直接相加。"
+ },
+ "w1d3": {
+  "title": "问候程序：输入姓名年龄，输出问候语",
+  "reqs": [
+   "用 `input()` 读取姓名（字符串）和年龄（整数，注意转换）。",
+   "用 f-string 输出：`你好，XXX！你今年 N 岁，明年就 N+1 岁了。`",
+   "代码里至少有 3 行注释（含一个多行注释说明程序用途）。",
+   "输入一个字母当年龄，观察并记录报的错。"
+  ],
+  "steps": [
+   "先跑通正常输入，再故意输入错误数据看报错。",
+   "把两种情况都写进「卡住的地方 / 收获」。",
+   "在 VS Code 里把代码保存成 `week1/greeting.py`，按 `Ctrl+S` 确认标签页小圆点消失。",
+   "把整段代码粘贴到下面「① 粘贴你的代码」，再点「已提交」。",
+   "在「② 程序运行输出」「③ 卡住的地方 / 收获」里补上终端输出和你踩的坑，周日复盘统一用。"
+  ],
+  "checks": [
+   "`int(input(...))` 转换写对了",
+   "f-string 前面有 `f`",
+   "我知道 ValueError 是怎么来的"
+  ],
+  "attach": "greeting.py",
+  "hint": "`input()` 拿到的永远是字符串，参与计算必须先 `int()` 或 `float()` 转换。"
+ },
+ "w1d4": {
+  "title": "运算符练习：两个数的加减乘除 + 取余幂",
+  "reqs": [
+   "输入两个数字（建议用 `float`），输出它们的 `+ - * /` 结果。",
+   "额外输出 `//`、`%`、`**` 的结果，并在注释里写清每个符号的含义。",
+   "除法结果用 f-string 保留 2 位小数。",
+   "算一次 `2 + 3 * 4` 和 `(2 + 3) * 4`，在备注里写下你观察到的优先级差异。"
+  ],
+  "steps": [
+   "运行并粘贴输出。",
+   "把两个表达式的结果记录下来。",
+   "在 VS Code 里把代码保存成 `week1/operators.py`，按 `Ctrl+S` 确认标签页小圆点消失。",
+   "把整段代码粘贴到下面「① 粘贴你的代码」，再点「已提交」。",
+   "在「② 程序运行输出」「③ 卡住的地方 / 收获」里补上终端输出和你踩的坑，周日复盘统一用。"
+  ],
+  "checks": [
+   "知道 `/` 和 `//` 的区别",
+   "知道 `%` 取余",
+   "结果保留了 2 位小数"
+  ],
+  "attach": "operators.py",
+  "hint": "`5 / 0` 会报 ZeroDivisionError，以后写计算器必须防这一手。"
+ },
+ "w1d5": {
+  "title": "f-string 与字符串切片练习",
+  "reqs": [
+   "输入一句话，输出：长度、第一个字符、最后一个字符、前 3 个字符、后 3 个字符。",
+   "用 `{值:.2f}` 格式化输出一个小数（比如把 3.14159 输出成 3.14）。",
+   "用 `\"-\" * 20` 打印一条分割线，把输出排版成一个小卡片。",
+   "在注释里写清 `s[0:2]` 为什么是“含头不含尾”。"
+  ],
+  "steps": [
+   "运行并粘贴输出。",
+   "备注里回答：`s[-1]` 和 `s[len(s)-1]` 是不是一回事？",
+   "在 VS Code 里把代码保存成 `week1/strings.py`，按 `Ctrl+S` 确认标签页小圆点消失。",
+   "把整段代码粘贴到下面「① 粘贴你的代码」，再点「已提交」。",
+   "在「② 程序运行输出」「③ 卡住的地方 / 收获」里补上终端输出和你踩的坑，周日复盘统一用。"
+  ],
+  "checks": [
+   "切片写对了",
+   "f-string 格式说明用对了",
+   "知道索引从 0 开始"
+  ],
+  "attach": "strings.py",
+  "hint": "字符串不可变，`s[0] = \"J\"` 会报错，只能用切片或 replace 生成新字符串。"
+ },
+ "w1d6": {
+  "title": "综合练习：个人介绍生成器 + 加减计算器",
+  "reqs": [
+   "脚本一「个人介绍生成器」：用 3 个 `input` 收集信息，用分割线 + f-string 输出一张整齐的名片。",
+   "脚本二「加减计算器」：输入两个数和运算符（+ 或 -），输出算式和结果（保留 2 位小数）。",
+   "两个脚本都保存成 .py 文件（`intro.py`、`calc.py` 之类），都能独立运行。",
+   "每个文件顶部写一行注释说明用途。"
+  ],
+  "steps": [
+   "两个脚本分别运行一次，把代码和输出粘过来（先粘计算器，介绍生成器可以只贴代码）。",
+   "备注里写下：哪一行是照抄的、哪一行是你自己改的（照抄 `if` 不丢人，下周就懂了）。",
+   "在 VS Code 里把代码保存成 `week1/calc.py`，按 `Ctrl+S` 确认标签页小圆点消失。",
+   "把整段代码粘贴到下面「① 粘贴你的代码」，再点「已提交」。",
+   "在「② 程序运行输出」「③ 卡住的地方 / 收获」里补上终端输出和你踩的坑，周日复盘统一用。"
+  ],
+  "checks": [
+   "两个脚本都能跑",
+   "计算器能正确处理 + 和 -",
+   "输出排版整齐（有分割线或对齐）"
+  ],
+  "attach": "intro.py、calc.py",
+  "hint": "今天不用理解 `if/else`，能跑通就行 —— 周一会正式讲它。"
+ },
+ "w1d7": {
+  "title": "复习 + 笔记 + 上传 GitHub",
+  "reqs": [
+   "独立完成 3 道复习题：问候语、圆面积（保留 2 位小数）、从 `\"hello world\"` 里取出 `world`。",
+   "写 `notes.md`：按 D1-D6 各写 2 行（学会了什么 / 卡住过什么）。",
+   "新建 GitHub 仓库并把 `week1` 的内容 push 上去。",
+   "把仓库链接贴在备注里。"
+  ],
+  "steps": [
+   "把复习题代码粘贴到下框。",
+   "notes.md 的内容也贴在备注里（或者只写仓库链接）。",
+   "确认仓库页面能看到 hello.py 等文件后，再点已提交。"
+  ],
+  "checks": [
+   "3 道复习题独立写出",
+   "notes.md 已创建",
+   "GitHub 上能看到 week1 的文件"
+  ],
+  "attach": "notes.md、week1/ 整个目录",
+  "hint": "push 报 rejected 就先 `git pull --rebase` 再 push。"
+ },
+ "w2d1": {
+  "title": "if 单分支：判断是否成年",
+  "reqs": [
+   "用 `int(input(...))` 读入年龄。",
+   "用单分支 `if` 判断是否成年（>=18），成立时打印一句提示。",
+   "在 `if` 块外面再写一行 `print`，证明“不缩进的行无论如何都执行”。",
+   "代码里体现：冒号、4 空格缩进都写对。"
+  ],
+  "steps": [
+   "先输入 20（成年），再输入 15（未成年），两次输出都粘过来。",
+   "备注里写：改动 18 这个阈值后，两次结果怎么变。",
+   "在 VS Code 里把代码保存成 `week2/if_adult.py`，按 `Ctrl+S` 确认标签页小圆点消失。",
+   "把整段代码粘贴到下面「① 粘贴你的代码」，再点「已提交」。",
+   "在「② 程序运行输出」「③ 卡住的地方 / 收获」里补上终端输出和你踩的坑，周日复盘统一用。"
+  ],
+  "checks": [
+   "`if` 行结尾有冒号",
+   "缩进是 4 个空格",
+   "知道不缩进的行总会执行"
+  ],
+  "attach": "if_adult.py",
+  "hint": "常见错误：忘冒号 → SyntaxError；缩进用 Tab 混空格 → IndentationError。"
+ },
+ "w2d2": {
+  "title": "if-else 双分支：判断奇偶数",
+  "reqs": [
+   "读入一个整数。",
+   "用 `%` 判断奇偶，分别打印“偶数”“奇数”。",
+   "额外加一个判断：输出这个数是否大于 100（提示：可以再写一个 if）。",
+   "在注释里解释 `n % 2 == 0` 为什么能判断偶数。"
+  ],
+  "steps": [
+   "分别输入 8、7、0、-3 四个值测试，把结果粘到输出框。",
+   "备注里写：输入 0 的结果符合你的预期吗？",
+   "在 VS Code 里把代码保存成 `week2/if_else_odd.py`，按 `Ctrl+S` 确认标签页小圆点消失。",
+   "把整段代码粘贴到下面「① 粘贴你的代码」，再点「已提交」。",
+   "在「② 程序运行输出」「③ 卡住的地方 / 收获」里补上终端输出和你踩的坑，周日复盘统一用。"
+  ],
+  "checks": [
+   "用 `%` 而不是靠感觉判断",
+   "两个分支都能走到",
+   "边界值 0 和负数也测过"
+  ],
+  "attach": "if_else_odd.py",
+  "hint": "`==` 才是比较，`=` 是赋值；写成 `if n % 2 = 0` 会直接语法错误。"
+ },
+ "w2d3": {
+  "title": "elif 多分支：成绩等级判断",
+  "reqs": [
+   "输入 0-100 的成绩，用 `if/elif/elif/elif/else` 输出 A/B/C/D/E 五个等级。",
+   "先加一层范围校验：不在 0-100 之间时提示“输入不合法”。",
+   "用 f-string 输出，例如 `85 分 -> B 良好`。",
+   "注释说明：为什么后面的 elif 不需要再写 `score < 90`。"
+  ],
+  "steps": [
+   "依次输入 100、90、89、60、59、-5 六个值，把全部输出粘过来。",
+   "备注里写：如果我把 `>= 60` 写在最前面会发生什么。",
+   "在 VS Code 里把代码保存成 `week2/grade.py`，按 `Ctrl+S` 确认标签页小圆点消失。",
+   "把整段代码粘贴到下面「① 粘贴你的代码」，再点「已提交」。",
+   "在「② 程序运行输出」「③ 卡住的地方 / 收获」里补上终端输出和你踩的坑，周日复盘统一用。"
+  ],
+  "checks": [
+   "elif 顺序是从高到低",
+   "越界输入有提示",
+   "边界值 89/90 测试过"
+  ],
+  "attach": "grade.py",
+  "hint": "elif 从上往下命中第一个就结束，所以顺序决定结果 —— 这是本周最重要的一个认知。"
+ },
+ "w2d4": {
+  "title": "比较运算符：三个数比大小",
+  "reqs": [
+   "读入三个数（整数或小数都行）。",
+   "用比较运算符和 and 组合，找出并打印最大的数。",
+   "额外判断并打印这三个数是否全部相等。",
+   "用 `60 <= score < 90` 这种链式比较写一个范围判断并打印结果。"
+  ],
+  "steps": [
+   "测试三组：全部相同、前两个相同、三个各不同。",
+   "把三次输出粘过来。",
+   "在 VS Code 里把代码保存成 `week2/compare.py`，按 `Ctrl+S` 确认标签页小圆点消失。",
+   "把整段代码粘贴到下面「① 粘贴你的代码」，再点「已提交」。",
+   "在「② 程序运行输出」「③ 卡住的地方 / 收获」里补上终端输出和你踩的坑，周日复盘统一用。"
+  ],
+  "checks": [
+   "用到了 `>=` 而不是 `=>`",
+   "链式比较写对",
+   "知道小数不要用 `==` 判断相等"
+  ],
+  "attach": "compare.py",
+  "hint": "浮点数有精度误差：`0.1 + 0.2 == 0.3` 是 False，要比较差值是否足够小。"
+ },
+ "w2d5": {
+  "title": "逻辑运算符：登录条件 + 复合条件",
+  "reqs": [
+   "读入用户名和密码。",
+   "用 `and` 组合判断登录成功；用 `elif` 分别提示“用户名不存在”“密码错误”。",
+   "再写一个复合条件：判断某个数是否是 3 的倍数或 5 的倍数（用 `or`）。",
+   "所有复合条件都加括号。"
+  ],
+  "steps": [
+   "测试：正确账号、错用户名、错密码、空输入，共 4 种情况。",
+   "把输出粘过来，备注里写哪种情况最有意思。",
+   "在 VS Code 里把代码保存成 `week2/login.py`，按 `Ctrl+S` 确认标签页小圆点消失。",
+   "把整段代码粘贴到下面「① 粘贴你的代码」，再点「已提交」。",
+   "在「② 程序运行输出」「③ 卡住的地方 / 收获」里补上终端输出和你踩的坑，周日复盘统一用。"
+  ],
+  "checks": [
+   "用 `and`/`or` 而不是写两层嵌套 if",
+   "复合条件加了括号",
+   "知道 not 怎么用"
+  ],
+  "attach": "login.py",
+  "hint": "`not` 的优先级最高，`and` 次之，`or` 最低；不确定就加括号。"
+ },
+ "w2d6": {
+  "title": "猜数字（条件版）：固定答案 + 大小提示",
+  "reqs": [
+   "把答案写死（比如 42），读入一次猜测。",
+   "用 `if/elif/else` 输出“大了 / 小了 / 猜对了”。",
+   "加一层嵌套：差值在 5 以内提示“很接近了”。",
+   "分别测试大、小、相等、接近四种情况。"
+  ],
+  "steps": [
+   "四种测试的输出都粘过来。",
+   "备注里写：如果答案改成 80，我的判断逻辑需要改哪里。",
+   "在 VS Code 里把代码保存成 `week2/guess_cond.py`，按 `Ctrl+S` 确认标签页小圆点消失。",
+   "把整段代码粘贴到下面「① 粘贴你的代码」，再点「已提交」。",
+   "在「② 程序运行输出」「③ 卡住的地方 / 收获」里补上终端输出和你踩的坑，周日复盘统一用。"
+  ],
+  "checks": [
+   "三种分支都能走到",
+   "有“接近”提示",
+   "用 `==` 做相等判断"
+  ],
+  "attach": "guess_cond.py",
+  "hint": "测完记得把答案改回一个随机感强的数字，下周三会把它换成真随机数。"
+ },
+ "w2d7": {
+  "title": "复习 + 优化成绩等级判断 + 笔记",
+  "reqs": [
+   "独立完成 3 道复习题：正负零判断、闰年判断、BMI 分级。",
+   "把周三的 grade.py 升级成 `grade_v2.py`：加范围校验 + 用 `try/except` 处理非数字输入。",
+   "写本周笔记（D8-D14，含“卡住过什么”）。",
+   "push 到 GitHub 并贴链接。"
+  ],
+  "steps": [
+   "把 grade_v2.py 的代码粘贴过来。",
+   "备注里写本周最大的一个收获和一个还没搞懂的点。",
+   "在 VS Code 里把代码保存成 `week2/grade_v2.py`，按 `Ctrl+S` 确认标签页小圆点消失。",
+   "把整段代码粘贴到下面「① 粘贴你的代码」，再点「已提交」。",
+   "在「② 程序运行输出」「③ 卡住的地方 / 收获」里补上终端输出和你踩的坑，周日复盘统一用。"
+  ],
+  "checks": [
+   "闰年条件写对了（注意括号）",
+   "非数字输入不再崩溃",
+   "已 push"
+  ],
+  "attach": "grade_v2.py、notes.md",
+  "hint": "闰年条件：`(year % 4 == 0 and year % 100 != 0) or year % 400 == 0`，括号别省。"
+ },
+ "w3d1": {
+  "title": "while 循环：1 到 10 累加",
+  "reqs": [
+   "用 while 写 1 到 10 累加，输出 55。",
+   "打印每次累加后的过程值（用 f-string 排版，例如 `加上 3 后 total = 6`）。",
+   "把范围改成 1 到 100，输出 5050。",
+   "故意删掉 `i += 1` 运行一次，用 `Ctrl+C` 停止，并在备注里记录现象。"
+  ],
+  "steps": [
+   "把最终代码和 1-10 的过程输出粘贴过来。",
+   "备注里写：死循环时终端是什么样子。",
+   "在 VS Code 里把代码保存成 `week3/while_sum.py`，按 `Ctrl+S` 确认标签页小圆点消失。",
+   "把整段代码粘贴到下面「① 粘贴你的代码」，再点「已提交」。",
+   "在「② 程序运行输出」「③ 卡住的地方 / 收获」里补上终端输出和你踩的坑，周日复盘统一用。"
+  ],
+  "checks": [
+   "50 行内写出了三件套（起点/条件/变化量）",
+   "累加器定义在循环外",
+   "亲眼见过一次死循环"
+  ],
+  "attach": "while_sum.py",
+  "hint": "累加器写成 `total = i` 而不是 `total += i` 会得到最后一个数，而不是总和。"
+ },
+ "w3d2": {
+  "title": "for 循环与 range：遍历列表",
+  "reqs": [
+   "用 `for + range` 打印 1 到 20 的数。",
+   "定义一个至少 5 个元素的列表，用 for 逐个打印每个元素。",
+   "用 `enumerate` 输出带序号的列表（从 1 开始编号）。",
+   "用 for 改写昨天的 1-100 累加，并注释说明 for 比 while 少写了什么。"
+  ],
+  "steps": [
+   "把列表遍历输出和累加结果粘贴过来。",
+   "在 VS Code 里把代码保存成 `week3/for_range.py`，按 `Ctrl+S` 确认标签页小圆点消失。",
+   "把整段代码粘贴到下面「① 粘贴你的代码」，再点「已提交」。",
+   "在「② 程序运行输出」「③ 卡住的地方 / 收获」里补上终端输出和你踩的坑，周日复盘统一用。"
+  ],
+  "checks": [
+   "知道 `range(1, 5)` 只到 4",
+   "用 for 重写了累加",
+   "enumerate 用对"
+  ],
+  "attach": "for_range.py",
+  "hint": "`range(5, 0, -1)` 能倒着数；`range(1, 11)` 才包含 10。"
+ },
+ "w3d3": {
+  "title": "break 与 continue：跳过偶数",
+  "reqs": [
+   "用循环 + `continue` 打印 1-20 中所有奇数（跳过偶数）。",
+   "用循环 + `break` 打印 1 开始、遇到 15 就停止。",
+   "写一个 `while True` + `break` 的小程序：不断读入内容，输入 q 退出。",
+   "注释里写清 break 和 continue 的区别。"
+  ],
+  "steps": [
+   "三个程序的代码都贴在同一个文件里，运行结果粘过来。",
+   "备注里一句话总结两者区别。",
+   "在 VS Code 里把代码保存成 `week3/skip_even.py`，按 `Ctrl+S` 确认标签页小圆点消失。",
+   "把整段代码粘贴到下面「① 粘贴你的代码」，再点「已提交」。",
+   "在「② 程序运行输出」「③ 卡住的地方 / 收获」里补上终端输出和你踩的坑，周日复盘统一用。"
+  ],
+  "checks": [
+   "两个关键字都正确使用",
+   "知道它们只影响当前这层循环",
+   "q 能正常退出"
+  ],
+  "attach": "skip_even.py",
+  "hint": "`while True` 不是错误写法，配上 break 是最常用的输入循环套路。"
+ },
+ "w3d4": {
+  "title": "嵌套循环：打印三角形星星",
+  "reqs": [
+   "打印 3x3 的正方形星星（用嵌套循环 + `end=\"\"`）。",
+   "打印 5 行递增的三角形。",
+   "打印 5 行递减的倒三角形。",
+   "注释说明：内层循环为什么用 `range(i)` 而不是固定值。"
+  ],
+  "steps": [
+   "三种图案的输出都粘过来（星星要对齐）。",
+   "在 VS Code 里把代码保存成 `week3/star_triangle.py`，按 `Ctrl+S` 确认标签页小圆点消失。",
+   "把整段代码粘贴到下面「① 粘贴你的代码」，再点「已提交」。",
+   "在「② 程序运行输出」「③ 卡住的地方 / 收获」里补上终端输出和你踩的坑，周日复盘统一用。"
+  ],
+  "checks": [
+   "用到了 `print(..., end=\"\")`",
+   "每行结束有 `print()` 换行",
+   "内外层变量名不同"
+  ],
+  "attach": "star_triangle.py",
+  "hint": "忘了 `end=\"\"` 会让每个星占一行；忘了 `print()` 会全部挤在一行。"
+ },
+ "w3d5": {
+  "title": "循环 + 条件综合：1-100 奇数和",
+  "reqs": [
+   "用循环（for 或 while）配合条件算出 1 到 100 内奇数的和，结果 2500。",
+   "再算偶数的和，并验证 奇数和 + 偶数和 = 5050。",
+   "用同一个循环统计：偶数个数、最大值（提示：先给 max 赋初值）。",
+   "把这段统计代码写清注释。"
+  ],
+  "steps": [
+   "把代码和输出的三个数字粘贴过来。",
+   "备注里写：为什么偶数的和比奇数的大。",
+   "在 VS Code 里把代码保存成 `week3/odd_sum.py`，按 `Ctrl+S` 确认标签页小圆点消失。",
+   "把整段代码粘贴到下面「① 粘贴你的代码」，再点「已提交」。",
+   "在「② 程序运行输出」「③ 卡住的地方 / 收获」里补上终端输出和你踩的坑，周日复盘统一用。"
+  ],
+  "checks": [
+   "奇数和 = 2500",
+   "会写累加器与计数器",
+   "知道乘法要从 1 开始"
+  ],
+  "attach": "odd_sum.py",
+  "hint": "这段“循环 + 条件 + 统计变量”的模板，第 4 周做项目统计时会直接复用。"
+ },
+ "w3d6": {
+  "title": "完整猜数字游戏：随机数 + 循环 + 条件",
+  "reqs": [
+   "用 `import random` 和 `random.randint(1, 100)` 生成随机答案。",
+   "用 `while True` 循环，反复读入猜测，给出“大了/小了/猜对了”。",
+   "记录并输出猜测次数，猜对后用 `break` 结束。",
+   "加输入校验：小于 1 或大于 100 的输入要提示，并且不计入次数。"
+  ],
+  "steps": [
+   "把完整代码粘贴过来。",
+   "连续玩两句（比如一局猜中，一局输入 0 触发校验），把两次的终端输出都贴到「程序运行输出」。",
+   "备注里写：我是怎么调试随机数的（提示：临时写死答案）。"
+  ],
+  "checks": [
+   "游戏能反复猜直到猜对",
+   "猜对后程序真的退出",
+   "非法输入不会崩溃",
+   "次数统计正确"
+  ],
+  "attach": "guess_number.py",
+  "hint": "随机数难调试，先把答案写死成 42 跑通逻辑，再换回 random。"
+ },
+ "w3d7": {
+  "title": "九九乘法表 + 循环复习 + 笔记",
+  "reqs": [
+   "用嵌套循环打印下三角九九乘法表（内层 `range(1, i + 1)`）。",
+   "用 `:2d` 让结果对齐。",
+   "复习三题：while 和 for 各写一遍 1-100 的和、打印 1-50 中 7 的倍数、输出 1! 到 5!。",
+   "写本周笔记并 push，贴仓库链接。"
+  ],
+  "steps": [
+   "把乘法表输出整段粘过来。",
+   "复习题代码可以只贴关键那一段。",
+   "在 VS Code 里把代码保存成 `week3/multiplication.py`，按 `Ctrl+S` 确认标签页小圆点消失。",
+   "把整段代码粘贴到下面「① 粘贴你的代码」，再点「已提交」。",
+   "在「② 程序运行输出」「③ 卡住的地方 / 收获」里补上终端输出和你踩的坑，周日复盘统一用。"
+  ],
+  "checks": [
+   "乘法表是下三角",
+   "输出对齐",
+   "已 push，仓库能看到 week3"
+  ],
+  "attach": "multiplication.py、notes.md",
+  "hint": "`\\t` 制表符能快速对齐；数字长短不一时改用 `:2d` 指定宽度。"
+ },
+ "w4d1": {
+  "title": "复习变量与数据类型：5 道小题",
+  "reqs": [
+   "定义 5 个不同类型的变量并全部打印。",
+   "输入两个数字，输出和差积商（商保留 2 位小数）。",
+   "输入姓名和年龄，输出“我叫X，今年N岁，明年N+1岁”。",
+   "用 `type()` 打印上面每个变量的类型。",
+   "输入一个字符串，输出长度、首字符、末字符。"
+  ],
+  "steps": [
+   "5 道题写在一个文件里（每题间用 `# =====` 分隔），跑通后整段粘贴过来。",
+   "备注里写：哪一题你一开始写错了、错在哪。",
+   "在 VS Code 里把代码保存成 `week4/review_types.py`，按 `Ctrl+S` 确认标签页小圆点消失。",
+   "把整段代码粘贴到下面「① 粘贴你的代码」，再点「已提交」。",
+   "在「② 程序运行输出」「③ 卡住的地方 / 收获」里补上终端输出和你踩的坑，周日复盘统一用。"
+  ],
+  "checks": [
+   "5 题全部独立完成",
+   "商保留了 2 位小数",
+   "知道 len() 不能用于数字"
+  ],
+  "attach": "review_types.py",
+  "hint": "复习日的标准是“关掉教程能自己写出来”，写不出就回去重敲那天的模板。"
+ },
+ "w4d2": {
+  "title": "复习条件判断：5 道小题",
+  "reqs": [
+   "判断正数/负数/零。",
+   "判断闰年。",
+   "成绩等级 + 0-100 范围校验。",
+   "用户名密码登录判断（用 and）。",
+   "三个数找最大。"
+  ],
+  "steps": [
+   "5 题写一个文件，跑通后粘贴。",
+   "备注里记录：你用什么数据测试的边界值。",
+   "在 VS Code 里把代码保存成 `week4/review_if.py`，按 `Ctrl+S` 确认标签页小圆点消失。",
+   "把整段代码粘贴到下面「① 粘贴你的代码」，再点「已提交」。",
+   "在「② 程序运行输出」「③ 卡住的地方 / 收获」里补上终端输出和你踩的坑，周日复盘统一用。"
+  ],
+  "checks": [
+   "5 题全对",
+   "闰年条件带括号",
+   "边界值（0、59、60、100）测过"
+  ],
+  "attach": "review_if.py",
+  "hint": "条件判断最容易错在顺序和边界，写完必须用边界值跑一遍。"
+ },
+ "w4d3": {
+  "title": "复习循环：5 道小题",
+  "reqs": [
+   "while 求 1-100 的和（5050）。",
+   "for + enumerate 输出列表元素与序号。",
+   "打印 1-50 中能被 7 整除的数。",
+   "嵌套循环打印 5 行三角形。",
+   "判断一个数是不是质数（用标志变量 + break）。"
+  ],
+  "steps": [
+   "5 题写一个文件，跑通后粘贴。",
+   "备注里写：质数那题你是怎么想到用标志变量的。",
+   "在 VS Code 里把代码保存成 `week4/review_loop.py`，按 `Ctrl+S` 确认标签页小圆点消失。",
+   "把整段代码粘贴到下面「① 粘贴你的代码」，再点「已提交」。",
+   "在「② 程序运行输出」「③ 卡住的地方 / 收获」里补上终端输出和你踩的坑，周日复盘统一用。"
+  ],
+  "checks": [
+   "5 题全对",
+   "没有死循环",
+   "质数判断正确（含 1 和 2 的情况）"
+  ],
+  "attach": "review_loop.py",
+  "hint": "质数判断里 `n <= 1` 要先排除，否则 1 会被判成质数。"
+ },
+ "w4d4": {
+  "title": "项目设计：选项目 + 写功能清单",
+  "reqs": [
+   "从猜数字 / 计算器 / 单位换算中选定一个，写下项目名和一句话简介。",
+   "写出 3 条核心功能（每条都能用一句话验证是否做到）。",
+   "写出 2 条加分功能。",
+   "用中文伪代码写出主流程（大概 10 行以内）。"
+  ],
+  "steps": [
+   "把功能清单和伪代码写到下面（这一天没有 .py 代码，写文字即可）。",
+   "备注里写：你为什么选这个项目。",
+   "在 VS Code 里把代码保存成 `week4/project_plan.md`，按 `Ctrl+S` 确认标签页小圆点消失。",
+   "把整段代码粘贴到下面「① 粘贴你的代码」，再点「已提交」。",
+   "在「② 程序运行输出」「③ 卡住的地方 / 收获」里补上终端输出和你踩的坑，周日复盘统一用。"
+  ],
+  "checks": [
+   "核心功能恰好 3 条（不多不少）",
+   "每条功能都能验证",
+   "主流程写清了循环和退出条件"
+  ],
+  "attach": "project_plan.md",
+  "hint": "项目做不完的头号原因是功能定太多。核心 3 条做完就算成功，加分项是奖励不是义务。"
+ },
+ "w4d5": {
+  "title": "项目编码：让核心功能跑起来",
+  "reqs": [
+   "搭出程序骨架：菜单 + 主循环 + 读取选择。",
+   "实现 3 条核心功能（先跑通，不追求完美）。",
+   "至少运行 3 次不同操作，确认能连续使用。",
+   "代码里保留你的调试 `print`（可以先注释掉）。"
+  ],
+  "steps": [
+   "把目前能跑的版本整段粘贴过来（哪怕不完善）。",
+   "输出框粘一次完整交互过程。",
+   "备注里写：今天卡在哪一步、怎么解决的。"
+  ],
+  "checks": [
+   "菜单能循环",
+   "3 条核心功能都能用",
+   "选退出能正常结束"
+  ],
+  "attach": "project_core.py",
+  "hint": "不要一次写完 60 行再运行。先骨架 → 跑通 → 填一个分支 → 跑通 → 再复制其他分支。"
+ },
+ "w4d6": {
+  "title": "项目完善：错误处理 + 循环菜单 + 注释",
+  "reqs": [
+   "用 `try/except ValueError` 处理非数字输入，程序不能崩。",
+   "处理除零（或项目里的其他边界情况）。",
+   "优化循环菜单：能选择继续或退出（用 y/n 或 0）。",
+   "补注释：文件头说明 + 关键步骤注释 + 一条 TODO。"
+  ],
+  "steps": [
+   "把完善后的完整代码粘贴过来。",
+   "输出框粘：一次正常流程 + 一次错误输入被友好拦截的过程。",
+   "备注里写：加错误处理前后，体验上最大的差别。"
+  ],
+  "checks": [
+   "输入字母不崩溃",
+   "除零/边界有提示",
+   "退出路径清晰",
+   "有注释和 TODO"
+  ],
+  "attach": "project_final.py",
+  "hint": "`except` 要写具体异常名（ValueError、ZeroDivisionError），不要直接写裸 `except:`。"
+ },
+ "w4d7": {
+  "title": "整理复盘：README + 上传 + 复盘",
+  "reqs": [
+   "写 `README.md`：项目简介、功能列表、运行方式、使用示例、用到的知识、我踩过的坑、后续计划。",
+   "整理目录结构（week1-week4 + final_project + notes.md）。",
+   "push 到 GitHub，确认仓库页面能正常显示 README。",
+   "复盘回答 5 个问题（写进 notes.md）。"
+  ],
+  "steps": [
+   "把 README.md 的完整内容粘贴到「代码」框（它就是这一天的交付物）。",
+   "把仓库链接写在备注里。",
+   "输出框可以粘 `git push` 成功时的终端信息。"
+  ],
+  "checks": [
+   "README 七个小节齐全",
+   "仓库页面能正常渲染 README",
+   "笔记里有复盘 5 问的答案",
+   "项目代码和 README 在同一个目录"
+  ],
+  "attach": "README.md、final_project/ 目录",
+  "hint": "「我踩过的坑」这一段最有价值 —— 它证明这段代码是你自己写的。"
+ }
+};
+const TEMPLATES = {
+ "w1d1": "# hello.py —— 第 1 周周一 · 环境搭建\n# 运行：在 VS Code 里按 Ctrl + 反引号 打开终端，输入 python hello.py\n# 或者点右上角的 ▶ 按钮\n\nprint(\"Hello World\")\nprint(\"我是 ZERO，今天开始学 Python\")\nprint(\"2026 年，我要学会写程序\")\n",
+ "w1d2": "# variables.py —— 第 1 周周二 · 变量与数据类型\n\n# 四个基本类型各来一个\nage = 20              # int 整数：年龄\nheight = 1.75         # float 小数：身高\nname = \"ZERO\"         # str 字符串：名字\nis_student = True     # bool 布尔：是不是学生\n\n# 一次全部打印\nprint(age, height, name, is_student)\n\n# 用 type() 看清楚它们到底是什么类型\nprint(type(age))\nprint(type(height))\nprint(type(name))\nprint(type(is_student))\n\n# 自己加：再来一个别的类型的变量，并打印它的类型\n",
+ "w1d3": "# greeting.py —— 第 1 周周三 · 输入输出与注释\n\n\"\"\"\n问候程序\n问用户的姓名和年龄，输出一句问候，并算出明年的年龄\n\"\"\"\n\nname = input(\"请输入你的名字：\")\nage = int(input(\"请输入你的年龄：\"))     # input 拿到的是字符串，要转成整数\n\nprint(f\"你好，{name}！\")\nprint(f\"你今年{age}岁，明年就{age + 1}岁了。\")\n\n# 自己加：问一下用户所在城市，把城市也输出出来\n",
+ "w1d4": "# operators.py —— 第 1 周周四 · 基本运算符\n\na = float(input(\"第一个数：\"))\nb = float(input(\"第二个数：\"))\n\nprint(f\"{a} + {b} = {a + b}\")\nprint(f\"{a} - {b} = {a - b}\")\nprint(f\"{a} * {b} = {a * b}\")\nprint(f\"{a} / {b} = {a / b:.2f}\")     # 保留 2 位小数\nprint(f\"{a} // {b} = {a // b}\")       # 整除：只要整数部分\nprint(f\"{a} % {b} = {a % b}\")         # 取余：余数\nprint(f\"{a} ** {b} = {a ** b}\")       # 幂：a 的 b 次方\n\n# 看看优先级\nprint(2 + 3 * 4)\nprint((2 + 3) * 4)\n\n# 自己加：算一下 10 除以 3 的商和余数，想想 // 和 % 各自在说什么\n",
+ "w1d5": "# strings.py —— 第 1 周周五 · 字符串基础\n\ns = input(\"输入一句话：\")\n\nprint(f\"长度：{len(s)}\")\nprint(f\"第一个字符：{s[0]}\")\nprint(f\"最后一个字符：{s[-1]}\")\nprint(f\"前 3 个字符：{s[:3]}\")\nprint(f\"后 3 个字符：{s[-3:]}\")\n\n# f-string 的格式说明：保留 2 位小数\npi = 3.14159\nprint(f\"圆周率约等于 {pi:.2f}\")\n\n# 用乘法画一条分割线\nprint(\"-\" * 20)\n\n# 自己加：把这句话变成全大写打印出来（提示：s.upper()）\n",
+ "w1d6": "# calc.py —— 第 1 周周六 · 加减计算器\n# 说明：今天用到的 if/else 是下周的内容，照抄能跑就行\n\nline = \"-\" * 30\nprint(line)\nprint(\"简易计算器（只做加减）\")\nprint(line)\n\na = float(input(\"第一个数：\"))\nop = input(\"运算符（+ 或 -）：\")\nb = float(input(\"第二个数：\"))\n\nif op == \"+\":\n    result = a + b\nelse:\n    result = a - b\n\nprint(f\"{a} {op} {b} = {result:.2f}\")\nprint(line)\n\n# 自己加：再写一个个人介绍生成器（intro.py），用 input 收集 3 个信息\n# 然后用 f-string 和分割线排版成一张名片\n",
+ "w1d7": "# review_notes.py —— 第 1 周周日 · 复习\n\n# 复习题 1：输入姓名，输出 你好，XXX！\nname = input(\"姓名：\")\nprint(f\"你好，{name}！\")\n\n# 复习题 2：输入半径，输出圆面积（保留 2 位小数）\nr = float(input(\"半径：\"))\nprint(f\"圆面积 = {3.14 * r ** 2:.2f}\")\n\n# 复习题 3：从 \"hello world\" 里取出 world\ns = \"hello world\"\nprint(s[6:])\n\n# 今天还要做：写 notes.md、把 week1 传到 GitHub\n",
+ "w2d1": "# if_adult.py —— 第 2 周周一 · if 基本语法\n\nage = int(input(\"请输入你的年龄：\"))\n\nif age >= 18:                    # 冒号不能少\n    print(\"你已成年\")             # 缩进 4 个空格，属于 if\n\nprint(\"判断结束\")                 # 不缩进：无论条件成立与否都执行\n\n# 自己改：\n# 1. 把 18 改成 22，输入 20 看看会怎样\n# 2. 把 int() 去掉，输入 18 看看报什么错\n# 3. 把最后一行也缩进到 if 里面，比较两次运行的区别\n",
+ "w2d2": "# if_else_odd.py —— 第 2 周周二 · if-else\n\nn = int(input(\"请输入一个整数：\"))\n\nif n % 2 == 0:          # 余数为 0 就是偶数\n    print(\"这是偶数\")\nelse:                   # 否则\n    print(\"这是奇数\")\n\n# 自己加：再判断一下这个数是否大于 100\n",
+ "w2d3": "# grade.py —— 第 2 周周三 · elif 多分支\n\nscore = int(input(\"请输入成绩（0-100）：\"))\n\nif score < 0 or score > 100:\n    print(\"输入不合法，分数应该在 0 到 100 之间\")\nelif score >= 90:        # 走到这里说明 score < 100 且 >= 90\n    grade = \"A 优秀\"\nelif score >= 80:\n    grade = \"B 良好\"\nelif score >= 70:\n    grade = \"C 中等\"\nelif score >= 60:\n    grade = \"D 及格\"\nelse:\n    grade = \"E 需要努力\"\n\nif 0 <= score <= 100:\n    print(f\"{score} 分 -> {grade}\")\n\n# 自己改：把 >= 60 那一段挪到最前面，输入 95 看看结果变成什么\n",
+ "w2d4": "# compare.py —— 第 2 周周四 · 比较运算符\n\na = float(input(\"第一个数：\"))\nb = float(input(\"第二个数：\"))\nc = float(input(\"第三个数：\"))\n\n# 用 and 组合条件找出最大值\nif a >= b and a >= c:\n    print(f\"最大的是 {a}\")\nelif b >= a and b >= c:\n    print(f\"最大的是 {b}\")\nelse:\n    print(f\"最大的是 {c}\")\n\n# 三个数是否全部相等\nif a == b and b == c:\n    print(\"三个数完全相同\")\n\n# 链式比较（Python 特色）\nscore = 85\nprint(60 <= score < 90)\n\n# 小数比较的坑\nprint(0.1 + 0.2 == 0.3)              # False\nprint(abs((0.1 + 0.2) - 0.3) < 1e-9)  # True\n",
+ "w2d5": "# login.py —— 第 2 周周五 · 逻辑运算符\n\nusername = input(\"用户名：\")\npassword = input(\"密码：\")\n\nif username == \"admin\" and password == \"123456\":\n    print(\"登录成功\")\nelif username != \"admin\":\n    print(\"用户名不存在\")\nelse:\n    print(\"密码错误\")\n\n# or：判断是否满足任一条件\nn = int(input(\"输入一个整数：\"))\nif n % 3 == 0 or n % 5 == 0:\n    print(f\"{n} 是 3 或 5 的倍数\")\n\n# not：取反\nhas_ticket = False\nif not has_ticket:\n    print(\"请先买票\")\n",
+ "w2d6": "# guess_cond.py —— 第 2 周周六 · 猜数字（条件版）\n\nanswer = 42      # 先写死答案，专注练条件判断\nguess = int(input(\"猜一个数字（1-100）：\"))\n\nif guess > answer:\n    if guess - answer <= 5:\n        print(\"大了一点点，很接近了\")\n    else:\n        print(\"大了\")\nelif guess < answer:\n    if answer - guess <= 5:\n        print(\"小了一点点，很接近了\")\n    else:\n        print(\"小了\")\nelse:\n    print(\"猜对了！\")\n\n# 自己改：把 answer 改成 80，再依次输入 79、81、80 测试三种分支\n",
+ "w2d7": "# grade_v2.py —— 第 2 周周日 · 成绩等级判断（完善版）\n\ntry:\n    score = int(input(\"请输入成绩（0-100）：\"))\nexcept ValueError:\n    print(\"请输入数字！\")\nelse:\n    if score < 0 or score > 100:\n        print(\"分数要在 0 到 100 之间\")\n    elif score >= 90:\n        print(f\"{score} 分 -> A 优秀\")\n    elif score >= 80:\n        print(f\"{score} 分 -> B 良好\")\n    elif score >= 70:\n        print(f\"{score} 分 -> C 中等\")\n    elif score >= 60:\n        print(f\"{score} 分 -> D 及格\")\n    else:\n        print(f\"{score} 分 -> E 需要努力\")\n\n# 本周复习题：\n# 1. 判断正数 / 负数 / 零\n# 2. 判断闰年：(year % 4 == 0 and year % 100 != 0) or year % 400 == 0\n# 3. 输入身高体重算 BMI，用 elif 输出 偏瘦 / 正常 / 偏胖\n",
+ "w3d1": "# while_sum.py —— 第 3 周周一 · while 循环\n\n# 先看过程\ni = 1\nwhile i <= 10:\n    print(f\"现在是第 {i} 次循环\")\n    i += 1              # 少了这一行就是死循环，卡住按 Ctrl + C\nprint(\"循环结束\")\n\n# 再求和\ni = 1          # ① 起点\ntotal = 0      # 累加器，必须定义在循环外面\nwhile i <= 10:  # ② 条件\n    total += i  # ③ 循环体\n    i += 1      # ④ 变化量\nprint(f\"1 到 10 累加 = {total}\")     # 55\n\n# 自己改：把范围改成 1 到 100（答案 5050）\n",
+ "w3d2": "# for_range.py —— 第 3 周周二 · for 循环与 range\n\n# range 的三种用法\nfor i in range(5):          # 0 1 2 3 4\n    print(i, end=\" \")\nprint()\n\nfor i in range(1, 6):       # 1 2 3 4 5（含头不含尾）\n    print(i, end=\" \")\nprint()\n\nfor i in range(1, 10, 2):   # 1 3 5 7 9，步长 2\n    print(i, end=\" \")\nprint()\n\n# 遍历列表\nfruits = [\"苹果\", \"香蕉\", \"橙子\", \"西瓜\", \"葡萄\"]\nfor fruit in fruits:\n    print(f\"我喜欢吃{fruit}\")\n\n# 带序号遍历\nfor index, fruit in enumerate(fruits, start=1):\n    print(f\"{index}. {fruit}\")\n\n# 用 for 重写累加：比 while 少了起点和变化量两行\ntotal = 0\nfor i in range(1, 11):\n    total += i\nprint(f\"1 到 10 累加 = {total}\")\n",
+ "w3d3": "# skip_even.py —— 第 3 周周三 · break 与 continue\n\n# continue：跳过偶数，只打印奇数\nfor i in range(1, 21):\n    if i % 2 == 0:\n        continue\n    print(i, end=\" \")\nprint()\n\n# break：遇到 15 就停止\nfor i in range(1, 100):\n    if i == 15:\n        break\n    print(i, end=\" \")\nprint()\n\n# while True + break：最常用的\"输入循环\"套路\nwhile True:\n    cmd = input(\"输入内容（输入 q 退出）：\")\n    if cmd == \"q\":\n        break\n    print(f\"你输入了：{cmd}\")\n\nprint(\"程序结束\")\n",
+ "w3d4": "# star_triangle.py —— 第 3 周周四 · 嵌套循环\n\n# 1. 正方形\nprint(\"正方形：\")\nfor i in range(3):\n    for j in range(3):\n        print(\"*\", end=\"\")\n    print()\n\n# 2. 递增三角形\nprint(\"三角形：\")\nn = 5\nfor i in range(1, n + 1):\n    for j in range(i):        # 第 i 行打 i 个星\n        print(\"*\", end=\"\")\n    print()\n\n# 3. 递减三角形（用字符串乘法更简单）\nprint(\"倒三角：\")\nfor i in range(5, 0, -1):\n    print(\"*\" * i)\n\n# 自己加：打印一个金字塔，第 i 行先打 (n-i) 个空格再打 (2i-1) 个星\n",
+ "w3d5": "# odd_sum.py —— 第 3 周周五 · 循环 + 条件综合\n\n# 1 到 100 内奇数的和\ntotal = 0\nfor i in range(1, 101):\n    if i % 2 == 1:\n        total += i\nprint(f\"奇数和 = {total}\")          # 2500\n\n# 偶数的和，并验证两者相加等于 5050\neven_sum = 0\nfor i in range(1, 101):\n    if i % 2 == 0:\n        even_sum += i\nprint(f\"偶数和 = {even_sum}\")\nprint(f\"奇数和 + 偶数和 = {total + even_sum}\")   # 5050\n\n# 统计模板：计数、累加、最大值\nnumbers = [3, 8, 12, 5, 20, 7]\ncount = 0\ns = 0\nmax_n = numbers[0]\nfor n in numbers:\n    s += n\n    if n > max_n:\n        max_n = n\n    if n % 2 == 0:\n        count += 1\nprint(f\"总和 {s}，最大 {max_n}，偶数 {count} 个，平均 {s / len(numbers):.1f}\")\n",
+ "w3d6": "# guess_number.py —— 第 3 周周六 · 完整猜数字游戏\n\nimport random\n\nanswer = random.randint(1, 100)\ncount = 0\nlow, high = 1, 100        # 记录已知范围，给提示用\n\nprint(\"我想好了一个 1-100 的数字，你来猜！\")\nprint(\"（调试时可以先把 answer 写死成 42）\")\n\nwhile True:\n    guess = int(input(f\"在 {low}-{high} 之间猜一个：\"))\n    count += 1\n\n    if guess < 1 or guess > 100:\n        print(\"请输入 1 到 100 之间的数\")\n        count -= 1         # 不合法输入不计次数\n        continue\n\n    if guess > answer:\n        print(\"大了\")\n        high = min(high, guess - 1)\n    elif guess < answer:\n        print(\"小了\")\n        low = max(low, guess + 1)\n    else:\n        print(f\"猜对了！你一共猜了 {count} 次\")\n        break\n\n# 自己加：\n# 1. 限制最多猜 7 次，超了就公布答案\n# 2. 猜对后问一句\"再来一局吗\"，用 input 判断\n",
+ "w3d7": "# multiplication.py —— 第 3 周周日 · 九九乘法表\n\n# 完整的九九乘法表（矩形）\nprint(\"矩形版：\")\nfor i in range(1, 10):\n    for j in range(1, 10):\n        print(f\"{j}x{i}={i * j}\", end=\"\\t\")\n    print()\n\n# 下三角版（真正的九九乘法表）\nprint(\"\\n下三角版：\")\nfor i in range(1, 10):\n    for j in range(1, i + 1):\n        print(f\"{j}x{i}={i * j:2d}\", end=\"  \")\n    print()\n\n# 复习三题：\n# 1. while 和 for 各写一遍 1 到 100 的和\n# 2. 打印 1 到 50 中所有能被 7 整除的数\n# 3. 输出 1! 到 5!（提示：累乘要从 1 开始）\n",
+ "w4d1": "# review_types.py —— 第 4 周周一 · 复习变量与数据类型（5 题）\n\n# ===== 第 1 题：5 个不同类型的变量 =====\nnum = 10\nprice = 9.9\nname = \"ZERO\"\nis_student = True\nscores = [90, 85, 77]\nprint(num, price, name, is_student, scores)\n\n# ===== 第 2 题：输入两个数，输出和差积商 =====\na = float(input(\"第一个数：\"))\nb = float(input(\"第二个数：\"))\nprint(f\"和={a + b} 差={a - b} 积={a * b} 商={a / b:.2f}\")\n\n# ===== 第 3 题：姓名年龄 =====\nname = input(\"姓名：\")\nage = int(input(\"年龄：\"))\nprint(f\"我叫{name}，今年{age}岁，明年{age + 1}岁\")\n\n# ===== 第 4 题：打印类型 =====\nprint(type(num), type(price), type(name), type(is_student), type(scores))\n\n# ===== 第 5 题：字符串长度与首尾字符 =====\ns = input(\"输入一段文字：\")\nprint(f\"长度 {len(s)}，首字符 {s[0]}，末字符 {s[-1]}\")\n\n# 先自己写一遍再看答案：答案就在上面，建议先注释掉再自己敲\n",
+ "w4d2": "# review_if.py —— 第 4 周周二 · 复习条件判断（5 题）\n\n# ===== 第 1 题：正数 / 负数 / 零 =====\nn = float(input(\"输入一个数：\"))\nif n > 0:\n    print(\"正数\")\nelif n < 0:\n    print(\"负数\")\nelse:\n    print(\"零\")\n\n# ===== 第 2 题：闰年 =====\nyear = int(input(\"年份：\"))\nif (year % 4 == 0 and year % 100 != 0) or year % 400 == 0:\n    print(\"闰年\")\nelse:\n    print(\"平年\")\n\n# ===== 第 3 题：成绩等级 + 范围校验 =====\nscore = int(input(\"成绩（0-100）：\"))\nif score < 0 or score > 100:\n    print(\"输入不合法\")\nelif score >= 90:\n    print(\"A\")\nelif score >= 80:\n    print(\"B\")\nelif score >= 70:\n    print(\"C\")\nelif score >= 60:\n    print(\"D\")\nelse:\n    print(\"E\")\n\n# ===== 第 4 题：登录判断 =====\nu = input(\"用户名：\")\np = input(\"密码：\")\nif u == \"admin\" and p == \"123456\":\n    print(\"登录成功\")\nelse:\n    print(\"用户名或密码错误\")\n\n# ===== 第 5 题：三个数找最大 =====\na, b, c = 3, 8, 5\nif a >= b and a >= c:\n    print(a)\nelif b >= a and b >= c:\n    print(b)\nelse:\n    print(c)\n",
+ "w4d3": "# review_loop.py —— 第 4 周周三 · 复习循环（5 题）\n\n# ===== 第 1 题：while 求 1-100 的和 =====\ni = 1\ntotal = 0\nwhile i <= 100:\n    total += i\n    i += 1\nprint(f\"1-100 的和 = {total}\")      # 5050\n\n# ===== 第 2 题：for + enumerate =====\nfruits = [\"苹果\", \"香蕉\", \"橙子\", \"西瓜\", \"葡萄\"]\nfor idx, fruit in enumerate(fruits, start=1):\n    print(f\"{idx}. {fruit}\")\n\n# ===== 第 3 题：1-50 中 7 的倍数 =====\nfor n in range(1, 51):\n    if n % 7 == 0:\n        print(n, end=\" \")\nprint()\n\n# ===== 第 4 题：三角形星星 =====\nfor i in range(1, 6):\n    print(\"*\" * i)\n\n# ===== 第 5 题：质数判断 =====\nnum = int(input(\"输入一个大于 1 的整数：\"))\nis_prime = True\nfor d in range(2, num):\n    if num % d == 0:\n        is_prime = False\n        break\nif num <= 1:\n    print(\"不是质数\")\nelif is_prime:\n    print(\"是质数\")\nelse:\n    print(\"不是质数\")\n",
+ "w4d4": "# project_plan.md —— 第 4 周周四 · 项目设计（这天交的是文字，不是代码）\n\n# 项目名：简易计算器\n# 一句话简介：一个命令行计算器，支持四则运算、循环菜单和错误处理。\n\n## 核心功能（必做，3 条）\n1. 支持 + - * / 四则运算，结果保留两位小数\n2. 循环菜单：算完一次可以继续算，输入 0 退出\n3. 输入非数字、除数为 0 都要有提示，程序不能崩\n\n## 加分功能（选做，2 条）\n4. 支持连续运算（用上一次的结果继续算）\n5. 记录本次运行算过几次并显示\n\n## 主流程（伪代码）\n显示欢迎语和菜单\n当 用户没有选择退出：\n    读取用户的选择\n    如果是 0：退出循环\n    否则：读取两个数字\n        根据选择做对应运算并打印结果\n        如果除数为 0：提示错误\n打印再见\n\n# 自己写：把上面改成你真正要做的那个项目\n",
+ "w4d5": "# project_core.py —— 第 4 周周五 · 项目编码（核心功能先跑起来）\n\nprint(\"=\" * 32)\nprint(\"  简易计算器\")\nprint(\"=\" * 32)\n\nwhile True:\n    print(\"\\n1. 加法   2. 减法   3. 乘法   4. 除法   0. 退出\")\n    choice = input(\"请选择：\")\n\n    if choice == \"0\":\n        print(\"再见！\")\n        break\n\n    a = float(input(\"第一个数：\"))\n    b = float(input(\"第二个数：\"))\n\n    if choice == \"1\":\n        print(f\"结果：{a + b:.2f}\")\n    elif choice == \"2\":\n        print(f\"结果：{a - b:.2f}\")\n    elif choice == \"3\":\n        print(f\"结果：{a * b:.2f}\")\n    elif choice == \"4\":\n        print(f\"结果：{a / b:.2f}\")\n    else:\n        print(\"没有这个选项\")\n\n# 今天不追求完美：先让它能连续算三次、选 0 能退出\n# 明天加：错误处理（输入字母、除以 0）、y/n 继续、注释\n",
+ "w4d6": "# project_final.py —— 第 4 周周六 · 项目完善（错误处理 + 循环菜单 + 注释）\n\n# ============================================\n# 简易计算器 v1.0\n# 功能：四则运算、循环菜单、错误处理\n# 作者：ZERO    日期：2026-09\n# ============================================\n\ncount = 0        # 统计本次运行算了几次\n\nprint(\"=\" * 32)\nprint(\"  简易计算器 v1.0（输入 0 退出）\")\nprint(\"=\" * 32)\n\nwhile True:\n    print(\"\\n1. 加法   2. 减法   3. 乘法   4. 除法   0. 退出\")\n    choice = input(\"请选择：\").strip()\n\n    if choice == \"0\":\n        print(f\"本次一共算了 {count} 次，再见！\")\n        break\n\n    if choice not in (\"1\", \"2\", \"3\", \"4\"):\n        print(\"没有这个选项，请重新选择\")\n        continue\n\n    try:\n        a = float(input(\"第一个数：\"))\n        b = float(input(\"第二个数：\"))\n    except ValueError:\n        print(\"请输入数字！\")\n        continue\n\n    if choice == \"1\":\n        result = a + b\n    elif choice == \"2\":\n        result = a - b\n    elif choice == \"3\":\n        result = a * b\n    else:\n        if b == 0:\n            print(\"除数不能为 0\")\n            continue\n        result = a / b\n\n    count += 1\n    print(f\"结果：{result:.2f}\")\n\n    again = input(\"继续吗？（y/n）：\").strip().lower()\n    if again != \"y\":\n        break\n\n# TODO: 以后加一个\"连续运算\"功能（用上一次的结果继续算）\n",
+ "w4d7": "# README.md —— 第 4 周周日 · 项目说明（这天交的就是这份文件）\n\n# 简易计算器\n\n一个用 Python 写的命令行计算器，支持四则运算、循环菜单和错误处理。\n\n## 功能\n- 支持 + - * / 四则运算，结果保留两位小数\n- 算完一次可以继续算，输入 0 退出\n- 输入非数字、除数为 0 都有友好提示，程序不会崩\n\n## 运行方式\n    python project_final.py\n\n## 使用示例\n    1. 加法   2. 减法   3. 乘法   4. 除法   0. 退出\n    请选择：1\n    第一个数：12\n    第二个数：8\n    结果：20.00\n\n## 用到的知识\n变量与数据类型、f-string、if/elif/else、while 循环、break/continue、try/except\n\n## 我踩过的坑\n- 除法遇到 0 会直接崩，加一层 if 判断解决\n- 一开始没写 while True，算一次就退出了\n- 输入 y 和 Y 判断不一致，用 .lower() 统一处理\n\n## 后续计划\n- [ ] 支持连续运算\n- [ ] 增加乘方和开方\n- [ ] 用函数重构（第 5 周会学）\n\n# 把上面内容保存成 README.md，然后：\n# git add . && git commit -m \"第4周：完成计算器项目 + README\" && git push\n"
+};
+
+
+/* ============ 启动 ============ */
+load();
+initStartDate();
+initGate();
+renderNav();
+renderPlan();
+renderCheckin();
+updateStats();
+applyFilter();
+scrollToToday();
+autoRemind();
+window.__planReady = true;
+window.__dayCount = DAYS.length;
+window.__lessonCount = Object.keys(TUTORIALS).length;
+window.__homeworkCount = Object.keys(HOMEWORK).length;
+window.__gateOn = gateOn();
+</script>
+</body>
+</html>
