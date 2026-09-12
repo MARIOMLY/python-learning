@@ -583,6 +583,69 @@ kbd{background:#fff; border:1px solid var(--line); border-bottom-width:2px; bord
   .act .row2{display:none}
   .checkin,.praisebox,.remind{display:none !important}
 }
+
+
+/* ---------- 在线运行 / 自动批改 ---------- */
+.runner{
+  margin-top:14px; border:1px solid var(--line); border-radius:12px; overflow:hidden; background:#fbfcfe;
+}
+.runner .rhead{
+  display:flex; align-items:center; gap:9px; flex-wrap:wrap;
+  padding:10px 13px; background:#f4f8fd; border-bottom:1px solid var(--line);
+}
+.runner .rhead .rt{font-size:13.5px; font-weight:700; color:var(--ink)}
+.runner .rhead .rs{font-size:11.5px; color:var(--ink-3)}
+.runner .rhead .grow{margin-left:auto}
+.runbtn{
+  border:1px solid var(--brand); background:var(--brand); color:#fff; border-radius:10px;
+  padding:7px 15px; font-size:13.5px; font-weight:700; transition:.15s ease;
+}
+.runbtn:hover{background:var(--brand-ink); border-color:var(--brand-ink)}
+.runbtn:disabled{opacity:.55; cursor:not-allowed}
+.runbtn.ghost{background:#fff; color:var(--brand-ink)}
+.runbtn.ghost:hover{background:#f4f8fd}
+.runner .rbody{padding:12px 13px}
+.runner .field2{margin-bottom:10px}
+.runner .field2 label{display:block; font-size:12px; font-weight:700; color:var(--ink-3); margin-bottom:5px}
+.runner textarea.stdinbox{
+  width:100%; min-height:52px; padding:8px 10px; border:1px solid var(--line); border-radius:9px;
+  background:#fff; font-family:"Cascadia Code",Consolas,monospace; font-size:12.5px; resize:vertical; outline:none;
+}
+.runner textarea.stdinbox:focus{border-color:#9dbdf5; box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.console{
+  background:#0f172a; color:#cbd5e1; border-radius:10px; padding:11px 13px; margin-top:10px;
+  font-family:"Cascadia Code",Consolas,monospace; font-size:12.4px; line-height:1.6;
+  max-height:260px; overflow:auto; white-space:pre-wrap; word-break:break-word;
+}
+.console .ok{color:#4ade80}
+.console .bad{color:#fca5a5}
+.console .dim{color:#64748b}
+.console:empty{display:none}
+.gradelist{margin-top:11px; display:flex; flex-direction:column; gap:6px}
+.gradeitem{display:flex; gap:9px; align-items:flex-start; font-size:13px; padding:7px 10px; border-radius:9px; background:#fff; border:1px solid var(--line)}
+.gradeitem.pass{background:#f0fdf4; border-color:#bbf7d0}
+.gradeitem.fail{background:#fef2f2; border-color:#fecaca}
+.gradeitem .gi{flex:none; font-size:13px; line-height:1.5}
+.gradeitem .gn{font-weight:600; color:var(--ink)}
+.gradeitem .gd{font-size:12px; color:#b91c1c; margin-top:2px}
+.gradesum{
+  margin-top:10px; padding:9px 12px; border-radius:10px; font-size:13.5px; font-weight:700;
+  display:flex; align-items:center; gap:8px;
+}
+.gradesum.pass{background:#ecfdf3; border:1px solid #86efac; color:#15803d}
+.gradesum.fail{background:#fff7e6; border:1px solid #f6c667; color:#a16207}
+.gradesum.info{background:#f1f5f9; border:1px solid var(--line); color:var(--ink-2); font-weight:600}
+.gradebadge{
+  display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:700;
+  border-radius:999px; padding:1px 9px; border:1px solid var(--line); background:#f8fafc; color:#64748b;
+}
+.gradebadge.pass{background:#ecfdf3; border-color:#86efac; color:#15803d}
+.gradebadge.fail{background:#fff7e6; border-color:#f6c667; color:#a16207}
+.spinner{
+  display:inline-block; width:12px; height:12px; border:2px solid #cbd5e1; border-top-color:var(--brand);
+  border-radius:50%; animation:spin .7s linear infinite; vertical-align:-2px; margin-right:5px;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -654,6 +717,12 @@ kbd{background:#fff; border:1px solid var(--line); border-bottom-width:2px; bord
       <input type="checkbox" id="allowNoWork">
       <span><b>允许不交作业直接标记完成</b>
         <span class="sub">默认关闭 —— 开着门禁才拦得住"假装学会"。只有真遇到意外（生病、断网、电脑坏了）才建议临时打开；开门禁期间标记的完成不会发鼓励，并会在当天备注里留痕。</span>
+      </span>
+    </div>
+    <div class="setrow" style="margin-top:14px">
+      <input type="checkbox" id="requireGrade">
+      <span><b>必须通过自动批改才能标记完成</b>
+        <span class="sub">默认开启。写完点「▶ 运行并批改」，代码会在<b>你自己的浏览器里真的跑一遍</b>并逐项检查；全部通过才能点「已完成」。首次使用会下载约 11 MB 的 Python 运行环境（只下载一次）。</span>
       </span>
     </div>
     <div class="setrow" style="margin-top:14px">
@@ -966,6 +1035,7 @@ function renderPlan(){
           <div class="gl">完成标志</div>
           <div class="gt">${richText(d.goal)}</div>
           <div class="workbadge" data-w="${wstat}">${workLabel(wstat)}${saved && wstat === "todo" ? "（有草稿）" : ""}</div>
+          ${gradeBadgeHtml(id, saved)}
           ${gated && s !== "done" ? '<div class="gatebadge">🔒 待交作业</div>' : ""}
         </div>
         <div class="act">
@@ -1040,11 +1110,21 @@ document.getElementById("plan").addEventListener("click", (e) => {
   const btn = e.target.closest(".st");
   if (!btn) return;
   const id = btn.dataset.target, next = btn.dataset.s;
-  // 门禁：没交作业就不让标"已完成"（点已完成的按钮会弹提示）
-  if (next === "done" && statusOf(id) !== "done" && typeof hasSubmitted === "function" && !hasSubmitted(id)){
-    if (typeof gateOn === "function" && !gateOn()){ if (typeof forceDone === "function") forceDone(id, "门禁已关闭"); return; }
-    if (typeof openGate === "function") openGate(id, "plan");
-    return;
+  // 门禁：先交作业，再通过自动批改，才能标"已完成"
+  if (next === "done" && statusOf(id) !== "done"){
+    const gateOff = (typeof gateOn === "function") && !gateOn();
+    const submitted = (typeof hasSubmitted === "function") ? hasSubmitted(id) : true;
+    if (gateOff){
+      if (!submitted && typeof forceDone === "function") forceDone(id, "门禁已关闭");
+    } else if (!submitted){
+      if (typeof openGate === "function") openGate(id, "plan");
+      return;
+    }
+    if (!gateOff && typeof requireGrade === "function" && requireGrade()
+        && typeof gradePassed === "function" && !gradePassed(id)){
+      if (typeof openGate === "function") openGate(id, "grade");
+      return;
+    }
   }
   if (statusOf(id) === next) state.status[id] = "todo"; else state.status[id] = next;
   const el = document.getElementById(id);
@@ -1151,6 +1231,19 @@ const CODE_NAMES = [
 
 /* 反引号（避免在生成器模板字符串里转义） */
 const BT = String.fromCharCode(96);
+
+
+function gradeBadgeHtml(id, submitted){
+  if (typeof gradeOf !== "function") return "";
+  const g = gradeOf(id);
+  if (g){
+    return '<div class="gradebadge ' + (g.passed ? "pass" : "fail") + '">' +
+      (g.passed ? "✅ 批改通过 " + g.count + "/" + g.total : "⚠️ 批改 " + g.count + "/" + g.total + " 未通过") + "</div>";
+  }
+  if (state.work[id] && state.work[id].gradeSkipped) return '<div class="gradebadge">已跳过批改</div>';
+  if (submitted) return '<div class="gradebadge">🔍 待批改</div>';
+  return "";
+}
 
 /* ==== 读取本地数据（必须在打卡模块之前，它要用 state.startDate 算起点） ==== */
 load();
@@ -1330,7 +1423,8 @@ function renderWork(id){
     '<button class="btn primary" id="copySubmit">📋 复制这条提交（发给群/组织者）</button>' +
     '<button class="btn" id="zipOneInline">📦 打包成 zip 文件</button>' +
     '<span class="hint2">内容只存在你这台设备，不上传服务器 —— 想交给别人就用这两个按钮</span>' +
-    "</div></div>";
+    "</div>";
+  html += '<div id="runnerBox"></div></div>';
   if (checks.length){
     html += '<div class="work-sec"><h4>交之前自检</h4><ul class="checks">' +
       checks.map((c, i) => {
@@ -1343,6 +1437,7 @@ function renderWork(id){
   }
   box.innerHTML = html;
   refreshWorkUi();
+  if (typeof renderRunner === "function") renderRunner(id);
 }
 
 /* ---------- 我的代码面板 ---------- */
@@ -1884,14 +1979,39 @@ function openGate(id, mode){
   if (!g) return;
   g.dataset.target = id;
   g.dataset.mode = mode || "plan";
+  const title = document.querySelector("#gate h3");
+  const goBtn = document.getElementById("gateGo");
+  const cancelBtn = document.getElementById("gateCancel");
+  const forceLink = document.getElementById("gateForce");
   const miss = missingFor(id);
-  document.getElementById("gateSub").innerHTML =
-    "<b>D" + pad2(WORK_IDX(id) + 1) + " · " + esc(d.topic) + "</b> 的作业还是空的。" +
-    (mode === "work" ? "先把作业交了，才能把它标成「已完成」。" : "交完作业再回来点「已完成」吧。");
-  const items = mode === "work"
-    ? ["至少填一项：代码 或 运行输出", "点下面的「去交作业」补上"]
-    : miss.need.map((n) => n.t);
-  document.getElementById("gateList").innerHTML = items.map((t) => "<li>" + t + "</li>").join("");
+  if (mode === "grade"){
+    const gr = (typeof gradeOf === "function") ? gradeOf(id) : null;
+    if (title) title.textContent = "🔍 这一天的代码还没通过批改";
+    document.getElementById("gateSub").innerHTML =
+      "<b>D" + pad2(WORK_IDX(id) + 1) + " · " + esc(d.topic) + "</b> 的作业已经交了" +
+      (gr ? "（上次 " + gr.count + "/" + gr.total + " 项通过）" : "") +
+      "，但还没通过自动批改。";
+    document.getElementById("gateList").innerHTML = [
+      "点下面的「去运行批改」，在作业页点「▶ 运行并批改」",
+      "程序会在你的浏览器里真的跑一遍，逐项检查",
+      "全部通过后回来就能标记完成了"
+    ].map((t) => "<li>" + t + "</li>").join("");
+    if (goBtn) goBtn.textContent = "去运行批改";
+    if (cancelBtn) cancelBtn.textContent = "先去改代码";
+    if (forceLink) forceLink.textContent = "运行不了 / 一直不通过？点这里跳过批改";
+  } else {
+    if (title) title.textContent = "🔒 这一天的作业还没交";
+    document.getElementById("gateSub").innerHTML =
+      "<b>D" + pad2(WORK_IDX(id) + 1) + " · " + esc(d.topic) + "</b> 的作业还是空的。" +
+      (mode === "work" ? "先把作业交了，才能把它标成「已完成」。" : "交完作业再回来点「已完成」吧。");
+    const items = mode === "work"
+      ? ["至少填一项：代码 或 运行输出", "点下面的「去交作业」补上"]
+      : miss.need.map((n) => n.t);
+    document.getElementById("gateList").innerHTML = items.map((t) => "<li>" + t + "</li>").join("");
+    if (goBtn) goBtn.textContent = "去交作业";
+    if (cancelBtn) cancelBtn.textContent = "先去写代码";
+    if (forceLink) forceLink.textContent = "确实交不了？点这里记录原因，直接标记完成";
+  }
   g.classList.add("show");
 }
 function closeGate(){
@@ -1928,8 +2048,15 @@ function toggleAllowNoWork(on){
 function initGate(){
   const cb = document.getElementById("allowNoWork");
   if (cb) cb.checked = state.setting.allowNoWork === true;
+  const rg = document.getElementById("requireGrade");
+  if (rg) rg.checked = state.setting.requireGrade !== false;
 }
 document.getElementById("allowNoWork").addEventListener("change", (e) => toggleAllowNoWork(e.target.checked));
+document.getElementById("requireGrade").addEventListener("change", (e) => {
+  state.setting.requireGrade = e.target.checked;
+  save();
+  toast(e.target.checked ? "已开启：必须通过自动批改才能标记完成" : "已关闭：可以不批改直接标记完成", 2600);
+});
 
 /* ---------- 事件 ---------- */
 document.getElementById("gate").addEventListener("click", (e) => {
@@ -1938,12 +2065,22 @@ document.getElementById("gate").addEventListener("click", (e) => {
   if (e.target === g){ closeGate(); return; }
   if (e.target.id === "gateCancel"){ closeGate(); return; }
   if (e.target.id === "gateGo"){
+    const wasGrade = g.dataset.mode === "grade";
     closeGate();
     openDay(id, "work");
-    toast("把代码和运行结果填进去，点「已提交」", 2400);
+    setTimeout(() => {
+      const rb = document.getElementById("runnerBox");
+      if (rb && rb.scrollIntoView) rb.scrollIntoView({ behavior:"smooth", block:"center" });
+    }, 350);
+    toast(wasGrade ? "点「▶ 运行并批改」跑一遍" : "把代码和运行结果填进去，点「已提交」", 2400);
     return;
   }
   if (e.target.id === "gateForce"){
+    if (g.dataset.mode === "grade"){
+      if (typeof skipGrade === "function") skipGrade(id);
+      closeGate();
+      return;
+    }
     const why = prompt("写一句原因（会记在当天的备注里，比如：那天生病了 / 电脑坏了）：");
     if (why === null) return;
     forceDone(id, (why || "").trim() || "未填写原因");
@@ -2771,6 +2908,1177 @@ const TEMPLATES = {
  "w4d6": "# project_final.py —— 第 4 周周六 · 项目完善（错误处理 + 循环菜单 + 注释）\n\n# ============================================\n# 简易计算器 v1.0\n# 功能：四则运算、循环菜单、错误处理\n# 作者：ZERO    日期：2026-09\n# ============================================\n\ncount = 0        # 统计本次运行算了几次\n\nprint(\"=\" * 32)\nprint(\"  简易计算器 v1.0（输入 0 退出）\")\nprint(\"=\" * 32)\n\nwhile True:\n    print(\"\\n1. 加法   2. 减法   3. 乘法   4. 除法   0. 退出\")\n    choice = input(\"请选择：\").strip()\n\n    if choice == \"0\":\n        print(f\"本次一共算了 {count} 次，再见！\")\n        break\n\n    if choice not in (\"1\", \"2\", \"3\", \"4\"):\n        print(\"没有这个选项，请重新选择\")\n        continue\n\n    try:\n        a = float(input(\"第一个数：\"))\n        b = float(input(\"第二个数：\"))\n    except ValueError:\n        print(\"请输入数字！\")\n        continue\n\n    if choice == \"1\":\n        result = a + b\n    elif choice == \"2\":\n        result = a - b\n    elif choice == \"3\":\n        result = a * b\n    else:\n        if b == 0:\n            print(\"除数不能为 0\")\n            continue\n        result = a / b\n\n    count += 1\n    print(f\"结果：{result:.2f}\")\n\n    again = input(\"继续吗？（y/n）：\").strip().lower()\n    if again != \"y\":\n        break\n\n# TODO: 以后加一个\"连续运算\"功能（用上一次的结果继续算）\n",
  "w4d7": "# README.md —— 第 4 周周日 · 项目说明（这天交的就是这份文件）\n\n# 简易计算器\n\n一个用 Python 写的命令行计算器，支持四则运算、循环菜单和错误处理。\n\n## 功能\n- 支持 + - * / 四则运算，结果保留两位小数\n- 算完一次可以继续算，输入 0 退出\n- 输入非数字、除数为 0 都有友好提示，程序不会崩\n\n## 运行方式\n    python project_final.py\n\n## 使用示例\n    1. 加法   2. 减法   3. 乘法   4. 除法   0. 退出\n    请选择：1\n    第一个数：12\n    第二个数：8\n    结果：20.00\n\n## 用到的知识\n变量与数据类型、f-string、if/elif/else、while 循环、break/continue、try/except\n\n## 我踩过的坑\n- 除法遇到 0 会直接崩，加一层 if 判断解决\n- 一开始没写 while True，算一次就退出了\n- 输入 y 和 Y 判断不一致，用 .lower() 统一处理\n\n## 后续计划\n- [ ] 支持连续运算\n- [ ] 增加乘方和开方\n- [ ] 用函数重构（第 5 周会学）\n\n# 把上面内容保存成 README.md，然后：\n# git add . && git commit -m \"第4周：完成计算器项目 + README\" && git push\n"
 };
+
+
+/* ===== 自动批改规则（由 autograde.js 生成） ===== */
+const TESTS = {
+ "w1d1": {
+  "intro": "跑一遍你的 hello.py，看看能不能打印出 Hello World",
+  "stdin": "",
+  "cases": [
+   {
+    "name": "能打印出 Hello World",
+    "expect": "Hello World",
+    "noError": true
+   },
+   {
+    "name": "至少输出了 3 行",
+    "minLines": 3,
+    "noError": true
+   }
+  ]
+ },
+ "w1d2": {
+  "intro": "检查变量定义与类型",
+  "stdin": "",
+  "cases": [
+   {
+    "name": "定义了至少 4 个变量",
+    "srcCount": {
+     "re": "^\\s*[A-Za-z_][A-Za-z0-9_]*\\s*=",
+     "min": 4
+    },
+    "noError": true
+   },
+   {
+    "name": "用 type() 看过类型",
+    "srcHas": [
+     "type("
+    ],
+    "noError": true
+   },
+   {
+    "name": "程序能正常运行且有输出",
+    "minLines": 1,
+    "noError": true
+   }
+  ]
+ },
+ "w1d3": {
+  "intro": "模拟输入姓名和年龄，检查问候语",
+  "stdin": "小明\n20\n",
+  "cases": [
+   {
+    "name": "问候语里出现了输入的名字",
+    "expect": "小明",
+    "noError": true
+   },
+   {
+    "name": "算出了明年的年龄（20 → 21）",
+    "expect": "21",
+    "noError": true
+   },
+   {
+    "name": "用到了 input()",
+    "srcHas": [
+     "input("
+    ],
+    "noError": true
+   }
+  ]
+ },
+ "w1d4": {
+  "intro": "输入 7 和 2，检查四则运算结果",
+  "stdin": "7\n2\n",
+  "cases": [
+   {
+    "name": "加法结果正确（7+2=9）",
+    "expectRe": "=\\s*9(\\.0)?\\b",
+    "noError": true
+   },
+   {
+    "name": "减法结果正确（7-2=5）",
+    "expectRe": "=\\s*5(\\.0)?\\b",
+    "noError": true
+   },
+   {
+    "name": "乘法结果正确（7×2=14）",
+    "expectRe": "=\\s*14(\\.0)?\\b",
+    "noError": true
+   },
+   {
+    "name": "除法保留两位小数（3.50）",
+    "expect": "3.50",
+    "noError": true
+   },
+   {
+    "name": "用到了取余或整除",
+    "srcRe": "[%/]|//",
+    "noError": true
+   }
+  ]
+ },
+ "w1d5": {
+  "intro": "输入 Python 这个词，检查切片和 f-string",
+  "stdin": "Python\n",
+  "cases": [
+   {
+    "name": "输出了长度 6",
+    "expect": "6",
+    "noError": true
+   },
+   {
+    "name": "取到了第一个字符 P",
+    "expect": "P",
+    "noError": true
+   },
+   {
+    "name": "取到了最后一个字符 n",
+    "expect": "n",
+    "noError": true
+   },
+   {
+    "name": "小数格式化保留两位（3.14）",
+    "expect": "3.14",
+    "noError": true
+   },
+   {
+    "name": "用了 f-string",
+    "srcRe": "f[\"']",
+    "noError": true
+   }
+  ]
+ },
+ "w1d6": {
+  "intro": "输入 12、加号、8，检查计算器（注意模板的提问顺序是：数 → 运算符 → 数）",
+  "stdin": "12\n+\n8\n",
+  "cases": [
+   {
+    "name": "加法算对了（12+8=20）",
+    "expectRe": "20(\\.00)?",
+    "noError": true
+   },
+   {
+    "name": "用了 if/else 判断运算符",
+    "srcHas": [
+     "if"
+    ],
+    "noError": true
+   }
+  ]
+ },
+ "w1d7": {
+  "intro": "输入姓名和半径，检查两道复习题",
+  "stdin": "小明\n2\n",
+  "cases": [
+   {
+    "name": "输出里有问候语和你输入的名字",
+    "expect": "小明",
+    "noError": true
+   },
+   {
+    "name": "圆面积算对了（3.14×2²=12.56）",
+    "expect": "12.56",
+    "noError": true
+   },
+   {
+    "name": "从 hello world 里取出了 world",
+    "expect": "world",
+    "noError": true
+   }
+  ]
+ },
+ "w2d1": {
+  "intro": "输入 20 岁，检查是否成年",
+  "stdin": "20\n",
+  "cases": [
+   {
+    "name": "20 岁判断为成年",
+    "expect": "成年",
+    "noError": true
+   },
+   {
+    "name": "用了 if",
+    "srcHas": [
+     "if"
+    ],
+    "noError": true
+   },
+   {
+    "name": "未成年人不会说成年",
+    "stdin": "15\n",
+    "notExpect": "成年",
+    "noError": true
+   }
+  ]
+ },
+ "w2d2": {
+  "intro": "分别输入 8 和 7，检查奇偶判断",
+  "stdin": "8\n",
+  "cases": [
+   {
+    "name": "8 判断为偶数",
+    "expect": "偶数",
+    "noError": true
+   },
+   {
+    "name": "7 判断为奇数",
+    "stdin": "7\n",
+    "expect": "奇数",
+    "noError": true
+   },
+   {
+    "name": "用了 % 取余",
+    "srcHas": [
+     "%"
+    ],
+    "noError": true
+   }
+  ]
+ },
+ "w2d3": {
+  "intro": "分别输入几个分数，检查等级判断",
+  "stdin": "95\n",
+  "cases": [
+   {
+    "name": "95 分是 A",
+    "expect": "A",
+    "noError": true
+   },
+   {
+    "name": "85 分是 B",
+    "stdin": "85\n",
+    "expect": "B",
+    "noError": true
+   },
+   {
+    "name": "75 分是 C",
+    "stdin": "75\n",
+    "expect": "C",
+    "noError": true
+   },
+   {
+    "name": "55 分是 E（或 F / 不及格）",
+    "stdin": "55\n",
+    "expectRe": "E|F|不及格|需要努力",
+    "noError": true
+   },
+   {
+    "name": "200 分提示不合法",
+    "stdin": "200\n",
+    "expectRe": "不合法|范围|0\\s*(到|-)\\s*100",
+    "noError": true
+   },
+   {
+    "name": "用了 elif",
+    "srcHas": [
+     "elif"
+    ],
+    "noError": true
+   }
+  ]
+ },
+ "w2d4": {
+  "intro": "输入 3、8、5，检查最大值判断",
+  "stdin": "3\n8\n5\n",
+  "cases": [
+   {
+    "name": "找出了最大值 8",
+    "expect": "8",
+    "noError": true
+   },
+   {
+    "name": "用了 and 组合条件",
+    "srcHas": [
+     "and"
+    ],
+    "noError": true
+   },
+   {
+    "name": "用了链式比较或比较运算符",
+    "srcRe": "[<>]=?|==",
+    "noError": true
+   }
+  ]
+ },
+ "w2d5": {
+  "intro": "输入正确的账号密码，检查登录判断",
+  "stdin": "admin\n123456\n15\n",
+  "cases": [
+   {
+    "name": "账号密码正确时登录成功",
+    "expect": "登录成功",
+    "noError": true
+   },
+   {
+    "name": "识别出 15 是 3 或 5 的倍数",
+    "expectRe": "3 或 5 的倍数|3和5|3 or 5",
+    "noError": true
+   },
+   {
+    "name": "密码错误时有提示",
+    "stdin": "admin\nwrong\n15\n",
+    "expectRe": "密码错误|错误|失败",
+    "noError": true
+   },
+   {
+    "name": "用了 and 和 or",
+    "srcHas": [
+     "and",
+     "or"
+    ],
+    "noError": true
+   }
+  ]
+ },
+ "w2d6": {
+  "intro": "猜一个写死的答案（模板里是 42）",
+  "stdin": "42\n",
+  "cases": [
+   {
+    "name": "猜对了会提示猜对",
+    "expectRe": "猜对|对了|正确",
+    "noError": true
+   },
+   {
+    "name": "猜大了有提示",
+    "stdin": "90\n",
+    "expectRe": "大",
+    "noError": true
+   },
+   {
+    "name": "猜小了有提示",
+    "stdin": "5\n",
+    "expectRe": "小",
+    "noError": true
+   },
+   {
+    "name": "用了 if/elif/else",
+    "srcHas": [
+     "if",
+     "elif",
+     "else"
+    ],
+    "noError": true
+   }
+  ]
+ },
+ "w2d7": {
+  "intro": "检查优化后的成绩等级判断",
+  "stdin": "95\n",
+  "cases": [
+   {
+    "name": "95 分输出 A",
+    "expect": "A",
+    "noError": true
+   },
+   {
+    "name": "输入非数字不会崩，而是给提示",
+    "stdin": "abc\n",
+    "expectRe": "数字|请输入|错误",
+    "noError": true
+   },
+   {
+    "name": "用了 try/except",
+    "srcHas": [
+     "try",
+     "except"
+    ],
+    "noError": true
+   }
+  ]
+ },
+ "w3d1": {
+  "intro": "检查 1 到 10 的累加",
+  "stdin": "",
+  "cases": [
+   {
+    "name": "累加结果是 55",
+    "expect": "55",
+    "noError": true
+   },
+   {
+    "name": "用了 while 循环",
+    "srcHas": [
+     "while"
+    ],
+    "noError": true
+   },
+   {
+    "name": "有循环过程的输出",
+    "minLines": 5,
+    "noError": true
+   }
+  ]
+ },
+ "w3d2": {
+  "intro": "检查 for 循环和 range 的用法",
+  "stdin": "",
+  "cases": [
+   {
+    "name": "打印出了 1 2 3 4 5 这一段",
+    "expectRe": "1\\s+2\\s+3\\s+4\\s+5",
+    "noError": true
+   },
+   {
+    "name": "遍历了列表",
+    "expect": "苹果",
+    "noError": true
+   },
+   {
+    "name": "用了 range",
+    "srcHas": [
+     "range"
+    ],
+    "noError": true
+   },
+   {
+    "name": "用了 enumerate 带序号",
+    "srcHas": [
+     "enumerate"
+    ],
+    "noError": true
+   }
+  ]
+ },
+ "w3d3": {
+  "intro": "检查 break 和 continue",
+  "stdin": "q\n",
+  "cases": [
+   {
+    "name": "输出了 1 到 19 的奇数（跳过了偶数）",
+    "expectRe": "1\\s+3\\s+5",
+    "noError": true
+   },
+   {
+    "name": "用了 continue",
+    "srcHas": [
+     "continue"
+    ],
+    "noError": true
+   },
+   {
+    "name": "用了 break",
+    "srcHas": [
+     "break"
+    ],
+    "noError": true
+   },
+   {
+    "name": "输入 q 能退出",
+    "expectRe": "结束|退出|再见",
+    "noError": true
+   }
+  ]
+ },
+ "w3d4": {
+  "intro": "检查星星图案",
+  "stdin": "",
+  "cases": [
+   {
+    "name": "打印出了 5 个星一行",
+    "expectRe": "\\*\\*\\*\\*\\*",
+    "noError": true
+   },
+   {
+    "name": "有递增的三角形",
+    "expectRe": "\\*\\s*\\n\\s*\\*\\*",
+    "noError": true
+   },
+   {
+    "name": "用了两层 for 循环",
+    "srcCount": {
+     "re": "for\\s+\\w+\\s+in",
+     "min": 2
+    },
+    "noError": true
+   },
+   {
+    "name": "用了 end 参数让星星不换行",
+    "srcRe": "end\\s*=\\s*['\"]",
+    "noError": true
+   }
+  ]
+ },
+ "w3d5": {
+  "intro": "检查 1 到 100 的奇数和",
+  "stdin": "",
+  "cases": [
+   {
+    "name": "奇数和是 2500",
+    "expect": "2500",
+    "noError": true
+   },
+   {
+    "name": "偶数和是 2550（加分项）",
+    "expect": "2550",
+    "noError": true
+   },
+   {
+    "name": "奇偶相加等于 5050",
+    "expect": "5050",
+    "noError": true
+   }
+  ]
+ },
+ "w3d6": {
+  "intro": "猜数字游戏：程序会依次收到 1~100 的每个数字作为猜测，直到猜中",
+  "stdin": "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n21\n22\n23\n24\n25\n26\n27\n28\n29\n30\n31\n32\n33\n34\n35\n36\n37\n38\n39\n40\n41\n42\n43\n44\n45\n46\n47\n48\n49\n50\n51\n52\n53\n54\n55\n56\n57\n58\n59\n60\n61\n62\n63\n64\n65\n66\n67\n68\n69\n70\n71\n72\n73\n74\n75\n76\n77\n78\n79\n80\n81\n82\n83\n84\n85\n86\n87\n88\n89\n90\n91\n92\n93\n94\n95\n96\n97\n98\n99\n100\n",
+  "cases": [
+   {
+    "name": "用 random 生成了随机数",
+    "srcHas": [
+     "random"
+    ],
+    "noError": true
+   },
+   {
+    "name": "用了 while 循环反复猜",
+    "srcHas": [
+     "while"
+    ],
+    "noError": true
+   },
+   {
+    "name": "猜中后有反馈（猜对了 / 公布答案）",
+    "expectRe": "猜对|对了|正确|答案",
+    "noError": true
+   },
+   {
+    "name": "会提示大了或小了",
+    "expectRe": "大|小",
+    "noError": true
+   }
+  ]
+ },
+ "w3d7": {
+  "intro": "检查九九乘法表",
+  "stdin": "",
+  "cases": [
+   {
+    "name": "输出了 1x1=1",
+    "expectRe": "1\\s*[x×*]\\s*1\\s*=\\s*1",
+    "noError": true
+   },
+   {
+    "name": "输出了 9x9=81",
+    "expectRe": "9\\s*[x×*]\\s*9\\s*=\\s*81",
+    "noError": true
+   },
+   {
+    "name": "用了两层循环",
+    "srcCount": {
+     "re": "for\\s+\\w+\\s+in",
+     "min": 2
+    },
+    "noError": true
+   }
+  ]
+ },
+ "w4d1": {
+  "intro": "复习：5 道变量与类型小题",
+  "stdin": "3\n4\n小明\n20\nPython\n",
+  "cases": [
+   {
+    "name": "输出的和是 7",
+    "expectRe": "和=?\\s*7(\\.0)?",
+    "noError": true
+   },
+   {
+    "name": "算出了明年的年龄 21",
+    "expect": "21",
+    "noError": true
+   },
+   {
+    "name": "测出了字符串长度 6",
+    "expect": "6",
+    "noError": true
+   },
+   {
+    "name": "用了 type()",
+    "srcHas": [
+     "type("
+    ],
+    "noError": true
+   },
+   {
+    "name": "商保留两位小数（0.75）",
+    "expect": "0.75",
+    "noError": true
+   }
+  ]
+ },
+ "w4d2": {
+  "intro": "复习：5 道条件判断小题",
+  "stdin": "5\n2024\n85\nadmin\n123456\n",
+  "cases": [
+   {
+    "name": "判断为正数",
+    "expect": "正数",
+    "noError": true
+   },
+   {
+    "name": "2024 是闰年",
+    "expect": "闰年",
+    "noError": true
+   },
+   {
+    "name": "85 分是 B",
+    "expect": "B",
+    "noError": true
+   },
+   {
+    "name": "登录成功",
+    "expect": "登录成功",
+    "noError": true
+   },
+   {
+    "name": "负数判断正确",
+    "stdin": "-3\n2024\n85\nadmin\n123456\n",
+    "expect": "负数",
+    "noError": true
+   }
+  ]
+ },
+ "w4d3": {
+  "intro": "复习：5 道循环小题",
+  "stdin": "7\n",
+  "cases": [
+   {
+    "name": "1 到 100 的和是 5050",
+    "expect": "5050",
+    "noError": true
+   },
+   {
+    "name": "打印了 7 的倍数（7 14 21）",
+    "expectRe": "7\\s+14\\s+21",
+    "noError": true
+   },
+   {
+    "name": "7 判断为质数",
+    "expectRe": "是质数",
+    "noError": true
+   },
+   {
+    "name": "用了 enumerate",
+    "srcHas": [
+     "enumerate"
+    ],
+    "noError": true
+   },
+   {
+    "name": "非质数判断正确（9 不是质数）",
+    "stdin": "9\n",
+    "expectRe": "不是质数",
+    "noError": true
+   }
+  ]
+ },
+ "w4d4": {
+  "intro": "这天的作业是文字说明（项目设计），不用运行代码",
+  "runnable": false,
+  "cases": [
+   {
+    "name": "写了项目名或一句话简介",
+    "srcRe": ".{8,}",
+    "noError": true
+   },
+   {
+    "name": "列了至少 3 条功能",
+    "srcCount": {
+     "re": "^\\s*(\\d+[\\.、)]|[-*])",
+     "min": 3
+    },
+    "noError": true
+   },
+   {
+    "name": "写了主流程（伪代码/步骤）",
+    "srcRe": "当|如果|流程|步骤|while|循环|菜单",
+    "noError": true
+   },
+   {
+    "name": "提到了核心功能",
+    "srcRe": "核心|功能",
+    "noError": true
+   }
+  ]
+ },
+ "w4d5": {
+  "intro": "检查项目核心功能能不能跑起来",
+  "stdin": "0\n",
+  "cases": [
+   {
+    "name": "有菜单输出",
+    "expectRe": "请选择|菜单|1[\\.、]",
+    "noError": true
+   },
+   {
+    "name": "输入 0 能退出",
+    "expectRe": "再见|退出|结束",
+    "noError": true
+   },
+   {
+    "name": "用了 while 循环菜单",
+    "srcHas": [
+     "while"
+    ],
+    "noError": true
+   }
+  ]
+ },
+ "w4d6": {
+  "intro": "检查完善后的项目：错误处理 + 计算正确",
+  "stdin": "1\n12\n8\nn\n0\n",
+  "cases": [
+   {
+    "name": "加法算对了（12+8=20）",
+    "expectRe": "20(\\.00)?",
+    "noError": true
+   },
+   {
+    "name": "用了 try/except 处理错误输入",
+    "srcHas": [
+     "try",
+     "except"
+    ],
+    "noError": true
+   },
+   {
+    "name": "输入字母不会崩，会给提示",
+    "stdin": "1\nabc\n0\n",
+    "expectRe": "数字|请输入|错误",
+    "noError": true
+   },
+   {
+    "name": "有注释",
+    "srcCount": {
+     "re": "^\\s*#",
+     "min": 2
+    },
+    "noError": true
+   }
+  ]
+ },
+ "w4d7": {
+  "intro": "这天的作业是 README 文档，不用运行代码",
+  "runnable": false,
+  "cases": [
+   {
+    "name": "有项目介绍",
+    "srcRe": ".{15,}",
+    "noError": true
+   },
+   {
+    "name": "写了功能说明",
+    "srcRe": "功能",
+    "noError": true
+   },
+   {
+    "name": "写了运行方式或使用方式",
+    "srcRe": "运行|使用|怎么用",
+    "noError": true
+   },
+   {
+    "name": "写了踩过的坑或问题",
+    "srcRe": "坑|问题|报错|遇到",
+    "noError": true
+   }
+  ]
+ }
+};
+function gradeAll(dayId, code, runCode){
+  const spec = TESTS[dayId];
+  if (!spec) return { ok:false, reason:'这一天还没有批改规则', results:[] };
+  const src = String(code || '');
+  const results = [];
+  // 先做静态检查（不需要运行）
+  spec.cases.forEach((c) => {
+    if (!c.srcHas && !c.srcRe && !c.srcCount) return;
+    const r = { name:c.name, kind:'static', pass:true, detail:'' };
+    if (c.srcHas){
+      const miss = c.srcHas.filter((s) => src.indexOf(s) < 0);
+      if (miss.length){ r.pass = false; r.detail = '代码里没找到：' + miss.join('、'); }
+    }
+    if (r.pass && c.srcRe && !(new RegExp(c.srcRe, 'im')).test(src)){
+      r.pass = false; r.detail = '代码里没找到对应的写法';
+    }
+    if (r.pass && c.srcCount){
+      const n = (src.match(new RegExp(c.srcCount.re, 'gm')) || []).length;
+      if (n < c.srcCount.min){ r.pass = false; r.detail = '只找到 ' + n + ' 处，至少需要 ' + c.srcCount.min + ' 处'; }
+    }
+    results.push(r);
+  });
+  // 需要运行的，按 stdin 分组，同样的输入只跑一次
+  const runs = {};
+  spec.cases.forEach((c, idx) => {
+    if (c.srcHas || c.srcRe || c.srcCount) return;
+    const key = (c.stdin === undefined ? (spec.stdin || '') : c.stdin);
+    if (!runs[key]) runs[key] = { stdout:'', error:'', ids:[] };
+    runs[key].ids.push(idx);
+  });
+  Object.keys(runs).forEach((key) => {
+    const out = runCode(src, key);
+    runs[key].stdout = out.stdout || '';
+    runs[key].error = out.error || '';
+  });
+  spec.cases.forEach((c) => {
+    if (c.srcHas || c.srcRe || c.srcCount) return;
+    const key = (c.stdin === undefined ? (spec.stdin || '') : c.stdin);
+    const out = runs[key].stdout, err = runs[key].error;
+    const r = { name:c.name, kind:'run', pass:true, detail:'' };
+    if (c.noError !== false && err){
+      r.pass = false; r.detail = '程序报错：' + String(err).split('\n').slice(-1)[0].slice(0, 90);
+    } else if (c.expect && out.toLowerCase().indexOf(String(c.expect).toLowerCase()) < 0){
+      r.pass = false; r.detail = '输出里没找到「' + c.expect + '」';
+    } else if (c.expectRe && !(new RegExp(c.expectRe, 'im')).test(out)){
+      r.pass = false; r.detail = '输出不符合要求';
+    } else if (c.notExpect && out.toLowerCase().indexOf(String(c.notExpect).toLowerCase()) >= 0){
+      r.pass = false; r.detail = '不该出现「' + c.notExpect + '」但它出现了';
+    } else if (c.minLines && out.split(/\r?\n/).filter((l) => l.trim()).length < c.minLines){
+      r.pass = false; r.detail = '输出行数不够（要求至少 ' + c.minLines + ' 行）';
+    }
+    results.push(r);
+  });
+  const passed = results.filter((r) => r.pass).length;
+  return { ok: passed === results.length, passed, total: results.length, results, intro:spec.intro, runnable:spec.runnable !== false };
+}
+
+
+/* ============ 在线运行 + 自动批改（由 build-page.js 注入） ============ */
+
+/* ---------- 1. Web Worker：在独立线程里跑 Pyodide ---------- */
+const PY_MIRRORS = [
+  "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/",
+  "https://unpkg.com/pyodide@0.26.4/",
+  "https://fastly.jsdelivr.net/pyodide/v0.26.4/full/",
+  "https://gcore.jsdelivr.net/pyodide/v0.26.4/full/"
+];
+const RUN_TIMEOUT = 20000;      // 单次运行超时（毫秒）—— 超过按"疑似死循环"处理
+const LOAD_TIMEOUT = 180000;    // 首次下载运行环境的超时
+
+const WORKER_SRC = [
+  "var py = null;",
+  "var out = '', err = '';",
+  "var queue = [], qi = 0;",
+  "self.onmessage = async function (ev) {",
+  "  var d = ev.data || {};",
+  "  if (d.type === 'init') {",
+  "    try {",
+  "      var lastErr = null;",
+  "      for (var i = 0; i < d.mirrors.length; i++) {",
+  "        var base = d.mirrors[i];",
+  "        try {",
+  "          self.postMessage({ type: 'progress', text: '正在连接 ' + base.split('/')[2] });",
+  "          importScripts(base + 'pyodide.js');",
+  "          py = await loadPyodide({ indexURL: base });",
+  "          py.runPython([",
+  "            'import builtins, sys',",
+  "            '_orig_input = builtins.input',",
+  "            'def _patched_input(prompt=\"\"):',",
+  "            '    if prompt:',",
+  "            '        sys.stdout.write(str(prompt))',",
+  "            '        sys.stdout.flush()',",
+  "            '    return _orig_input()',",
+  "            'builtins.input = _patched_input'",
+  "          ].join('\\n'));",
+  "          py.runPython('import random, math, string');",
+  "          lastErr = null;",
+  "          break;",
+  "        } catch (e) { lastErr = e; }",
+  "      }",
+  "      if (lastErr) throw lastErr;",
+  "      self.postMessage({ type: 'ready' });",
+  "    } catch (e) {",
+  "      self.postMessage({ type: 'error', message: String((e && e.message) || e) });",
+  "    }",
+  "    return;",
+  "  }",
+  "  if (d.type === 'run') {",
+  "    var seq = d.seq;",
+  "    if (!py) { self.postMessage({ type: 'result', seq: seq, stdout: '', error: '运行环境还没准备好' }); return; }",
+  "    out = ''; err = '';",
+  "    var lines = String(d.stdin || '').split(/\\r?\\n/);",
+  "    if (lines.length && lines[lines.length - 1] === '') lines.pop();",
+  "    qi = 0;",
+  "    py.setStdin({ stdin: function () { return qi < lines.length ? lines[qi++] : null; }, autoEOF: false, isatty: false });",
+  "    py.setStdout({ batched: function (s) { out += s + '\\n'; } });",
+  "    py.setStderr({ batched: function (s) { err += s + '\\n'; } });",
+  "    var errMsg = '';",
+  "    try {",
+  "      await py.runPythonAsync(d.code);",
+  "    } catch (e) {",
+  "      var m = String((e && e.message) || e);",
+  "      var tail = m.trim().split('\\n');",
+  "      errMsg = tail[tail.length - 1] || m;",
+  "    }",
+  "    self.postMessage({ type: 'result', seq: seq, stdout: out, stderr: err, error: errMsg });",
+  "  }",
+  "};"
+].join("\n");
+
+let pyWorker = null, pyReady = false, pyLoading = null;
+let workerOnProgress = null;
+let runSeq = 0;
+const runWaiters = {};
+
+function workerBlobUrl(){
+  if (workerBlobUrl._u) return workerBlobUrl._u;
+  workerBlobUrl._u = URL.createObjectURL(new Blob([WORKER_SRC], { type: "application/javascript" }));
+  return workerBlobUrl._u;
+}
+function killWorker(){
+  if (pyWorker){ try { pyWorker.terminate(); } catch (e) {} }
+  pyWorker = null; pyReady = false; pyLoading = null;
+  Object.keys(runWaiters).forEach((k) => { try { runWaiters[k]({ stdout:'', error:'运行被中断' }); } catch (e) {} delete runWaiters[k]; });
+}
+function ensurePy(progress){
+  if (pyReady && pyWorker) return Promise.resolve();
+  if (pyLoading) { workerOnProgress = progress; return pyLoading; }
+  workerOnProgress = progress;
+  pyLoading = new Promise((resolve, reject) => {
+    let w;
+    try { w = new Worker(workerBlobUrl()); }
+    catch (e) { reject(new Error("这个浏览器不支持 Web Worker")); return; }
+    pyWorker = w;
+    const to = setTimeout(() => { reject(new Error("加载超时")); killWorker(); }, LOAD_TIMEOUT);
+    w.onmessage = (ev) => {
+      const d = ev.data || {};
+      if (d.type === "progress"){ if (workerOnProgress) workerOnProgress(d.text); return; }
+      if (d.type === "ready"){ clearTimeout(to); pyReady = true; resolve(); return; }
+      if (d.type === "error"){ clearTimeout(to); killWorker(); reject(new Error(d.message || "加载失败")); return; }
+      if (d.type === "result"){
+        const cb = runWaiters[d.seq];
+        if (cb){ delete runWaiters[d.seq]; cb(d); }
+      }
+    };
+    w.onerror = (e) => { clearTimeout(to); reject(new Error("Worker 出错: " + (e.message || "未知"))); killWorker(); };
+    w.postMessage({ type:"init", mirrors:PY_MIRRORS });
+  });
+  return pyLoading;
+}
+/* 跑一次代码：返回 {stdout, error} —— 超时按死循环处理 */
+function runOnce(code, stdinText, timeoutMs){
+  return new Promise((resolve) => {
+    if (!pyWorker || !pyReady){ resolve({ stdout:"", error:"运行环境还没准备好" }); return; }
+    const seq = ++runSeq;
+    let done = false;
+    const finish = (r) => { if (done) return; done = true; clearTimeout(timer); delete runWaiters[seq]; resolve(r); };
+    const timer = setTimeout(() => {
+      // 先解决本次调用（标记为超时），再销毁 Worker —— 顺序反了会丢掉"死循环"这个标志
+      finish({ stdout:"", error:"__TIMEOUT__", timeout:true });
+      killWorker();
+    }, timeoutMs || RUN_TIMEOUT);
+    runWaiters[seq] = (d) => finish({ stdout:d.stdout || "", stderr:d.stderr || "", error:d.error || "" });
+    try { pyWorker.postMessage({ type:"run", seq:seq, code:String(code), stdin:String(stdinText == null ? "" : stdinText) }); }
+    catch (e) { finish({ stdout:"", error:"发送失败: " + e.message }); }
+  });
+}
+
+/* ---------- 2. 批改结果的存储 ---------- */
+function gradeOf(id){ return (state.work[id] && state.work[id].grade) || null; }
+function gradePassed(id){ const w = state.work[id]; if (w && w.gradeSkipped) return true; const g = gradeOf(id); return !!(g && g.passed); }
+function requireGrade(){ return state.setting.requireGrade !== false; }
+function saveGrade(id, g){
+  const w = workAt(id);
+  w.grade = { passed: !!g.ok, count: g.passed, total: g.total, at: new Date().toLocaleString("zh-CN"), results: g.results.map((r) => ({ name:r.name, pass:r.pass, detail:r.detail || "" })) };
+  save();
+  const badge = document.querySelector("#" + id + " .gradebadge");
+  if (badge){
+    badge.className = "gradebadge " + (w.grade.passed ? "pass" : "fail");
+    badge.textContent = w.grade.passed ? ("✅ 批改通过 " + w.grade.count + "/" + w.grade.total) : ("⚠️ 批改 " + w.grade.count + "/" + w.grade.total + " 未通过");
+  }
+}
+
+/* ---------- 3. 运行面板 UI ---------- */
+function renderRunner(id){
+  const box = document.getElementById("runnerBox");
+  if (!box) return;
+  const spec = TESTS[id];
+  const w = workAt(id);
+  const g = gradeOf(id);
+  if (!spec){
+    box.innerHTML = '<div class="runner"><div class="rbody"><div class="gradesum info">这一天还没有自动批改规则</div></div></div>';
+    return;
+  }
+  const runnable = spec.runnable !== false;
+  const defIn = spec.stdin == null ? "" : spec.stdin;
+  box.innerHTML =
+    '<div class="runner">' +
+      '<div class="rhead">' +
+        '<span class="rt">▶ 在线运行与自动批改</span>' +
+        '<span class="rs">' + (runnable ? "在浏览器里用真正的 Python 跑你的代码，自动检查" : "这天的作业是文字说明，不需要运行") + '</span>' +
+        '<span class="grow"></span>' +
+        (g ? '<span class="gradebadge ' + (g.passed ? "pass" : "fail") + '">' + (g.passed ? "✅ 批改通过 " + g.count + "/" + g.total : "⚠️ 批改 " + g.count + "/" + g.total + " 未通过") + "</span>" : '<span class="gradebadge">还没批改</span>') +
+      "</div>" +
+      '<div class="rbody">' +
+        (spec.intro ? '<div class="gradesum info">📋 ' + esc(spec.intro) + "</div>" : "") +
+        (runnable
+          ? '<div class="field2" style="margin-top:10px">' +
+              '<label>程序运行时自动输入的内容（一行一个，可以自己改）</label>' +
+              '<textarea class="stdinbox" id="stdinBox" spellcheck="false">' + esc(defIn) + "</textarea>" +
+            "</div>" +
+            '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
+              '<button class="runbtn" id="runGrade">▶ 运行并批改</button>' +
+              '<button class="runbtn ghost" id="runOnly">▶ 只运行看看</button>' +
+              (state.work[id] && state.work[id].gradeSkipped ? '<span class="gradebadge">已跳过批改</span>' : "") +
+            "</div>"
+          : '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="runbtn" id="runGrade">✅ 检查文字内容</button></div>'
+        ) +
+        '<div class="console" id="runConsole"></div>' +
+        '<div class="gradelist" id="gradeList"></div>' +
+      "</div>" +
+    "</div>";
+  const btn = document.getElementById("runGrade");
+  if (btn) btn.addEventListener("click", () => doRunGrade(id));
+  const b2 = document.getElementById("runOnly");
+  if (b2) b2.addEventListener("click", () => doRunOnly(id));
+  if (g && g.results && g.results.length) showGradeResults(g.results, { ok:g.passed, passed:g.count, total:g.total });
+}
+function consoleWrite(txt, cls){
+  const c = document.getElementById("runConsole");
+  if (!c) return;
+  const span = document.createElement("span");
+  if (cls) span.className = cls;
+  span.textContent = txt;
+  c.appendChild(span);
+  c.scrollTop = c.scrollHeight;
+}
+function consoleClear(){
+  const c = document.getElementById("runConsole");
+  if (c) c.innerHTML = "";
+}
+function showGradeResults(results, sum){
+  const list = document.getElementById("gradeList");
+  if (!list) return;
+  list.innerHTML =
+    results.map((r) => '<div class="gradeitem ' + (r.pass ? "pass" : "fail") + '">' +
+      '<span class="gi">' + (r.pass ? "✅" : "❌") + "</span>" +
+      '<span><span class="gn">' + esc(r.name) + "</span>" + (r.pass ? "" : '<div class="gd">' + esc(r.detail || "") + "</div>") + "</span>" +
+    "</div>").join("") +
+    (sum ? '<div class="gradesum ' + (sum.ok ? "pass" : "fail") + '">' +
+      (sum.ok ? "🎉 全部通过（" + sum.passed + "/" + sum.total + "）—— 今天可以标记完成了" : "还有 " + (sum.total - sum.passed) + " 项没过，改一改再跑一次（" + sum.passed + "/" + sum.total + "）") +
+    "</div>" : "");
+}
+function setBusy(busy, text){
+  ["runGrade", "runOnly"].forEach((bid) => { const b = document.getElementById(bid); if (b) b.disabled = busy; });
+  if (text) consoleWrite((busy ? "\n" : "\n") + text + "\n", "dim");
+}
+
+/* ---------- 4. 运行入口 ---------- */
+async function withPy(id, fn){
+  try {
+    if (!pyReady){
+      setBusy(true);
+      consoleError("首次使用需要下载 Python 运行环境（约 11 MB），只下载这一次，之后浏览器会缓存。");
+      await ensurePy((t) => { consoleError("  " + t + " …"); });
+      consoleError("✅ 运行环境就绪\n");
+    }
+    await fn();
+  } catch (e) {
+    consoleError("❌ 无法启动运行环境：" + e.message + "\n");
+    consoleError("可能是网络问题。也可以用下面的「跳过批改」把作业复制给组织者。\n");
+  } finally {
+    setBusy(false);
+  }
+}
+function consoleError(t){ consoleWrite(t + "\n", "bad"); }
+
+/* 并发保护：一次只允许跑一个（避免重复点击导致批改跑两遍） */
+let running = false;
+async function guard(fn){
+  if (running){ toast("正在运行中，稍等一下"); return; }
+  running = true;
+  try { return await fn(); }
+  finally { running = false; }
+}
+
+async function doRunOnly(id){
+  const w = workAt(id);
+  const code = (w.code || "").trim();
+  if (!code){ toast("先把代码填进上面的框里"); return; }
+  const stdinText = (document.getElementById("stdinBox") || {}).value || "";
+  await guard(async () => {
+  consoleClear();
+  await withPy(id, async () => {
+    consoleWrite("▶ 运行中…\n", "dim");
+    const t0 = Date.now();
+    const r = await runOnce(code, stdinText);
+    const ms = Date.now() - t0;
+    if (r.timeout){
+      consoleError("⏱ 超过 " + Math.round(RUN_TIMEOUT / 1000) + " 秒还没结束 —— 很可能是死循环！\n");
+      consoleError("常见原因：while 循环里忘了改条件变量（比如忘了写 i += 1）。\n");
+      return;
+    }
+    consoleWrite("—— 程序输出 ——\n", "dim");
+    consoleWrite(r.stdout || "（没有任何输出）\n");
+    if (r.error){ consoleWrite("\n—— 报错 ——\n", "bad"); consoleError(r.error + "\n"); }
+    else consoleWrite("\n✅ 运行结束，用时 " + ms + " 毫秒\n", "ok");
+  });
+  });
+}
+
+async function doRunGrade(id){
+  const w = workAt(id);
+  const spec = TESTS[id];
+  if (!spec){ toast("这一天还没有批改规则"); return; }
+  const code = (w.code || "").trim();
+  if (spec.runnable === false){
+    const g = gradeAll(id, code, () => ({ stdout:"", error:"" }));
+    saveGrade(id, g);
+    showGradeResults(g.results, g);
+    if (g.ok){ toast("🎉 检查通过，可以标记完成了"); if (typeof maybePraise === "function") maybePraise(id); }
+    else toast("还有 " + (g.total - g.passed) + " 项没满足，看看下面的提示");
+    return;
+  }
+  if (!code){ toast("先把代码填进上面的框里"); return; }
+  await guard(async () => {
+  consoleClear();
+  await withPy(id, async () => {
+    // 输入框里的内容作为"默认输入"；每条用例自己指定的输入优先
+    const custom = (document.getElementById("stdinBox") || {}).value;
+    const cache = {};
+    const inputs = {};
+    spec.cases.forEach((c) => {
+      if (c.srcHas || c.srcRe || c.srcCount) return;
+      const k = c.stdin === undefined ? ((custom != null && custom !== "") ? custom : (spec.stdin || "")) : c.stdin;
+      inputs[k] = true;
+    });
+    const keys = Object.keys(inputs);
+    consoleWrite("▶ 开始运行你的代码（共 " + keys.length + " 组输入）…\n", "dim");
+    let timedOut = false;
+    for (let i = 0; i < keys.length; i++){
+      const k = keys[i];
+      const label = k.split(/\r?\n/).filter((x) => x !== "").join(" / ") || "（无输入）";
+      consoleWrite("  第 " + (i + 1) + " 组输入：" + (label.length > 40 ? label.slice(0, 40) + "…" : label) + "\n", "dim");
+      const r = await runOnce(code, k);
+      if (r.timeout){ timedOut = true; break; }
+      cache[k] = { stdout:r.stdout || "", error:r.error || "" };
+    }
+    if (timedOut){
+      consoleError("\n⏱ 程序运行超过 " + Math.round(RUN_TIMEOUT / 1000) + " 秒，疑似死循环，已强制停止。\n");
+      consoleError("检查一下 while 循环里有没有让条件变化的语句（例如 i += 1）。\n");
+      return;
+    }
+    // 展示真实输出（选最长的那次）
+    let longest = { stdout:"", error:"" }, lk = "";
+    keys.forEach((k) => { if ((cache[k].stdout || "").length > (longest.stdout || "").length){ longest = cache[k]; lk = k; } });
+    consoleWrite("\n—— 程序实际输出（输入：" + (lk.split(/\r?\n/).filter((x)=>x!=="").join(" / ") || "无") + "）——\n", "dim");
+    consoleWrite(longest.stdout || "（没有输出）\n");
+    if (longest.error){ consoleWrite("\n—— 报错 ——\n", "bad"); consoleError(longest.error + "\n"); }
+    // 判分
+    const g = gradeAll(id, code, (src, stdinKey) => cache[stdinKey] || { stdout:"", error:"" });
+    saveGrade(id, g);
+    showGradeResults(g.results, g);
+    consoleWrite("\n—— 批改结果：" + g.passed + "/" + g.total + " ——\n", g.ok ? "ok" : "bad");
+    if (g.ok){
+      toast("🎉 全部通过！今天可以标记完成了", 2600);
+      if (typeof maybePraise === "function") maybePraise(id);
+      if (typeof renderPlan === "function") renderPlan();
+    } else {
+      toast("还有 " + (g.total - g.passed) + " 项没过，按提示改一改", 2800);
+      if (typeof renderPlan === "function") renderPlan();
+    }
+  });
+  });
+}
+
+/* 跳过批改（网络不行 / 规则不适用时的手动出口） */
+function skipGrade(id){
+  const w = workAt(id);
+  w.gradeSkipped = true;
+  save(); renderPlan();
+  toast("已跳过批改。建议把作业复制给组织者人工看一眼 🙂", 2600);
+}
 
 
 /* ============ 启动 ============ */
