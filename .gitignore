@@ -1,0 +1,39 @@
+﻿# 只保留 Python 学习相关的内容，其余（高数预习、QM/PES 作业、构建脚本等）不上传
+*
+
+# 允许的目录：每周的代码
+!week1/
+!week2/
+!week3/
+!week4/
+!week1/**
+!week2/**
+!week3/**
+!week4/**
+
+# 允许仓库自身的配置文件
+!.gitignore
+!.nojekyll
+
+# 允许的说明文件（index.html 是 GitHub Pages 的入口）
+!README.md
+!notes.md
+!周一任务指导.md
+!index.html
+!Python学习计划_四周.xlsx
+
+# 排除 Python 运行产生的临时文件
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.ipynb_checkpoints/
+*.log
+
+# 排除编辑器/系统生成的杂物
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/settings.json
+.idea/
