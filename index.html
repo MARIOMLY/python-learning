@@ -755,6 +755,11 @@ ul.tips kbd{border:1px solid var(--line); border-bottom-width:2px; border-radius
 .adm-stat{background:#f8fafc; border:1px solid var(--line); border-radius:10px; padding:9px 11px}
 .adm-stat b{display:block; font-size:19px; color:var(--ink); line-height:1.25}
 .adm-stat span{font-size:11.5px; color:var(--ink-3)}
+.adm-daystate{
+  margin:9px 0 3px; padding:8px 11px; border-radius:9px; font-size:12.6px; color:var(--ink-2);
+  background:#f1f5f9; border:1px solid var(--line); font-family:inherit;
+}
+.adm-sec select.adm-input{margin-top:2px; cursor:pointer}
 .adm-row{display:flex; align-items:center; gap:9px; font-size:13.3px; color:var(--ink-2); margin:7px 0}
 .adm-row input[type=checkbox]{flex:none; width:15px; height:15px}
 .adm-btns{display:flex; gap:8px; flex-wrap:wrap; margin-top:4px}
@@ -4024,6 +4029,18 @@ const PY_MIRRORS = [
   "https://gcore.jsdelivr.net/pyodide/v0.26.4/full/"
 ];
 const RUN_TIMEOUT = 20000;      // 单次运行超时（毫秒）—— 超过按"疑似死循环"处理
+const PY_FILES = ['pyodide.js', 'pyodide.asm.js', 'pyodide.asm.wasm', 'python_stdlib.zip', 'pyodide-lock.json'];
+/* v0.26.4 的固定文件大小（用 HEAD 请求有时拿不到，写死更可靠，也省 5 次请求） */
+const PY_SIZES = {
+  'pyodide.js': 14761,
+  'pyodide.asm.js': 1229099,
+  'pyodide.asm.wasm': 10088051,
+  'python_stdlib.zip': 2341872,
+  'pyodide-lock.json': 106335
+};
+const STALL_MS = 20000;         // 连续 20 秒没有新数据 → 判定这个节点不行（有数据流动就一直等，网速慢也能成功）
+const WORKER_TIMEOUT = 120000;  // 预下载完成后 worker 启动的超时（此时基本都走缓存，很快）
+const MIRROR_KEY = 'py-plan-mirror';   // 记住上次成功的节点，下次优先用它
 const LOAD_TIMEOUT = 180000;    // 首次下载运行环境的超时
 
 const WORKER_SRC = [
@@ -4034,9 +4051,8 @@ const WORKER_SRC = [
   "  var d = ev.data || {};",
   "  if (d.type === 'init') {",
   "    try {",
-  "      var lastErr = null;",
-  "      for (var i = 0; i < d.mirrors.length; i++) {",
-  "        var base = d.mirrors[i];",
+  "      {",
+  "        var base = d.mirror;",
   "        try {",
   "          self.postMessage({ type: 'progress', text: '正在连接 ' + base.split('/')[2] });",
   "          importScripts(base + 'pyodide.js');",
@@ -4052,12 +4068,11 @@ const WORKER_SRC = [
   "            'builtins.input = _patched_input'",
   "          ].join('\\n'));",
   "          py.runPython('import random, math, string');",
-  "          lastErr = null;",
-  "          break;",
-  "        } catch (e) { lastErr = e; }",
+  "          self.postMessage({ type: 'ready' });",
+  "        } catch (e) {",
+  "          self.postMessage({ type: 'error', message: String((e && e.message) || e) });",
+  "        }",
   "      }",
-  "      if (lastErr) throw lastErr;",
-  "      self.postMessage({ type: 'ready' });",
   "    } catch (e) {",
   "      self.postMessage({ type: 'error', message: String((e && e.message) || e) });",
   "    }",
@@ -4101,30 +4116,100 @@ function killWorker(){
   pyWorker = null; pyReady = false; pyLoading = null;
   Object.keys(runWaiters).forEach((k) => { try { runWaiters[k]({ stdout:'', error:'运行被中断' }); } catch (e) {} delete runWaiters[k]; });
 }
-function ensurePy(progress){
-  if (pyReady && pyWorker) return Promise.resolve();
-  if (pyLoading) { workerOnProgress = progress; return pyLoading; }
-  workerOnProgress = progress;
-  pyLoading = new Promise((resolve, reject) => {
+/* 运行阶段的消息处理（拿 seq 找等待者） */
+function onWorkerMessage(ev){
+  const d = ev.data || {};
+  if (d.type === "progress"){ if (workerOnProgress) workerOnProgress(d.text); return; }
+  if (d.type === "result"){
+    const cb = runWaiters[d.seq];
+    if (cb){ delete runWaiters[d.seq]; cb(d); }
+  }
+}
+/* 上次成功的节点优先 */
+function mirrorOrder(){
+  const list = PY_MIRRORS.slice();
+  let saved = null;
+  try { saved = localStorage.getItem(MIRROR_KEY); } catch (e) {}
+  if (saved && list.indexOf(saved) >= 0){
+    list.splice(list.indexOf(saved), 1);
+    list.unshift(saved);
+  }
+  return list;
+}
+/* 预下载运行环境：带进度 + 卡住检测。
+   关键：只要还有数据在流动就一直等（网速慢也能最终成功），
+   连续 STALL_MS 没有任何数据才判定这个节点不行、换下一个。
+   预下载会进浏览器缓存（这些文件都是 max-age=31536000），
+   随后 loadPyodide 直接走缓存，不再重复下载。 */
+async function prefetchMirror(base, onProgress){
+  const plan = PY_FILES.map(function (name){ return { name: name, size: PY_SIZES[name] || 0 }; });
+  const totalBytes = plan.reduce(function (s, p){ return s + p.size; }, 0);
+  let gotAll = 0;
+  const t0 = Date.now();
+  let lastReport = 0;
+  for (let k = 0; k < plan.length; k++){
+    const p = plan[k];
+    const ctrl = new AbortController();
+    let last = Date.now(), stalled = false;
+    const timer = setInterval(() => {
+      if (Date.now() - last > STALL_MS){
+        stalled = true;
+        try { ctrl.abort(); } catch (e) {}
+      }
+    }, 2500);
+    try {
+      const res = await fetch(base + p.name, { signal: ctrl.signal, cache: "force-cache" });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      if (!res.body || !res.body.getReader) throw new Error("浏览器不支持流式下载");
+      const reader = res.body.getReader();
+      for (;;){
+        const r = await reader.read();
+        if (r.done) break;
+        gotAll += r.value.length;
+        last = Date.now();
+        const now = Date.now();
+        if (onProgress && now - lastReport > 700){
+          lastReport = now;
+          const secs = Math.max(1, (now - t0) / 1000);
+          const speed = Math.round(gotAll / secs / 1024);
+          const totalTxt = totalBytes ? ("/" + (totalBytes / 1048576).toFixed(1) + " MB") : "";
+          const remain = totalBytes - gotAll;
+          const left = (totalBytes && speed > 0 && remain > 0)
+            ? ("，约还需 " + Math.max(1, Math.ceil(remain / 1024 / speed)) + " 秒")
+            : "";
+          onProgress("  正在下载 Python 运行环境：" + (gotAll / 1048576).toFixed(1) + totalTxt +
+            "（" + speed + " KB/s" + left + "）");
+        }
+      }
+    } finally {
+      clearInterval(timer);
+    }
+    if (stalled) throw new Error("__STALL__");
+  }
+}
+/* 用一个节点启动 worker（此时文件已进缓存，通常很快） */
+function initWorker(base){
+  return new Promise((resolve, reject) => {
     let w;
     try { w = new Worker(workerBlobUrl()); }
     catch (e) { reject(new Error("这个浏览器不支持 Web Worker")); return; }
-    pyWorker = w;
-    const to = setTimeout(() => { reject(new Error("加载超时")); killWorker(); }, LOAD_TIMEOUT);
+    let done = false;
+    const fail = (msg) => {
+      if (done) return;
+      done = true; clearTimeout(to);
+      try { w.terminate(); } catch (e) {}
+      reject(new Error(msg));
+    };
+    const to = setTimeout(() => fail("__MIRROR_TIMEOUT__"), WORKER_TIMEOUT);
     w.onmessage = (ev) => {
       const d = ev.data || {};
       if (d.type === "progress"){ if (workerOnProgress) workerOnProgress(d.text); return; }
-      if (d.type === "ready"){ clearTimeout(to); pyReady = true; resolve(); return; }
-      if (d.type === "error"){ clearTimeout(to); killWorker(); reject(new Error(d.message || "加载失败")); return; }
-      if (d.type === "result"){
-        const cb = runWaiters[d.seq];
-        if (cb){ delete runWaiters[d.seq]; cb(d); }
-      }
+      if (d.type === "ready"){ if (done) return; done = true; clearTimeout(to); resolve(w); return; }
+      if (d.type === "error"){ fail(d.message || "启动失败"); return; }
     };
-    w.onerror = (e) => { clearTimeout(to); reject(new Error("Worker 出错: " + (e.message || "未知"))); killWorker(); };
-    w.postMessage({ type:"init", mirrors:PY_MIRRORS });
+    w.onerror = () => fail("__WORKER_ERROR__");
+    w.postMessage({ type: "init", mirror: base });
   });
-  return pyLoading;
 }
 /* 跑一次代码：返回 {stdout, error} —— 超时按死循环处理 */
 function runOnce(code, stdinText, timeoutMs){
@@ -4134,16 +4219,48 @@ function runOnce(code, stdinText, timeoutMs){
     let done = false;
     const finish = (r) => { if (done) return; done = true; clearTimeout(timer); delete runWaiters[seq]; resolve(r); };
     const timer = setTimeout(() => {
-      // 先解决本次调用（标记为超时），再销毁 Worker —— 顺序反了会丢掉"死循环"这个标志
+      /* 先解决本次调用（标记为超时），再销毁 Worker —— 顺序反了会丢掉"死循环"这个标志 */
       finish({ stdout:"", error:"__TIMEOUT__", timeout:true });
       killWorker();
     }, timeoutMs || RUN_TIMEOUT);
-    runWaiters[seq] = (d) => finish({ stdout:d.stdout || "", stderr:d.stderr || "", error:d.error || "" });
-    try { pyWorker.postMessage({ type:"run", seq:seq, code:String(code), stdin:String(stdinText == null ? "" : stdinText) }); }
-    catch (e) { finish({ stdout:"", error:"发送失败: " + e.message }); }
+    runWaiters[seq] = (d) => finish({ stdout: d.stdout || "", stderr: d.stderr || "", error: d.error || "" });
+    try { pyWorker.postMessage({ type: "run", seq: seq, code: String(code), stdin: String(stdinText == null ? "" : stdinText) }); }
+    catch (e) { finish({ stdout: "", error: "发送失败: " + e.message }); }
   });
 }
-
+function ensurePy(progress){
+  if (pyReady && pyWorker) return Promise.resolve();
+  if (pyLoading) { workerOnProgress = progress || workerOnProgress; return pyLoading; }
+  workerOnProgress = progress;
+  pyLoading = (async () => {
+    const order = mirrorOrder();
+    let lastErr = null;
+    for (let i = 0; i < order.length; i++){
+      const base = order[i];
+      const host = base.split("/")[2];
+      if (workerOnProgress) workerOnProgress("第 " + (i + 1) + "/" + order.length + " 个下载节点：" + host);
+      try {
+        await prefetchMirror(base, workerOnProgress);
+        const w = await initWorker(base);
+        w.onmessage = onWorkerMessage;
+        pyWorker = w; pyReady = true;
+        try { localStorage.setItem(MIRROR_KEY, base); } catch (e) {}
+        return;
+      } catch (e) {
+        lastErr = e;
+        const msg = String((e && e.message) || "");
+        if (workerOnProgress){
+          if (msg === "__STALL__") workerOnProgress("  这个节点 20 秒没有任何数据，换下一个");
+          else if (msg === "__MIRROR_TIMEOUT__") workerOnProgress("  这个节点启动超时，换下一个");
+          else workerOnProgress("  这个节点不行（" + msg.slice(0, 50) + "），换下一个");
+        }
+      }
+    }
+    pyLoading = null;
+    throw new Error(lastErr ? "所有下载节点都失败了，请检查网络后重试" : "加载失败");
+  })();
+  return pyLoading;
+}
 /* ---------- 2. 批改结果的存储 ---------- */
 function gradeOf(id){ return (state.work[id] && state.work[id].grade) || null; }
 function gradePassed(id){ const w = state.work[id]; if (w && w.gradeSkipped) return true; const g = gradeOf(id); return !!(g && g.passed); }
@@ -4247,7 +4364,8 @@ async function withPy(id, fn){
     await fn();
   } catch (e) {
     consoleError("❌ 无法启动运行环境：" + e.message + "\n");
-    consoleError("可能是网络问题。也可以用下面的「跳过批改」把作业复制给组织者。\n");
+    consoleError("可能是网络问题（页面用的 Python 运行环境要从 CDN 下载）。\n");
+    consoleError("可以：① 刷新页面再试一次；② 过一会儿再试；③ 用下面的「跳过批改」先继续学习。\n");
   } finally {
     setBusy(false);
   }
@@ -5218,10 +5336,10 @@ function renderAdminPanel(){
       '<div class="adm-stat"><b>' + s.kb + ' KB</b><span>本机存储占用</span></div>' +
       '<div class="adm-stat"><b>' + (typeof streak === "function" ? streak() : 0) + ' 天</b><span>当前连续签到</span></div>' +
     '</div></div>' +
-    '<div class="adm-sec"><h4>快捷开关</h4>' +
-      '<label class="adm-row"><input type="checkbox" id="admGateOff"' + (set.allowNoWork === true ? " checked" : "") + '><span>允许不交作业直接标记完成（门禁总开关）</span></label>' +
+    '<div class="adm-sec"><h4>快捷开关</h4>' +      '<label class="adm-row"><input type="checkbox" id="admGateOff"' + (set.allowNoWork === true ? " checked" : "") + '><span>允许不交作业直接标记完成（门禁总开关）</span></label>' +
       '<label class="adm-row"><input type="checkbox" id="admNoGrade"' + (set.requireGrade === false ? " checked" : "") + '><span>取消"必须通过自动批改"的要求</span></label>' +
     '</div>' +
+    admDebugHtml() +
     '<div class="adm-sec"><h4>数据管理</h4><div class="adm-btns">' +
       '<button class="btn" type="button" id="admExport">📤 导出完整数据（JSON）</button>' +
       '<button class="btn" type="button" id="admImport">📥 导入数据</button>' +
@@ -5255,6 +5373,164 @@ function renderAdminPanel(){
   if (wp) wp.addEventListener("click", adminWipeData);
   const lo = document.getElementById("admLogout");
   if (lo) lo.addEventListener("click", adminLogout);
+  if (typeof admWireDebug === "function") admWireDebug();
+}
+/* ---------- 调试工具（方便自己测试各功能） ---------- */
+let admDebugDay = null;      // 当前选中的 dayId
+function admTodayDayId(){
+  const t = todayIdx();
+  return dayIdAt(t >= 0 ? t : 0);
+}
+function admDayLabel(id){
+  const i = WORK_IDX(id);
+  const d = DAYS[i];
+  const dt = dayDate(i);
+  return "D" + pad2(i + 1) + " · " + d.topic + "（" + dstrShort(dt) + " " + WEEKDAY_CN[dt.getDay()] + "）";
+}
+/* 把一天的现状整理成一行文字，方便确认改的是哪一天 */
+function admDayState(id){
+  const i = WORK_IDX(id);
+  const w = state.work[id] || {};
+  const st = { todo: "未开始", doing: "进行中", done: "已完成" }[statusOf(id)] || statusOf(id);
+  const ci = isChecked(i) ? (madeUp(i) ? "已补签" : "已签到") : "未签到";
+  const sub = (typeof hasSubmitted === "function" && hasSubmitted(id)) ? "已交作业" : "未交作业";
+  let gr = "未批改";
+  if (w.gradeSkipped) gr = "已跳过批改";
+  else if (w.grade) gr = (w.grade.passed ? "批改通过 " : "批改未过 ") + w.grade.count + "/" + w.grade.total;
+  const codeLen = (w.code || "").length;
+  return st + " · " + ci + " · " + sub + " · " + gr + " · 代码 " + codeLen + " 字符";
+}
+function admDebugHtml(){
+  const id = admDebugDay || admTodayDayId();
+  admDebugDay = id;
+  const opts = DAYS.map(function (d, i){
+    const did = dayIdAt(i);
+    return '<option value="' + did + '"' + (did === id ? " selected" : "") + ">D" + pad2(i + 1) + " · " + esc(d.topic) + "（" + dstrShort(dayDate(i)) + "）</option>";
+  }).join("");
+  return '<div class="adm-sec"><h4>调试工具（只影响这台设备，方便自己测功能）</h4>' +
+    '<select class="adm-input" id="admDay" aria-label="选择要操作的日期">' + opts + "</select>" +
+    '<div class="adm-daystate" id="admDayState">当前：' + esc(admDayState(id)) + "</div>" +
+    '<div class="adm-btns">' +
+      '<button class="btn" type="button" id="admSetDone">✅ 标记完成</button>' +
+      '<button class="btn" type="button" id="admSetTodo">↩️ 标记未完成</button>' +
+      '<button class="btn" type="button" id="admFillTpl">📝 填入起始模板</button>' +
+      '<button class="btn" type="button" id="admClearGrade">🔍 清空批改结果</button>' +
+      '<button class="btn" type="button" id="admClearWork">🧹 清空这一天的作业</button>' +
+      '<button class="btn" type="button" id="admCheckin">📍 设为已签到</button>' +
+      '<button class="btn" type="button" id="admUncheckin">🚫 取消签到</button>' +
+    "</div>" +
+    '<div class="adm-btns" style="margin-top:10px">' +
+      [1, 2, 3, 4].map(function (w){ return '<button class="btn" type="button" data-admweek="' + w + '">重置第 ' + w + ' 周</button>'; }).join("") +
+      '<button class="btn" type="button" id="admResetStatus" style="color:#b91c1c">重置全部状态（保留代码）</button>' +
+    "</div>" +
+    '<div style="font-size:12px;color:var(--ink-3);margin-top:7px">' +
+      "「标记完成」会直接写入完成状态，不经过门禁和批改（方便测试完成后的效果）。" +
+    "</div></div>";
+}
+/* 调试操作后统一刷新 */
+function admAfterChange(msg){
+  save();
+  try { if (typeof renderPlan === "function") renderPlan(); } catch (e) {}
+  try { if (typeof renderCheckin === "function") renderCheckin(); } catch (e) {}
+  try { if (typeof updateStats === "function") updateStats(); } catch (e) {}
+  try { if (typeof refreshRemind === "function") refreshRemind(); } catch (e) {}
+  try { if (typeof renderAdminPanel === "function") renderAdminPanel(); } catch (e) {}
+  if (msg) toast(msg, 2200);
+}
+function admSetStatus(status){
+  const id = admDebugDay;
+  if (!id) return;
+  state.status[id] = status;
+  const w = state.work[id];
+  if (w) w.status = status;
+  admAfterChange((status === "done" ? "已标记完成" : "已标记未完成") + "：" + admDayLabel(id));
+}
+function admFillTemplate(){
+  const id = admDebugDay;
+  if (!id) return;
+  const tpl = (typeof TEMPLATES === "object" && TEMPLATES[id]) ? TEMPLATES[id] : "";
+  if (!tpl){ toast("这一天没有起始模板", 2200); return; }
+  workAt(id).code = tpl;
+  admAfterChange("已填入起始模板：" + admDayLabel(id));
+}
+function admClearGrade(){
+  const id = admDebugDay;
+  if (!id) return;
+  const w = workAt(id);
+  const had = !!(w.grade || w.gradeSkipped);
+  delete w.grade;
+  delete w.gradeSkipped;
+  admAfterChange(had ? "已清空批改结果：" + admDayLabel(id) : "这一天本来就没有批改结果");
+}
+function admClearWork(){
+  const id = admDebugDay;
+  if (!id) return;
+  if (!confirm("清空 " + admDayLabel(id) + " 的作业（代码、输出、备注、批改结果）？\n\n状态和签到不受影响。")) return;
+  delete state.work[id];
+  admAfterChange("已清空作业：" + admDayLabel(id));
+}
+function admSetCheckin(on){
+  const id = admDebugDay;
+  if (!id) return;
+  const i = WORK_IDX(id);
+  const key = dayKey(i);
+  if (on){
+    state.checkin[key] = Date.now();
+    delete state.added[key];        /* 调试签到按"正常签到"记，不算补签 */
+    admAfterChange("已设为已签到：" + dstrShort(dayDate(i)));
+  } else {
+    delete state.checkin[key];
+    delete state.added[key];
+    admAfterChange("已取消签到：" + dstrShort(dayDate(i)));
+  }
+}
+function admResetWeek(w){
+  const s = weekSlice(w);
+  if (!confirm("重置第 " + w + " 周（D" + pad2(s.start + 1) + "–D" + pad2(s.end) + "）的状态、签到、作业和批改结果？")) return;
+  for (let i = s.start; i < s.end; i++){
+    const id = dayIdAt(i), key = dayKey(i);
+    delete state.status[id];
+    delete state.work[id];
+    delete state.checkin[key];
+    delete state.added[key];
+  }
+  admAfterChange("已重置第 " + w + " 周");
+}
+function admResetAllStatus(){
+  if (!confirm("重置全部 28 天的状态、签到和批改结果？\n\n（作业代码会保留）")) return;
+  if (!confirm("最后确认：真的要全部重置吗？")) return;
+  state.status = {};
+  state.checkin = {};
+  state.added = {};
+  state.praised = {};
+  Object.keys(state.work).forEach(function (id){
+    const w = state.work[id];
+    if (w){ w.status = "todo"; delete w.grade; delete w.gradeSkipped; }
+  });
+  admAfterChange("已重置全部状态（代码保留）");
+}
+function admWireDebug(){
+  const day = document.getElementById("admDay");
+  if (day) day.addEventListener("change", function (e){
+    admDebugDay = e.target.value;
+    const el = document.getElementById("admDayState");
+    if (el) el.textContent = "当前：" + admDayState(admDebugDay);
+  });
+  const bind = function (elId, fn){
+    const el = document.getElementById(elId);
+    if (el) el.addEventListener("click", fn);
+  };
+  bind("admSetDone", function (){ admSetStatus("done"); });
+  bind("admSetTodo", function (){ admSetStatus("todo"); });
+  bind("admFillTpl", admFillTemplate);
+  bind("admClearGrade", admClearGrade);
+  bind("admClearWork", admClearWork);
+  bind("admCheckin", function (){ admSetCheckin(true); });
+  bind("admUncheckin", function (){ admSetCheckin(false); });
+  bind("admResetStatus", admResetAllStatus);
+  Array.prototype.forEach.call(document.querySelectorAll("[data-admweek]"), function (b){
+    b.addEventListener("click", function (){ admResetWeek(Number(b.getAttribute("data-admweek"))); });
+  });
 }
 /* ---------- 数据导出 / 导入 / 清空 ---------- */
 function adminDownload(name, text){
