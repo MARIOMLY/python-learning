@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://zero-python-4weeks.netlify.app/sitemap.xml
+Sitemap: https://mariomly.github.io/python-learning/sitemap.xml

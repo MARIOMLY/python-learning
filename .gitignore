@@ -1,4 +1,4 @@
-﻿# 只保留 Python 学习相关的内容，其余（高数预习、QM/PES 作业、构建脚本等）不上传
+# 只保留 Python 学习相关的内容，其余（高数预习、QM/PES 作业、构建脚本等）不上传
 *
 
 # 允许的目录：每周的代码
@@ -21,6 +21,10 @@
 !周一任务指导.md
 !index.html
 !Python学习计划_四周.xlsx
+
+# 允许搜索引擎相关文件
+!robots.txt
+!sitemap.xml
 
 # 排除 Python 运行产生的临时文件
 __pycache__/

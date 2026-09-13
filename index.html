@@ -6,6 +6,17 @@
 <title>Python 四周学习计划 · 教程与作业</title>
 <meta name="description" content="Python 四周学习计划：28 天逐日教程 + 浏览器内真机运行代码 + 自动批改 + 每日打卡。打开网页就能学，无需安装任何软件。">
 <meta name="theme-color" content="#2563eb">
+<!-- 分享到微信 / QQ / 社交平台时的预览卡片 -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Python 四周学习计划">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:title" content="Python 四周学习计划 · 28 天从零到第一个小项目">
+<meta property="og:description" content="每天 30 分钟，28 天学会 Python 基础。网页里直接写代码、真机运行、自动批改，还带打卡和作业门禁。打开就能学，不用装任何软件。">
+<meta property="og:url" content="https://zero-python-4weeks.netlify.app/">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Python 四周学习计划 · 28 天从零到第一个小项目">
+<meta name="twitter:description" content="每天 30 分钟，28 天学会 Python 基础。网页里直接写代码、真机运行、自动批改。">
+<link rel="canonical" href="https://zero-python-4weeks.netlify.app/">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%232563eb'/%3E%3Ctext x='32' y='46' font-family='Arial,Helvetica,sans-serif' font-size='36' font-weight='bold' fill='%23ffffff' text-anchor='middle'%3EPy%3C/text%3E%3C/svg%3E">
 <!-- ==== SCENARIO-HOOK（测试时在这之前注入预置数据，页面脚本尚未执行） ==== -->
 <style>
@@ -395,6 +406,58 @@ kbd{background:#fff; border:1px solid var(--line); border-bottom-width:2px; bord
 .saveline{font-size:12px; color:var(--ink-3); margin-top:8px; display:flex; align-items:center; gap:8px; flex-wrap:wrap}
 .saveline .ok{color:var(--done); font-weight:600}
 
+/* ---------- 常见报错查询页 ---------- */
+.errbox .remind-card{max-width:760px; width:min(760px,94vw)}
+.errsearch{display:flex; gap:8px; align-items:center; margin:2px 0 12px}
+.errsearch input{
+  flex:1; padding:9px 12px; border:1px solid var(--line); border-radius:10px;
+  font-size:13.5px; outline:none; background:#fff;
+}
+.errsearch input:focus{border-color:#9dbdf5; box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.errlist{max-height:min(58vh,520px); overflow:auto; display:flex; flex-direction:column; gap:8px; padding-right:2px}
+.errcard{border:1px solid var(--line); border-radius:11px; background:#fff; overflow:hidden}
+.errcard.hit{border-color:#f6c667; background:#fffdf5}
+.errcard > summary{
+  cursor:pointer; padding:10px 13px; display:flex; align-items:center; gap:9px;
+  font-size:13.6px; font-weight:700; color:var(--ink); list-style:none;
+}
+.errcard > summary::-webkit-details-marker{display:none}
+.errcard > summary::before{content:"▸"; color:var(--ink-3); font-size:12px; transition:.15s}
+.errcard[open] > summary::before{transform:rotate(90deg)}
+.errcard > summary .cn{font-weight:600; color:var(--ink-3); font-size:12.5px}
+.errcard > summary .code{font-family:"Cascadia Code",Consolas,monospace; font-size:12.2px; color:#b91c1c}
+.errcard .body{padding:0 13px 13px; border-top:1px solid var(--line-2, #eef2f7)}
+.errcard .sect{margin-top:10px}
+.errcard .sect > b{display:block; font-size:12.5px; color:var(--ink-3); margin-bottom:5px}
+.errcard .sect p{margin:0 0 6px; font-size:13.2px; color:var(--ink-2); line-height:1.75}
+.errcase{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:7px 0}
+.errcase > div{border-radius:9px; padding:7px 9px; font-family:"Cascadia Code",Consolas,monospace; font-size:12.1px; line-height:1.55; white-space:pre-wrap; word-break:break-word}
+.errcase .bad{background:#fef2f2; border:1px solid #fecaca; color:#991b1b}
+.errcase .good{background:#f0fdf4; border:1px solid #bbf7d0; color:#166534}
+.errcase .lbl{font-family:inherit; font-size:11px; font-weight:700; opacity:.75; display:block; margin-bottom:3px}
+.errcase .why2{grid-column:1/-1; font-family:inherit; font-size:12.2px; color:var(--ink-3); padding:0 2px}
+.errhow{margin:0; padding-left:19px}
+.errhow li{font-size:13.1px; color:var(--ink-2); margin:4px 0; line-height:1.7}
+.errfoot{display:flex; gap:9px; align-items:center; flex-wrap:wrap; margin-top:14px; padding-top:12px; border-top:1px solid var(--line)}
+.errfoot .grow{margin-left:auto}
+@media (max-width:620px){ .errcase{grid-template-columns:1fr} }
+/* ---------- 代码高亮 + 复制按钮 ---------- */
+.codeblock{position:relative; margin:10px 0}
+.codeblock pre{margin:0}
+.codeblock .copybtn{
+  position:absolute; top:8px; right:8px; z-index:2;
+  border:1px solid rgba(148,163,184,.35); background:rgba(15,23,42,.72); color:#cbd5e1;
+  border-radius:7px; padding:2px 9px; font-size:11.5px; font-weight:600;
+  opacity:.75; transition:.15s ease;
+}
+.codeblock:hover .copybtn,.codeblock .copybtn:focus{opacity:1}
+.codeblock .copybtn:hover{background:rgba(37,99,235,.9); color:#fff; border-color:transparent}
+.codeblock .copybtn.ok{background:#16a34a; color:#fff; border-color:transparent}
+.tok-kw{color:#c792ea}      /* 关键字 */
+.tok-str{color:#a5d6a7}     /* 字符串 */
+.tok-num{color:#f78c6c}     /* 数字 */
+.tok-com{color:#7c8798; font-style:italic}  /* 注释 */
+.tok-bi{color:#82aaff}      /* 内置函数 */
 /* ---------- 分享 / 交给别人 ---------- */
 .sharebar{
   display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:12px;
@@ -649,6 +712,23 @@ kbd{background:#fff; border:1px solid var(--line); border-bottom-width:2px; bord
   border-radius:50%; animation:spin .7s linear infinite; vertical-align:-2px; margin-right:5px;
 }
 @keyframes spin{to{transform:rotate(360deg)}}
+
+
+/* 说明里的按键样式 */
+ul.tips kbd{border:1px solid var(--line); border-bottom-width:2px; border-radius:5px; padding:0 5px; background:#fff; font-family:inherit; font-size:11.5px; color:var(--ink-2)}
+/* 键盘焦点必须看得见（鼠标点击不显示，避免影响观感） */
+:focus-visible{outline:3px solid #2563eb; outline-offset:2px; border-radius:8px}
+.day:focus-visible{outline:3px solid var(--brand); outline-offset:3px}
+.ci:focus-visible{outline:2px solid var(--brand); outline-offset:2px}
+.btn:focus-visible,.dtab:focus-visible,.runbtn:focus-visible{outline:3px solid #1d4ed8; outline-offset:2px}
+.sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0}
+.kbdhint{
+  display:inline-flex; align-items:center; gap:4px; font-size:11.5px; color:var(--ink-3);
+}
+.kbdhint kbd{
+  border:1px solid var(--line); border-bottom-width:2px; border-radius:5px; padding:0 5px;
+  background:#fff; font-family:inherit; font-size:11px; color:var(--ink-2);
+}
 </style>
 </head>
 <body>
@@ -661,6 +741,7 @@ kbd{background:#fff; border:1px solid var(--line); border-bottom-width:2px; bord
     </div>
     <div class="search"><input id="q" type="search" placeholder="搜索主题 / 任务 / 备注" title="按主题、任务、完成标志或你自己的备注筛选" autocomplete="off"></div>
     <button class="btn" id="onlyOpen" title="只显示未完成的计划项">只看未完成</button>
+    <button class="btn" id="errBtn" title="查常见报错的原因和改法">🐞 报错查询</button>
     <button class="btn" id="exportBtn">导出进度 CSV</button>
     <button class="btn" id="exportWork">导出作业包</button>
     <button class="btn" id="printBtn">打印</button>
@@ -715,7 +796,7 @@ kbd{background:#fff; border:1px solid var(--line); border-bottom-width:2px; bord
       <li data-n="6">第 4 周的项目从“猜数字 / 计算器 / 单位换算”中选一个，功能越少越容易做完。</li>
       <li data-n="7">快捷键：<kbd>/</kbd> 定位搜索框，<kbd>Esc</kbd> 清空搜索，<kbd>Ctrl</kbd>+<kbd>P</kbd> 打印。</li>
       <li data-n="8">进度存在本机浏览器（localStorage），换电脑请先用“导出进度 CSV”备份。</li>
-    </ul>
+      <li data-n="9">键盘也能用：<kbd>↑</kbd><kbd>↓</kbd>（或 <kbd>J</kbd><kbd>K</kbd>）在日卡间移动，<kbd>Enter</kbd> 开教程，<kbd>W</kbd> 开作业，<kbd>/</kbd> 搜内容，<kbd>?</kbd> 查报错，<kbd>Esc</kbd> 关闭。</li>
     <div class="setrow" style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line)">
       <input type="checkbox" id="allowNoWork">
       <span><b>允许不交作业直接标记完成</b>
@@ -741,6 +822,7 @@ kbd{background:#fff; border:1px solid var(--line); border-bottom-width:2px; bord
         </span>
       </span>
     </div>
+    </ul>
   </section>
 </div>
 
@@ -775,6 +857,24 @@ kbd{background:#fff; border:1px solid var(--line); border-bottom-width:2px; bord
       <button class="btn" id="gateCancel">先去写代码</button>
     </div>
     <button class="force-link" id="gateForce">确实交不了？点这里记录原因，直接标记完成</button>
+  </div>
+</div>
+
+<!-- 常见报错查询页 -->
+<div class="remind gate errbox" id="errbox" role="dialog" aria-modal="true" aria-label="常见报错查询">
+  <div class="remind-card">
+    <h3>🐞 常见报错查询</h3>
+    <p class="rsub" id="errSub">把报错信息里的关键词打进来（比如 <b>NameError</b>、<b>缩进</b>、<b>int</b>），或者直接往下翻。</p>
+    <div class="errsearch">
+      <input type="search" id="errq" placeholder="搜报错名或中文症状：NameError / 缩进 / 越界 / 除以零 …" aria-label="搜索报错">
+      <button class="btn" id="errClear" type="button">清空</button>
+    </div>
+    <div class="errlist" id="errList"></div>
+    <div class="errfoot">
+      <span class="hint2" id="errCount"></span>
+      <span class="grow"></span>
+      <button class="btn primary" id="errClose2" type="button">知道了</button>
+    </div>
   </div>
 </div>
 
@@ -1011,7 +1111,8 @@ function renderPlan(){
       const isToday = i === todayIdx();
       const ciOn = isChecked(i);
       const gated = !hasSubmitted(id) && (typeof gateOn !== "function" || gateOn());
-      html += `<article class="day${isToday ? " is-today" : ""}" id="${id}" data-s="${s}" data-id="${id}"
+      html += `<article class="day${isToday ? " is-today" : ""}" id="${id}" data-s="${s}" data-id="${id}" tabindex="0" role="group"
+          aria-label="第 ${globalNo} 天 ${esc(d.topic)}${isToday ? "（今天）" : ""}，按回车打开教程，按 W 打开作业"
           style="--wc:${w.soft};--wcd:${w.color};--wct:${w.text}">
         <div class="when">
           ${isToday ? '<span class="todaytag">今天</span>' : ""}
@@ -1054,6 +1155,7 @@ function renderPlan(){
     html += `</div></section>`;
   });
   plan.innerHTML = html;
+  if (typeof enhanceA11y === "function") enhanceA11y();
 }
 
 function updateStats(){
@@ -1247,6 +1349,112 @@ function gradeBadgeHtml(id, submitted){
   return "";
 }
 
+
+/* 关键字 / 内置函数表（用于着色） */
+const PY_KW = "False None True and as assert break class continue def del elif else except finally for from global if import in is lambda nonlocal not or pass raise return try while with yield".split(" ");
+const PY_BI = "print input len range int float str bool list dict set tuple sum min max abs round type enumerate sorted reversed zip map filter open isinstance random randint choice math sqrt format".split(" ");
+const PY_KW_SET = {}; PY_KW.forEach(function (k) { PY_KW_SET[k] = 1; });
+const PY_BI_SET = {}; PY_BI.forEach(function (k) { PY_BI_SET[k] = 1; });
+const RE_IDENT = /[A-Za-z0-9_]/;
+const RE_IDENT_START = /[A-Za-z_]/;
+
+/* 把 Python 源码变成带 <span> 着色的 HTML。
+   用逐字符扫描而不是正则 —— 避免多层模板里的转义地狱，也不会漏掉边界情况。 */
+function hlPython(code){
+  var src = String(code == null ? "" : code);
+  var n = src.length, i = 0, out = "", plain = "";
+  function flush(){ if (plain){ out += esc(plain); plain = ""; } }
+  function span(cls, t){ flush(); out += '<span class="' + cls + '">' + esc(t) + "</span>"; }
+  while (i < n){
+    var ch = src.charAt(i);
+    /* 注释：# 到行尾 */
+    if (ch === "#"){
+      var e1 = src.indexOf("\n", i);
+      if (e1 < 0) e1 = n;
+      span("tok-com", src.slice(i, e1));
+      i = e1;
+      continue;
+    }
+    /* 字符串：三引号 / 单引号 / 双引号 */
+    if (ch === '"' || ch === "'"){
+      var triple = src.substr(i, 3);
+      if (triple === '\u0022\u0022\u0022' || triple === "\u0027\u0027\u0027"){
+        var e2 = src.indexOf(triple, i + 3);
+        e2 = (e2 < 0) ? n : e2 + 3;
+        span("tok-str", src.slice(i, e2));
+        i = e2;
+        continue;
+      }
+      var j = i + 1;
+      while (j < n){
+        var cj = src.charAt(j);
+        if (cj === "\\"){ j += 2; continue; }
+        if (cj === ch){ j++; break; }
+        if (cj === "\n"){ break; }   /* 没闭合就到此为止，别把后面全染成字符串 */
+        j++;
+      }
+      span("tok-str", src.slice(i, j));
+      i = j;
+      continue;
+    }
+    /* 数字 */
+    if (ch >= "0" && ch <= "9"){
+      var k = i;
+      while (k < n && ((src.charAt(k) >= "0" && src.charAt(k) <= "9") || src.charAt(k) === ".")) k++;
+      span("tok-num", src.slice(i, k));
+      i = k;
+      continue;
+    }
+    /* 标识符 → 关键字 / 内置函数 / 普通名字 */
+    if (RE_IDENT_START.test(ch)){
+      var q = i;
+      while (q < n && RE_IDENT.test(src.charAt(q))) q++;
+      var w = src.slice(i, q);
+      if (PY_KW_SET[w]) span("tok-kw", w);
+      else if (PY_BI_SET[w]) span("tok-bi", w);
+      else plain += w;
+      i = q;
+      continue;
+    }
+    /* 其它字符原样累积（最后统一转义） */
+    plain += ch;
+    i++;
+  }
+  flush();
+  return out;
+}
+
+/* 复制代码块 */
+function copyCodeBlock(btn){
+  var block = btn.closest(".codeblock");
+  var code = block ? block.querySelector("code") : null;
+  if (!code) return;
+  var text = code.textContent;
+  var done = function (){
+    btn.textContent = "已复制 ✓";
+    btn.classList.add("ok");
+    setTimeout(function (){ btn.textContent = "复制"; btn.classList.remove("ok"); }, 1600);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done).catch(function (){ fallbackCopy(text, done); });
+  } else fallbackCopy(text, done);
+}
+function fallbackCopy(text, done){
+  var ta = document.createElement("textarea");
+  ta.value = text;
+  ta.style.position = "fixed"; ta.style.left = "-9999px";
+  document.body.appendChild(ta);
+  var ok = false;
+  try { ta.select(); ok = document.execCommand("copy"); } catch (e) { ok = false; }
+  ta.remove();
+  if (ok) done(); else toast("复制失败，请手动选中代码复制", 2600);
+}
+/* 全局委托：所有 [data-copy] 按钮都能复制所在代码块 */
+document.addEventListener("click", function (e){
+  var b = e.target.closest("[data-copy]");
+  if (b) copyCodeBlock(b);
+});
+
 /* ==== 读取本地数据（必须在打卡模块之前，它要用 state.startDate 算起点） ==== */
 load();
 
@@ -1258,6 +1466,11 @@ function mdInline(s){
     .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
     .replace(/\x60([^\x60]+)\x60/g, "<code>$1</code>")
     .replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>");
+}
+/* 代码块统一渲染：高亮 + 右上角复制按钮 */
+function codeBlockHtml(raw){
+  return '<div class="codeblock"><button class="copybtn" type="button" data-copy title="复制这段代码">复制</button>' +
+    "<pre><code>" + (typeof hlPython === "function" ? hlPython(raw) : esc(raw)) + "</code></pre></div>";
 }
 function mdCells(line){
   return line.replace(/^\s*\|/, "").replace(/\|\s*$/, "").split("|").map(c => c.trim());
@@ -1280,7 +1493,7 @@ function mdToHtml(md){
   for (const raw of lines){
     const line = raw.replace(/\s+$/, "");
     if (code !== null){
-      if (/^\x60\x60\x60/.test(line.trim())){ out += "<pre><code>" + esc(code.join("\n")) + "</code></pre>"; code = null; }
+      if (/^\x60\x60\x60/.test(line.trim())){ out += codeBlockHtml(code.join("\n")); code = null; }
       else code.push(raw);
       continue;
     }
@@ -1302,7 +1515,7 @@ function mdToHtml(md){
     if ((m = line.match(/^\s*\d+[.、)]\s+(.*)$/))){ flushPara(); if (list !== "ol"){ closeList(); out += "<ol>"; list = "ol"; } out += "<li>" + mdInline(m[1]) + "</li>"; continue; }
     para.push(mdInline(line.trim()));
   }
-  if (code !== null) out += "<pre><code>" + esc(code.join("\n")) + "</code></pre>";
+  if (code !== null) out += codeBlockHtml(code.join("\n"));
   flushPara(); closeList(); closeTable();
   return out;
 }
@@ -1440,6 +1653,7 @@ function renderWork(id){
   box.innerHTML = html;
   refreshWorkUi();
   if (typeof renderRunner === "function") renderRunner(id);
+
 }
 
 /* ---------- 我的代码面板 ---------- */
@@ -1460,7 +1674,7 @@ function renderCode(id){
     '<div class="tplbox">📦 zip 内含：<b>' + esc(file) + '</b>、每天的 <span class="mini">README.md</span>（任务、完成标志、你的备注）' +
     "，以及仓库根目录的 <span class=\"mini\">README.md</span>。上传 GitHub 时用它最省事。</div>" +
     '<div style="margin-top:14px"><label style="display:block;font-size:12.5px;font-weight:700;color:var(--ink-3);margin-bottom:6px">代码预览</label>' +
-    '<div class="md">' + (w.code.trim() ? "<pre><code>" + esc(w.code) + "</code></pre>" : '<p style="color:var(--ink-3)">还没有提交代码。去「📝 作业提交」把代码粘进去吧。</p>') + "</div></div>";
+    '<div class="md">' + (w.code.trim() ? codeBlockHtml(w.code) : '<p style="color:var(--ink-3)">还没有提交代码。去「📝 作业提交」把代码粘进去吧。</p>') + "</div></div>";
   const z1 = document.getElementById("zipOne");
   const zw = document.getElementById("zipWeek");
   const za = document.getElementById("zipAll");
@@ -2216,31 +2430,31 @@ document.getElementById("workBody").addEventListener("click", (e) => {
 const TUTORIALS = {
  "w1d1": "\n### 为什么要先搭环境\n写 Python 需要两样东西：**解释器**（真正跑代码的程序）和**编辑器**（写代码的地方）。装好这两样，后面 27 天都在这套工具里度过，所以今天值得多花 10 分钟。\n\n### 第一步：装 Python（10 分钟）\n1. 打开 [python.org/downloads/windows](https://www.python.org/downloads/windows/)，下载最新的 **Windows installer (64-bit)**（3.12 以上都行，别纠结版本）。\n2. 双击安装，**第一屏最底部必须勾上 `Add python.exe to PATH`** —— 忘了勾，以后再终端里敲 `python` 会找不到。\n3. 点 `Install Now`，默认路径即可，**安装路径不要带中文和空格**。\n4. 装完点 `Close`。\n\n> 装的时候勾 PATH 是新手第一大坑，看到这一条请停下来确认一遍。\n\n```bat\npython --version\n```\n在任意终端（Win+R 输入 cmd）里敲上面这行，出现 `Python 3.x.x` 就对了。这一步没通过，后面全部白搭，先修这个。\n\n### 第二步：装 VS Code + Python 扩展（8 分钟）\n1. 打开 [code.visualstudio.com](https://code.visualstudio.com/) 下载安装，一路下一步。建议勾选「添加到 PATH」和「资源管理器右键菜单」。\n2. 打开 VS Code，按 `Ctrl+Shift+X` 打开扩展面板，搜 `Python`，装**作者是 Microsoft** 的那个。\n3. （可选）搜 `Chinese (Simplified)` 装中文语言包，重启后菜单变中文。\n\n### 第三步：建自己的代码文件夹\n`文件 → 打开文件夹`，新建并打开一个专门放代码的目录，例如 `D:\\Python学习\\week1`。\n**别把代码散在桌面**：每周一个子文件夹，最后直接打包上传 GitHub，省事。\n\n### 第四步：写下并运行第一个程序\n在左侧文件区右键 → 新建文件，命名 `hello.py`（扩展名必须是 `.py`），输入：\n\n```python\nprint(\"Hello World\")\nprint(\"我是 ZERO，今天开始学 Python\")\n```\n\n保存（`Ctrl+S`，标签页上的小圆点消失才算存了），然后运行，三种方式任选：\n\n| 方式 | 操作 | 说明 |\n| --- | --- | --- |\n| 运行按钮 | 右上角 ▶（先在下拉里选 Run Python File） | 最省事，推荐 |\n| 终端命令 | `Ctrl+` + ` python hello.py` | 最通用，和以后工作一样 |\n| 交互模式 | 终端敲 `python` 进入 `>>>`，逐行输入，`exit()` 退出 | 适合试语法、算数 |\n\n### 看懂这条语句\n- `print` 是**函数**，括号里放什么，就打印什么；\n- 引号里的内容叫**字符串**，中文、英文、数字都可以；\n- 引号必须是英文的 `\"...\"` 或 `'...'`，用了中文引号会报 `SyntaxError`。\n\n### 今天必须认识的三个报错\n- `'python' 不是内部或外部命令` → 装的时候没勾 PATH，重跑安装包选 Modify 补上；\n- `can't open file 'hello.py'` → 终端当前目录不对，先 `cd /d D:\\Python学习\\week1`，或直接用 ▶ 运行；\n- `SyntaxError: invalid syntax` → 少括号、少引号，或者用了中文标点。\n\n> 报错不是失败，是 Python 在告诉你哪一行不对。**先读最后一行**（错误类型），再看倒数第二三行的行号。\n",
  "w1d2": "\n### 变量：给数据起个名字\n```python\nage = 20\n```\n这行的意思是：把右边的 `20` 存起来，起名叫 `age`。以后写 `age` 就等于写 `20`。\n注意 `=` 在这里读作\"赋值\"，**不是数学上的等于**。\n\n### 四种最基本的数据类型\n| 类型 | 写法 | 例子 | 用途 |\n| --- | --- | --- | --- |\n| `int` 整数 | 不带小数点 | `10` `-3` | 年龄、个数、次数 |\n| `float` 小数 | 带小数点 | `9.9` `3.14` | 身高、价格、平均值 |\n| `str` 字符串 | 用引号包起来 | `\"ZERO\"` `\"你好\"` | 姓名、句子、任何文字 |\n| `bool` 布尔 | 只有两个值 | `True` `False` | 判断结果、开关状态 |\n\n**引号是字符串的身份证**：`20` 是数字，可以加减乘除；`\"20\"` 是文字，`\"20\" + 1` 会报错。这是新人最容易踩的坑之一。\n\n### print 的两种写法\n```python\nname = \"ZERO\"\nage = 20\nprint(name, age)                    # 逗号分隔，输出: ZERO 20\nprint(f\"我叫{name}，今年{age}岁\")     # f-string，最推荐\n```\nf-string 前面那个 `f` 千万别漏，漏了就变成原样输出大括号。\n\n### 用 type() 看真实类型\n```python\nprint(type(20))       # <class 'int'>\nprint(type(\"20\"))     # <class 'str'>\nprint(type(True))     # <class 'bool'>\n```\n**不确定一个东西是什么类型，就 type() 一下**，这是排查问题的常用手段。\n\n### 变量命名规则\n- 只能用字母、数字、下划线，且不能以数字开头（`2name` 错，`name2` 对）；\n- 区分大小写：`Age` 和 `age` 是两个不同的变量；\n- 别用 `print`、`if`、`for` 这些**关键字**当变量名；\n- 养成习惯：名字要能看懂，`user_age` 比 `a` 好一万倍。\n\n> 变量名用英文小写加下划线（snake_case）是 Python 社区的通用风格，现在开始就这么写，以后看别人的代码会顺很多。\n",
- "w1d3": "\n### input()：让程序会问问题\n```python\nname = input(\"请输入你的名字：\")\nprint(\"你好，\" + name)\n```\n运行后程序会停下来等你打字，回车之后才继续。终端里显示的不是输出，是**提示语**。\n\n### 重要：input() 拿到的永远是字符串\n```python\nage = input(\"你几岁？\")     # 输入 20，但 age 是 \"20\" 不是 20\nprint(age + 1)             # 报错 TypeError\n```\n要参与计算必须转换：\n\n| 想要类型 | 写法 | 说明 |\n| --- | --- | --- |\n| 整数 | `int(input(\"年龄：\"))` | 输入 `20` 得到 20 |\n| 小数 | `float(input(\"身高：\"))` | 输入 `1.75` 得到 1.75 |\n| 字符串 | `input(\"姓名：\")` | 不用转，本来就是 |\n\n这条规则要记牢，第 2 周做判断、第 3 周做循环都会用到。\n\n### 注释：写给未来的自己\n```python\n# 这是单行注释，Python 不会执行这一行\nage = 20  # 行末也可以写注释\n\n\"\"\"\n三个引号是多行注释，\n用来解释一段代码的整体思路。\n\"\"\"\n```\n注释不是废话：**写清\"为什么这么写\"比\"这行做了什么\"更有价值**。以后你回头看自己的代码，只有注释能救你。\n\n### 一个完整的小程序\n```python\n# 问候程序：问名字和年龄，输出一句问候\nname = input(\"请输入你的名字：\")\nage = int(input(\"请输入你的年龄：\"))\n\nprint(f\"你好，{name}！\")\nprint(f\"你今年{age}岁，明年就{age + 1}岁了。\")\n```\n\n> 提示：如果程序运行报 `ValueError: invalid literal for int()`，说明你在提示里输入了字母或中文，int() 转不了。\n",
- "w1d4": "\n### 七个运算符，一次认全\n| 运算符 | 名称 | 例子 | 结果 |\n| --- | --- | --- | --- |\n| `+` | 加 | `7 + 2` | 9 |\n| `-` | 减 | `7 - 2` | 5 |\n| `*` | 乘 | `7 * 2` | 14 |\n| `/` | 除 | `7 / 2` | **3.5**（永远得到小数） |\n| `//` | 整除 | `7 // 2` | 3（只要整数部分） |\n| `%` | 取余 | `7 % 2` | 1（余数） |\n| `**` | 幂 | `7 ** 2` | 49 |\n\n**`/` 和 `//` 的区别是新人第一个惊讶点**：Python 里 `/` 的结果永远是小数，`10 / 2` 得到 `5.0` 而不是 `5`。\n\n### 取余 % 是宝藏\n```python\nprint(10 % 2)   # 0  -> 偶数\nprint(11 % 2)   # 1  -> 奇数\n```\n判断奇偶、控制循环节奏、做周期性任务，全靠 `%`。第 2 周判断奇偶会立刻用到。\n\n### 运算优先级\n```python\nprint(2 + 3 * 4)      # 14，先乘除后加减\nprint((2 + 3) * 4)    # 20，括号最优先\n```\n**不确定优先级就加括号**，可读性也更好。\n\n### 字符串也能 + 和 *\n```python\nprint(\"Py\" + \"thon\")    # Python，拼接\nprint(\"ab\" * 3)         # ababab，重复\n```\n但 `\"20\" + 1` 会报错：**字符串和数字不能直接混算**，要 `int(\"20\") + 1`。\n\n### 变量自增的简写\n```python\nscore = 10\nscore = score + 5   # 15，最啰嗦但最好懂\nscore += 5          # 20，等价写法，以后会经常见\n```\n\n> 算除法前想一下除数是不是 0：`5 / 0` 会报 `ZeroDivisionError`，程序直接崩。\n",
- "w1d5": "\n### 字符串就是字符的排队\n```python\ns = \"Python\"\n# 索引:  0=P  1=y  2=t  3=h  4=o  5=n\n# 反向: -6=P -5=y -4=t -3=h -2=o -1=n\nprint(s[0])     # P\nprint(s[-1])    # n，最后一个\nprint(len(s))   # 6，长度\n```\n**索引从 0 开始**，这是所有编程语言的惯例。`s[6]` 会报 `IndexError: string index out of range` —— 越界了。\n\n### 切片：一次拿一段\n格式是 `s[起点:终点]`，**取起点不取终点**（左闭右开）：\n```python\ns = \"Python\"\nprint(s[0:2])   # Py\nprint(s[2:])    # thon，从 2 到结尾\nprint(s[:3])    # Pyt，从头到 3 之前\nprint(s[-3:])   # hon，最后三个\nprint(s[::2])   # Pto，隔一个取一个\n```\n记不住就记一句话：\"**含头不含尾**\"。\n\n### 拼接与重复\n```python\nfirst = \"Py\"\nsecond = \"thon\"\nprint(first + second)    # Python\nprint(\"-\" * 20)          # 一条分割线，很好用\n```\n\n### f-string：今天最重要的一个\n```python\nname = \"ZERO\"\nscore = 95.5\nprint(f\"{name} 的成绩是 {score} 分\")          # ZERO 的成绩是 95.5 分\nprint(f\"{name} 的成绩是 {score:.1f} 分\")      # 保留 1 位小数: 95.5\nprint(f\"{name} 的成绩是 {score:.0f} 分\")      # 不要小数: 96（会四舍五入）\nprint(f\"{'右对齐':>10}|\")                     # 右对齐，做表格用\n```\n`{score:.2f}` 这种写法叫**格式说明**，做计算器、成绩单时天天用。\n\n### 常用小方法\n```python\ns = \"  Hello Python  \"\nprint(s.strip())        # 去掉首尾空格\nprint(s.upper())        # 全大写\nprint(s.lower())        # 全小写\nprint(s.replace(\"Python\", \"World\"))   # 替换\nprint(\"Py\" in s)        # True，判断包不包含\n```\n\n> 字符串是**不可变**的：`s[0] = \"J\"` 会报错。要改只能用切片/替换拼出新字符串。\n",
- "w1d6": "\n### 今天不学新语法，只做两件事\n周六是**动手日**：把周一到周五学的五样东西（变量、输入输出、运算符、字符串、f-string）串成两个能跑的小脚本。\n\n### 项目一：个人介绍生成器\n思路：用 `input` 问三个信息，用 f-string 排版输出一张\"名片\"。\n```python\nname = input(\"姓名：\")\ncity = input(\"城市：\")\nhobby = input(\"爱好：\")\n\nline = \"=\" * 30\nprint(line)\nprint(f\"  姓名：{name}\")\nprint(f\"  城市：{city}\")\nprint(f\"  爱好：{hobby}\")\nprint(line)\n```\n小升级（量力而行）：\n- 加上年龄，并算出「明年多少岁」；\n- 用 `len(name)` 输出名字长度；\n- 用 `{hobby:>8}` 把内容对齐成右侧整齐的样式。\n\n### 项目二：加减计算器\n```python\nline = \"-\" * 30\nprint(line)\nprint(\"简易计算器（只做加减）\")\nprint(line)\n\na = float(input(\"第一个数：\"))\nop = input(\"运算符（+ 或 -）：\")\nb = float(input(\"第二个数：\"))\n\nif op == \"+\":\n    result = a + b\nelse:\n    result = a - b\n\nprint(f\"{a} {op} {b} = {result:.2f}\")\nprint(line)\n```\n`if/else` 是下周的内容，**今天照抄能跑就行**，下周你会真正理解它。\n\n### 卡住时按这个顺序排查\n1. 报错**最后一行**是什么类型？`SyntaxError` 看符号，`ValueError` 看输入，`NameError` 看变量名拼写；\n2. 报错里的行号指的是**你文件里的第几行**，直接跳过去看；\n3. 还是不行就 `print()` 打出来看看：想知道 `a` 是什么，就 `print(a, type(a))`。\n\n### 完成标准\n两个脚本都能独立运行、输入合理数据能得到正确输出，**代码用 VS Code 保存成 .py 文件**（别只在终端里敲）。\n",
+ "w1d3": "\n### input()：让程序会问问题\n```python\nname = input(\"请输入你的名字：\")\nprint(\"你好，\" + name)\n```\n运行后程序会停下来等你打字，回车之后才继续。终端里显示的不是输出，是**提示语**。\n\n### 重要：input() 拿到的永远是字符串\n```python\nage = input(\"你几岁？\")     # 输入 20，但 age 是 \"20\" 不是 20\nprint(age + 1)             # 报错 TypeError\n```\n要参与计算必须转换：\n\n| 想要类型 | 写法 | 说明 |\n| --- | --- | --- |\n| 整数 | `int(input(\"年龄：\"))` | 输入 `20` 得到 20 |\n| 小数 | `float(input(\"身高：\"))` | 输入 `1.75` 得到 1.75 |\n| 字符串 | `input(\"姓名：\")` | 不用转，本来就是 |\n\n这条规则要记牢，第 2 周做判断、第 3 周做循环都会用到。\n\n### 注释：写给未来的自己\n```python\n# 这是单行注释，Python 不会执行这一行\nage = 20  # 行末也可以写注释\n\n\"\"\"\n三个引号是多行注释，\n用来解释一段代码的整体思路。\n\"\"\"\n```\n注释不是废话：**写清\"为什么这么写\"比\"这行做了什么\"更有价值**。以后你回头看自己的代码，只有注释能救你。\n\n### 一个完整的小程序\n```python\n# 问候程序：问名字和年龄，输出一句问候\nname = input(\"请输入你的名字：\")\nage = int(input(\"请输入你的年龄：\"))\n\nprint(f\"你好，{name}！\")\nprint(f\"你今年{age}岁，明年就{age + 1}岁了。\")\n```\n\n> 提示：如果程序运行报 `ValueError: invalid literal for int()`，说明你在提示里输入了字母或中文，int() 转不了。\n\n\n### 常见误区\n\n**1. 忘了把 input 转成数字**\n`age = input('年龄：')` 之后再写 `print(age + 1)` 会直接报错；两个输入相加还会得到 `'181'` 这种奇怪结果，看着像算错了。\n\n**2. print 里逗号和加号混用**\n`print('你好' + name)` 没错，但 `print('你今年' + age + '岁')` 里 age 是数字就会报类型错误；逗号版本 `print('你今年', age, '岁')` 会自己转换。\n\n**3. 提示语忘了加引号**\n写成 `input(请输入年龄：)` 会报 NameError，提示语本身是字符串，引号不能省。\n\n**为什么**：input 只负责原样收下键盘敲的内容，从不猜你想要数字还是文字。\n\n**怎么改**：要数字就立刻包一层，`age = int(input('年龄：'))`。拼字符串前先 `str(age)`，或者直接用 f-string：`print(f'你今年{age}岁')`。\n",
+ "w1d4": "\n### 七个运算符，一次认全\n| 运算符 | 名称 | 例子 | 结果 |\n| --- | --- | --- | --- |\n| `+` | 加 | `7 + 2` | 9 |\n| `-` | 减 | `7 - 2` | 5 |\n| `*` | 乘 | `7 * 2` | 14 |\n| `/` | 除 | `7 / 2` | **3.5**（永远得到小数） |\n| `//` | 整除 | `7 // 2` | 3（只要整数部分） |\n| `%` | 取余 | `7 % 2` | 1（余数） |\n| `**` | 幂 | `7 ** 2` | 49 |\n\n**`/` 和 `//` 的区别是新人第一个惊讶点**：Python 里 `/` 的结果永远是小数，`10 / 2` 得到 `5.0` 而不是 `5`。\n\n### 取余 % 是宝藏\n```python\nprint(10 % 2)   # 0  -> 偶数\nprint(11 % 2)   # 1  -> 奇数\n```\n判断奇偶、控制循环节奏、做周期性任务，全靠 `%`。第 2 周判断奇偶会立刻用到。\n\n### 运算优先级\n```python\nprint(2 + 3 * 4)      # 14，先乘除后加减\nprint((2 + 3) * 4)    # 20，括号最优先\n```\n**不确定优先级就加括号**，可读性也更好。\n\n### 字符串也能 + 和 *\n```python\nprint(\"Py\" + \"thon\")    # Python，拼接\nprint(\"ab\" * 3)         # ababab，重复\n```\n但 `\"20\" + 1` 会报错：**字符串和数字不能直接混算**，要 `int(\"20\") + 1`。\n\n### 变量自增的简写\n```python\nscore = 10\nscore = score + 5   # 15，最啰嗦但最好懂\nscore += 5          # 20，等价写法，以后会经常见\n```\n\n> 算除法前想一下除数是不是 0：`5 / 0` 会报 `ZeroDivisionError`，程序直接崩。\n\n\n### 常见误区\n\n**1. 把 `/` 当成整除**\n`5 / 2` 得到的是 `2.5`，不是 `2`。只要整数部分得用 `5 // 2`，结果是 `2`，它是往下取整的。\n\n**2. 该用 `//` 的地方写了 `/`**\n算人数、算份数时随手写 `/`，结果里冒出一串小数；反过来该有小数的地方写了 `//`，精度被悄悄砍掉。\n\n**3. 把 `%` 当成百分号，把 `**` 写成 `^`**\n`7 % 2` 是求余数，结果是 1，用 `n % 2 == 0` 判断偶数很方便；乘方要写 `2 ** 3`，`^` 在 Python 里不是乘方。\n\n**为什么**：`/` 算的是精确的商，`//` 算的是这个商里能装下几个整数，用途本来就不同。\n\n**怎么改**：先想清楚要整数还是小数，再挑符号。想同时拿到商和余数就写 `q, r = divmod(7, 2)`。\n",
+ "w1d5": "\n### 字符串就是字符的排队\n```python\ns = \"Python\"\n# 索引:  0=P  1=y  2=t  3=h  4=o  5=n\n# 反向: -6=P -5=y -4=t -3=h -2=o -1=n\nprint(s[0])     # P\nprint(s[-1])    # n，最后一个\nprint(len(s))   # 6，长度\n```\n**索引从 0 开始**，这是所有编程语言的惯例。`s[6]` 会报 `IndexError: string index out of range` —— 越界了。\n\n### 切片：一次拿一段\n格式是 `s[起点:终点]`，**取起点不取终点**（左闭右开）：\n```python\ns = \"Python\"\nprint(s[0:2])   # Py\nprint(s[2:])    # thon，从 2 到结尾\nprint(s[:3])    # Pyt，从头到 3 之前\nprint(s[-3:])   # hon，最后三个\nprint(s[::2])   # Pto，隔一个取一个\n```\n记不住就记一句话：\"**含头不含尾**\"。\n\n### 拼接与重复\n```python\nfirst = \"Py\"\nsecond = \"thon\"\nprint(first + second)    # Python\nprint(\"-\" * 20)          # 一条分割线，很好用\n```\n\n### f-string：今天最重要的一个\n```python\nname = \"ZERO\"\nscore = 95.5\nprint(f\"{name} 的成绩是 {score} 分\")          # ZERO 的成绩是 95.5 分\nprint(f\"{name} 的成绩是 {score:.1f} 分\")      # 保留 1 位小数: 95.5\nprint(f\"{name} 的成绩是 {score:.0f} 分\")      # 不要小数: 96（会四舍五入）\nprint(f\"{'右对齐':>10}|\")                     # 右对齐，做表格用\n```\n`{score:.2f}` 这种写法叫**格式说明**，做计算器、成绩单时天天用。\n\n### 常用小方法\n```python\ns = \"  Hello Python  \"\nprint(s.strip())        # 去掉首尾空格\nprint(s.upper())        # 全大写\nprint(s.lower())        # 全小写\nprint(s.replace(\"Python\", \"World\"))   # 替换\nprint(\"Py\" in s)        # True，判断包不包含\n```\n\n> 字符串是**不可变**的：`s[0] = \"J\"` 会报错。要改只能用切片/替换拼出新字符串。\n\n\n### 常见误区\n\n**1. 索引从 1 开始数**\n`s = 'python'`，`s[1]` 拿到的是 `y` 而不是 `p`；`s[6]` 还会报 IndexError，长度是 6，最大下标只有 5，最后一位请写 `s[-1]`。\n\n**2. 以为切片的右边也包含**\n`s[1:3]` 只给下标 1 和 2 两个字符。想从 3 倒着取到 1，写 `s[3:1]` 会是空的，必须补上步长：`s[3:1:-1]`。\n\n**3. 拼接时类型不匹配**\n`'第' + 1 + '名'` 会报错，因为字符串只能和字符串相加，数字得先 `str()`。\n\n**为什么**：索引说的是偏移几个位置，所以起点是 0；切片说的是在哪两处下刀，右边那刀落在该字符前面，自然取不到它。\n\n**怎么改**：拿不准就用 `len(s)` 看长度，取最后一位用 `s[-1]`。拼数字要么 `str(i)`，要么直接 f-string：`f'第{i}名'`。\n",
+ "w1d6": "\n### 今天不学新语法，只做两件事\n周六是**动手日**：把周一到周五学的五样东西（变量、输入输出、运算符、字符串、f-string）串成两个能跑的小脚本。\n\n### 项目一：个人介绍生成器\n思路：用 `input` 问三个信息，用 f-string 排版输出一张\"名片\"。\n```python\nname = input(\"姓名：\")\ncity = input(\"城市：\")\nhobby = input(\"爱好：\")\n\nline = \"=\" * 30\nprint(line)\nprint(f\"  姓名：{name}\")\nprint(f\"  城市：{city}\")\nprint(f\"  爱好：{hobby}\")\nprint(line)\n```\n小升级（量力而行）：\n- 加上年龄，并算出「明年多少岁」；\n- 用 `len(name)` 输出名字长度；\n- 用 `{hobby:>8}` 把内容对齐成右侧整齐的样式。\n\n### 项目二：加减计算器\n```python\nline = \"-\" * 30\nprint(line)\nprint(\"简易计算器（只做加减）\")\nprint(line)\n\na = float(input(\"第一个数：\"))\nop = input(\"运算符（+ 或 -）：\")\nb = float(input(\"第二个数：\"))\n\nif op == \"+\":\n    result = a + b\nelse:\n    result = a - b\n\nprint(f\"{a} {op} {b} = {result:.2f}\")\nprint(line)\n```\n`if/else` 是下周的内容，**今天照抄能跑就行**，下周你会真正理解它。\n\n### 卡住时按这个顺序排查\n1. 报错**最后一行**是什么类型？`SyntaxError` 看符号，`ValueError` 看输入，`NameError` 看变量名拼写；\n2. 报错里的行号指的是**你文件里的第几行**，直接跳过去看；\n3. 还是不行就 `print()` 打出来看看：想知道 `a` 是什么，就 `print(a, type(a))`。\n\n### 完成标准\n两个脚本都能独立运行、输入合理数据能得到正确输出，**代码用 VS Code 保存成 .py 文件**（别只在终端里敲）。\n\n\n### 常见误区\n\n**1. 输入的数字没转类型**\n写 `age = input('年龄：')` 再 `print(age + 1)` 会报错；两个输入相加还会变成 `'181'` 这种拼接。\n\n**2. 计算器把数字当字符串**\n`num1 + num2` 里用户输入 3 和 5，屏幕打出 35，错在少了一步 `int()`。\n\n**3. 变量名随手写 a、b**\n两个练习连着写，a 一会儿是年龄一会儿是数字，改到后面自己都分不清。\n\n**为什么**：input 收回来的永远是字符串，想要数字必须自己转；名字起得清楚，也是在帮几天后的自己。\n\n**怎么改**：拿到输入立刻转，`age = int(input('年龄：'))`。变量用 `age`、`num1` 这类看得懂的名字。先算再打印：`print(f'{num1} + {num2} = {num1 + num2}')`。\n",
  "w1d7": "\n### 今天三件事：复习、归档、规划\n\n### 一、复习：用\"输出倒逼输入\"\n不要重看教程，而是**盖住答案自己写一遍**：\n1. 让用户输入姓名，输出 `你好，XXX！`；\n2. 输入半径，用 `3.14 * r ** 2` 输出圆面积（保留 2 位小数）；\n3. `\"hello world\"` 取出 `world` 这个词（提示：切片从 6 开始）。\n\n写不出来再回头看对应那天的教程，**看懂了不等于写得出来**，这一步是分水岭。\n\n### 二、整理笔记：三行就够\n在 `week1/notes.md` 里按天写：\n```\n## D1 环境搭建\n- 学会了：装 Python 要勾 PATH，运行用 ▶\n- 卡住过：终端目录不对导致找不到文件\n- 待确认：无\n```\n**记\"卡住过什么\"比记知识点更值钱**，因为那是你专属的坑点清单。\n\n### 三、上传 GitHub（第一次会慢，之后 1 分钟）\n1. 注册/登录 [github.com](https://github.com)，右上角 `+` → `New repository`；\n2. 仓库名 `python-learning`，选 **Public**，勾上 `Add a README file`，创建；\n3. 装 [Git](https://git-scm.com/download/win)，一路默认；\n4. 在 `D:\\Python学习` 目录里打开终端，依次执行：\n```bat\ngit init\ngit add .\ngit commit -m \"第1周：环境搭建与基础语法\"\ngit branch -M main\ngit remote add origin https://github.com/你的用户名/python-learning.git\ngit push -u origin main\n```\n5. 第一次 push 会弹出登录窗口，按提示授权即可。\n\n> 以后每周日只要三条命令：`git add .` → `git commit -m \"本周内容\"` → `git push`。\n> push 报 `rejected` 就先 `git pull --rebase` 再 push。\n\n### 四、规划下周\n下周开始学 **if 条件判断**，是编程真正开始\"有脑子\"的第一周。提前想好：你希望用条件判断做出什么？（比如：根据分数自动评级、判断能否打折）\n带着这个问题进第 2 周，学习动力完全不同。\n",
  "w2d1": "\n### if：让程序会做选择\n```python\nage = 20\nif age >= 18:\n    print(\"已成年\")\nprint(\"这行无论如何都会执行\")\n```\n三行代码里有**两个绝对不能错的地方**：\n1. `if` 那行结尾的 **冒号 `:`**；\n2. 下一行必须**缩进 4 个空格**（VS Code 里按一次 Tab）。\n\nPython 靠缩进判断\"哪几行属于 if\"。缩进错了程序不会报错，但行为完全不是你要的 —— 这比报错更危险。\n\n### if 的执行逻辑\n- 条件成立（结果是 `True`）→ 执行缩进的代码块；\n- 条件不成立（`False`）→ 整块跳过，继续往下走；\n- 没有 `else` 时，\"什么都不做\"也是完全正常的结果。\n\n### 条件表达式：结果是 True 或 False\n| 写法 | 含义 |\n| --- | --- |\n| `age >= 18` | 大于等于 |\n| `age > 18` | 大于 |\n| `age == 18` | **等于**（两个等号！） |\n| `age != 18` | 不等于 |\n| `age < 18` | 小于 |\n\n**`=` 是赋值，`==` 才是比较**。写成 `if age = 18:` 会报 `SyntaxError`。\n\n### 常见的三个错误\n```python\n# 1. 忘了冒号\nif age >= 18          # SyntaxError: expected ':'\n    print(\"成年\")\n\n# 2. 缩进不一致（Tab 和空格混用）\nif age >= 18:\n\tprint(\"成年\")      # IndentationError\n\n# 3. 条件写成了字符串\nif age >= \"18\":       # TypeError: '>=' not supported between int and str\n    print(\"成年\")\n```\n第三条的根因是 `input()` 返回的是字符串，比较前要 `int()` 转换。\n\n> 缩进统一用**4 个空格**（VS Code 默认就是），永远不要混 Tab。\n",
  "w2d2": "\n### if-else：两条路必须选一条\n```python\nnumber = int(input(\"请输入一个整数：\"))\n\nif number % 2 == 0:\n    print(\"这是偶数\")\nelse:\n    print(\"这是奇数\")\n```\n- `if` 条件成立 → 走 if 分支；不成立 → 走 `else` 分支；\n- **两者必执行其一**，这是它和单分支最大的区别；\n- `else` 后面**也要冒号**，且它自己不写条件。\n\n### 奇偶判断为什么用 % 2\n```python\nprint(8 % 2)   # 0 -> 偶数\nprint(7 % 2)   # 1 -> 奇数\n```\n能不能被 2 整除，就看余数是不是 0。这个思路还能判断\"能否被 3 整除\"\"是不是闰年\"等等。\n\n### 缩进决定归属：对比这两段\n```python\n# A：第三行属于 if\nif number % 2 == 0:\n    print(\"偶数\")\n    print(\"偶数分支里的话\")\n\n# B：第三行不属于 if，无论如何都打印\nif number % 2 == 0:\n    print(\"偶数\")\nprint(\"无论如何都打印\")\n```\n**每写完一个 if，都数一下缩进**，这是最常见的 bug 来源。\n\n### 嵌套 if（了解即可，第 3 周会大量用）\n```python\nif number > 0:\n    if number % 2 == 0:\n        print(\"正偶数\")\n    else:\n        print(\"正奇数\")\nelse:\n    print(\"不是正数\")\n```\n\n> 输入 `0` 会打印\"这是偶数\" —— 因为 `0 % 2 == 0`。想一想这符合你的预期吗？如果不，怎么改？\n",
- "w2d3": "\n### elif：多个条件的正确写法\n```python\nscore = int(input(\"请输入成绩（0-100）：\"))\n\nif score >= 90:\n    grade = \"A\"\nelif score >= 80:\n    grade = \"B\"\nelif score >= 70:\n    grade = \"C\"\nelif score >= 60:\n    grade = \"D\"\nelse:\n    grade = \"E\"\n\nprint(f\"等级：{grade}\")\n```\n\n### 为什么不需要写 `score < 90`\nPython **从上往下依次判断，遇到第一个成立的就把整条链走完**。\n所以进到 `elif score >= 80` 时，已经隐含了 `score < 90`。\n**顺序决定结果**：如果把 `>= 60` 写在最前面，所有人都会得到 D —— 这是最经典的错误。\n\n### if / elif / else 三者关系\n| 关键字 | 数量 | 条件 |\n| --- | --- | --- |\n| `if` | 恰好 1 个，必须放最前 | 必须有 |\n| `elif` | 0 到多个 | 必须有 |\n| `else` | 0 或 1 个，只能放最后 | 不能写条件 |\n\n### 用 if 也能写，但差别很大\n```python\n# 用独立的 if：每个条件都会被检查，可能命中多个\nif score >= 90:\n    print(\"A\")\nif score >= 80:\n    print(\"B\")\n# 输入 95 会同时打印 A 和 B —— 通常不是你要的\n```\n**要\"只命中一个\"就用 elif**，要\"多个条件都检查\"才用并列的 if。\n\n### 顺序写错了怎么发现\n输入几个边界值测一下：`100`、`90`、`89`、`60`、`59`。\n**边界值最容易暴露逻辑错误**，这个习惯从今天开始养成。\n\n> 成绩还应该处理非法输入（比如 -10 或 200）。第 4 周做项目时会专门加\"输入校验\"。\n",
+ "w2d3": "\n### elif：多个条件的正确写法\n```python\nscore = int(input(\"请输入成绩（0-100）：\"))\n\nif score >= 90:\n    grade = \"A\"\nelif score >= 80:\n    grade = \"B\"\nelif score >= 70:\n    grade = \"C\"\nelif score >= 60:\n    grade = \"D\"\nelse:\n    grade = \"E\"\n\nprint(f\"等级：{grade}\")\n```\n\n### 为什么不需要写 `score < 90`\nPython **从上往下依次判断，遇到第一个成立的就把整条链走完**。\n所以进到 `elif score >= 80` 时，已经隐含了 `score < 90`。\n**顺序决定结果**：如果把 `>= 60` 写在最前面，所有人都会得到 D —— 这是最经典的错误。\n\n### if / elif / else 三者关系\n| 关键字 | 数量 | 条件 |\n| --- | --- | --- |\n| `if` | 恰好 1 个，必须放最前 | 必须有 |\n| `elif` | 0 到多个 | 必须有 |\n| `else` | 0 或 1 个，只能放最后 | 不能写条件 |\n\n### 用 if 也能写，但差别很大\n```python\n# 用独立的 if：每个条件都会被检查，可能命中多个\nif score >= 90:\n    print(\"A\")\nif score >= 80:\n    print(\"B\")\n# 输入 95 会同时打印 A 和 B —— 通常不是你要的\n```\n**要\"只命中一个\"就用 elif**，要\"多个条件都检查\"才用并列的 if。\n\n### 顺序写错了怎么发现\n输入几个边界值测一下：`100`、`90`、`89`、`60`、`59`。\n**边界值最容易暴露逻辑错误**，这个习惯从今天开始养成。\n\n> 成绩还应该处理非法输入（比如 -10 或 200）。第 4 周做项目时会专门加\"输入校验\"。\n\n\n### 常见误区\n\n**1. 把 elif 写成 if**\n后面再写一个独立的 `if score >= 60`，95 分会同时命中两条，等级被后一条覆盖掉。\n\n**2. 条件顺序写反**\n先判断 `score >= 60` 再判断 `score >= 90`，高分永远轮不到 A，条件要从严到宽往下排。\n\n**3. 冒号或缩进漏了**\n`elif score >= 80` 后面忘冒号，或者下一行没缩进四格，报的是语法错误，看着却像条件写错。\n\n**为什么**：elif 是“否则如果”的意思，前面有一条成立，整条链就结束了；换成独立的 if，每个条件都会被单独检查一遍。\n\n**怎么改**：同一件事只用一条 if/elif/else 链，从最严格的条件开始写。写完拿 59、60、89、90 这几个边界值各试一次。缩进统一四个空格。\n",
  "w2d4": "\n### 比较运算符回顾\n| 运算符 | 读法 | 例子 | 结果 |\n| --- | --- | --- | --- |\n| `==` | 等于 | `5 == 5` | True |\n| `!=` | 不等于 | `5 != 3` | True |\n| `>` `<` | 大于 / 小于 | `5 > 3` | True |\n| `>=` `<=` | 大于等于 / 小于等于 | `5 >= 5` | True |\n\n最容易错的是 `>=`：在 Python 里**先写 `>` 再写 `=`**（写成 `=>` 会报错）。\n\n### 比较的结果就是布尔值\n```python\nresult = 5 > 3\nprint(result)          # True\nprint(type(result))    # <class 'bool'>\n```\n所以 `if` 后面根本不需要写 `== True`：\n\n```python\nis_adult = age >= 18\nif is_adult:           # 好写法\n    print(\"成年\")\n\nif is_adult == True:   # 能跑但啰嗦，不推荐\n    print(\"成年\")\n```\n\n### 链式比较（Python 特色）\n```python\nscore = 85\nprint(60 <= score < 90)     # True，等价于 60 <= score and score < 90\n```\n写范围判断时非常清爽。\n\n### 浮点数比较的陷阱\n```python\nprint(0.1 + 0.2 == 0.3)     # False！计算机存小数有精度误差\nprint(abs((0.1 + 0.2) - 0.3) < 1e-9)   # True，正确做法：比较差值\n```\n**小数永远不要用 `==` 判断相等**，用「差值足够小」。\n\n### 字符串也能比较\n```python\nprint(\"apple\" == \"apple\")   # True\nprint(\"apple\" < \"banana\")   # True，按字母序比\nprint(\"10\" > \"9\")           # True！字符串是逐字符比较，\"1\" < \"9\"\n```\n所以 `input()` 拿到的字符串**一定要转成数字再比大小**。\n\n> 今天的关键动作：写一个程序，输入三个数，判断第一个数是不是最大的。\n",
- "w2d5": "\n### 三个逻辑运算符\n| 运算符 | 含义 | 成立条件 |\n| --- | --- | --- |\n| `and` | 并且 | 两边都 True |\n| `or` | 或者 | 至少一边 True |\n| `not` | 非 | 取反 |\n\n```python\nage = 20\nhas_ticket = True\n\nif age >= 18 and has_ticket:\n    print(\"可以入场\")\n\nif age < 12 or age > 65:\n    print(\"可以买优惠票\")\n\nif not has_ticket:\n    print(\"请先买票\")\n```\n\n### 复合条件的真值表（记住这四行）\n```python\nprint(True and True)     # True\nprint(True and False)    # False\nprint(False or True)     # True\nprint(False or False)    # False\n```\n\n### 优先级：not > and > or\n```python\nprint(True or False and False)    # True，因为 and 先算 -> True or False\nprint((True or False) and False)  # False，括号改变了顺序\n```\n**复合条件一定加括号**，既清楚又不会错。\n\n### 实战：登录条件判断\n```python\nusername = input(\"用户名：\")\npassword = input(\"密码：\")\n\nif username == \"admin\" and password == \"123456\":\n    print(\"登录成功\")\nelif username != \"admin\":\n    print(\"用户名不存在\")\nelse:\n    print(\"密码错误\")\n```\n注意这里的 `elif` 顺序：**先判断哪个条件更能说明问题**，用户体验会更好。\n\n### 短路特性（顺手了解）\n```python\nx = 0\nif x != 0 and 10 / x > 1:    # x 为 0 时，右边根本不会被计算，不会崩\n    print(\"ok\")\n```\nPython 从左往右算，**左边已经能定论时右边就不执行了**，这叫短路。以后写防御性代码会用上。\n\n> 硬核提醒：`=` 和 `==` 在复合条件里更容易写错，写完读一遍：`if a == 1 and b == 2:`。\n",
+ "w2d5": "\n### 三个逻辑运算符\n| 运算符 | 含义 | 成立条件 |\n| --- | --- | --- |\n| `and` | 并且 | 两边都 True |\n| `or` | 或者 | 至少一边 True |\n| `not` | 非 | 取反 |\n\n```python\nage = 20\nhas_ticket = True\n\nif age >= 18 and has_ticket:\n    print(\"可以入场\")\n\nif age < 12 or age > 65:\n    print(\"可以买优惠票\")\n\nif not has_ticket:\n    print(\"请先买票\")\n```\n\n### 复合条件的真值表（记住这四行）\n```python\nprint(True and True)     # True\nprint(True and False)    # False\nprint(False or True)     # True\nprint(False or False)    # False\n```\n\n### 优先级：not > and > or\n```python\nprint(True or False and False)    # True，因为 and 先算 -> True or False\nprint((True or False) and False)  # False，括号改变了顺序\n```\n**复合条件一定加括号**，既清楚又不会错。\n\n### 实战：登录条件判断\n```python\nusername = input(\"用户名：\")\npassword = input(\"密码：\")\n\nif username == \"admin\" and password == \"123456\":\n    print(\"登录成功\")\nelif username != \"admin\":\n    print(\"用户名不存在\")\nelse:\n    print(\"密码错误\")\n```\n注意这里的 `elif` 顺序：**先判断哪个条件更能说明问题**，用户体验会更好。\n\n### 短路特性（顺手了解）\n```python\nx = 0\nif x != 0 and 10 / x > 1:    # x 为 0 时，右边根本不会被计算，不会崩\n    print(\"ok\")\n```\nPython 从左往右算，**左边已经能定论时右边就不执行了**，这叫短路。以后写防御性代码会用上。\n\n> 硬核提醒：`=` 和 `==` 在复合条件里更容易写错，写完读一遍：`if a == 1 and b == 2:`。\n\n\n### 常见误区\n\n**1. and 和 or 用反**\n判断年龄在 18 到 60 之间写成 `age > 18 or age < 60`，几乎谁都能通过，这里应该用 `and`。\n\n**2. 比较符号只写一边**\n写 `if age > 18 or > 60` 会报语法错误，每个小条件都得写完整：`age > 60`。\n\n**3. not 的位置放得别扭**\n`if not age > 18` 虽然能跑，但意思容易看反，不如直接写 `if age <= 18`。\n\n**为什么**：and 要两边同时为真才通过，or 只要一边为真就通过；判断时它先把每个小条件算成真假，再合成一个结果。\n\n**怎么改**：先用中文把条件念出来，比如“大于 18 并且小于 60”，再把“并且”换成 and。拿不准就加一行 `print(age > 18, age < 60)`，看看每半边是真是假。\n",
  "w2d6": "\n### 今天的综合练习：猜数字（条件版）\n先不引入随机数，**把答案写死**，专注练条件判断的分支设计。\n\n### 第一步：写清判断逻辑\n- 猜的数 > 答案 → 提示\"大了\"；\n- 猜的数 < 答案 → 提示\"小了\"；\n- 相等 → 提示\"猜对了\"。\n\n```python\nanswer = 42\nguess = int(input(\"猜一个数字（1-100）：\"))\n\nif guess > answer:\n    print(\"大了\")\nelif guess < answer:\n    print(\"小了\")\nelse:\n    print(\"猜对了！\")\n```\n\n### 第二步：加上边界与激励\n```python\nif guess > answer:\n    if guess - answer <= 5:\n        print(\"大了一点点，很接近了\")\n    else:\n        print(\"大了，差得有点远\")\n```\n**嵌套 if 的原则**：外层管大类，内层管细节。嵌套别超过两层，否则要考虑重构。\n\n### 第三步：自查三种情况\n分别输入 `42`、`80`、`10`，确认三种分支都能走到。\n**如果某个分支怎么都走不到，说明逻辑写错了**（或答案写错了）。\n\n### 常见问题\n- 忘了 `int()`：`guess > answer` 直接报 `TypeError`；\n- `elif guess < answer` 写成了 `elif guess > answer`：第二个分支永远不会执行；\n- 用 `=` 代替 `==` 做相等判断 → `SyntaxError`。\n\n> 今天这个程序只有 8 行，但它包含了条件判断的全部套路。第 3 周我们会加上 `while` 让它能反复猜、加上 `random` 让它真的随机。\n",
  "w2d7": "\n### 一、复习：把\"能看懂\"变成\"能写出\"\n1. 输入一个数，判断是正数、负数还是零（三种分支，用 elif）；\n2. 输入年份，判断是不是闰年（能被 4 整除但不能被 100 整除，或者能被 400 整除）；\n3. 输入身高体重，计算 BMI，用 elif 输出\"偏瘦 / 正常 / 偏胖\"。\n\n第 2 题的完整判断条件是：\n\n```python\nif (year % 4 == 0 and year % 100 != 0) or year % 400 == 0:\n    print(\"闰年\")\nelse:\n    print(\"平年\")\n```\n**这是一个典型的\"不写括号就容易错\"的例子**，注意 `or` 两边的处理。\n\n### 二、优化成绩等级判断（本周的作业成品）\n回头看周三写的 grade 程序，做三件事：\n1. **加输入校验**：分数不在 0-100 之间要提示\"输入不合法\"；\n2. **加容错**：用 `try/except` 处理输入了字母的情况（先照抄，第 4 周会讲原理）；\n3. **加输出信息**：除了等级，再输出\"距离下一等级还差几分\"。\n\n```python\ntry:\n    score = int(input(\"请输入成绩（0-100）：\"))\nexcept ValueError:\n    print(\"请输入数字！\")\nelse:\n    if score < 0 or score > 100:\n        print(\"分数要在 0 到 100 之间\")\n    elif score >= 90:\n        print(\"A 优秀\")\n    elif score >= 80:\n        print(\"B 良好\")\n    elif score >= 70:\n        print(\"C 中等\")\n    elif score >= 60:\n        print(\"D 及格\")\n    else:\n        print(\"E 需要努力\")\n```\n\n### 三、笔记 + 上传\n```\n## D8-D14 条件判断\n- 学会了：if/elif/else 只会命中一个分支；and/or/not 组合条件\n- 卡住过：elif 顺序写错导致所有人都得 D\n- 心得：缩进决定代码归属，写完必须数一遍\n```\n然后：`git add .` → `git commit -m \"第2周：条件判断\"` → `git push`\n\n### 下周一预告\n进入**循环**，程序终于能\"重复做事\"。你可以先想一个问题：如果要让猜数字能一直猜到对，该怎么写？\n",
  "w3d1": "\n### while：条件成立就一直做\n```python\ni = 1              # ① 起点\nwhile i <= 10:     # ② 条件\n    print(i)\n    i += 1         # ③ 变化量\nprint(\"结束\")\n```\n**三个零件缺一不可**，尤其第 ③ 个：没有它，条件永远成立，程序永远转下去。\n\n### 死循环：新人第一课\n把 `i += 1` 注释掉再运行，你会看到数字一直打印 —— 这就是死循环。\n**终端卡住时按 `Ctrl + C` 强制停止**，这不是电脑坏了。\n\n### 1 到 10 累加（今天的核心）\n```python\ni = 1\ntotal = 0\nwhile i <= 10:\n    total += i      # 等价于 total = total + i\n    i += 1\nprint(total)        # 55\n```\n**自己验算一遍**：前 5 个数 1+2+3+4+5=15，全部加起来 55。程序算出来不是 55，就说明逻辑错了。\n\n### 累加器的固定套路\n```python\naccumulator = 0            # 1. 在循环之外定义累加器\nwhile 条件:\n    accumulator += 某个值   # 2. 循环里累加\n    # 更新变化量\nprint(accumulator)         # 3. 循环结束后输出\n```\n这个套路以后算总分、算平均值、统计个数都用它。\n\n### 三个常见的写法错误\n```python\ntotal = 0                  # 错：累加器写在循环里，每次都被清零\nwhile i <= 10:\n    total = 0\n    total += i\n\ntotal = i                  # 错：把\"最后一个 i\"当成总和\n```\n\n### 什么时候用 while\n- 循环次数**不确定**（比如\"直到用户输入正确\"）→ 用 while；\n- 循环次数**确定**（比如\"重复 10 次\"）→ 下周二的 for 更合适。\n\n> 今天动手：把范围改成 1 到 100，答案应该是 5050。算对了再往下走。\n",
- "w3d2": "\n### for：最适合\"遍历\"的循环\n```python\nfor i in range(1, 6):\n    print(i)          # 1 2 3 4 5\n```\n读法：**对于 range(1,6) 里的每一个 i，做下面缩进的事**。\n\n### range 的三种用法（含头不含尾！）\n| 写法 | 产生的数 | 个数 |\n| --- | --- | --- |\n| `range(5)` | 0 1 2 3 4 | 5 |\n| `range(1, 6)` | 1 2 3 4 5 | 5 |\n| `range(1, 10, 2)` | 1 3 5 7 9 | 5 |\n| `range(5, 0, -1)` | 5 4 3 2 1 | 5 |\n\n**`range(1, 5)` 只到 4** —— 这是最常被记错的一点，和字符串切片一样\"含头不含尾\"。\n\n### 遍历列表\n```python\nfruits = [\"苹果\", \"香蕉\", \"橙子\"]\nfor fruit in fruits:\n    print(f\"我喜欢吃{fruit}\")\n\n# 同时要序号时用 enumerate\nfor index, fruit in enumerate(fruits, start=1):\n    print(f\"{index}. {fruit}\")\n```\n\n### 用 for 改写昨天的累加\n```python\ntotal = 0\nfor i in range(1, 11):\n    total += i\nprint(total)      # 55\n```\n**对比昨天那段 while，for 少了\"起点\"和\"变化量\"两行** —— 因为 for 自动帮你管了。\n\n### for 和 while 怎么选\n- 知道要循环多少次 → `for i in range(n)`；\n- 要在列表/字符串里逐个处理 → `for x in 容器`；\n- 循环到某个条件满足才停 → `while`。\n\n### tab 补全的小技巧\n在 VS Code 里输入 `for` 会弹出代码片段，按 Tab 直接生成循环骨架，**空格和冒号都不会漏**。\n\n> 动手：用 for 打印 1 到 100 里所有的偶数（两种写法：`range(2, 101, 2)` 和 `if i % 2 == 0`）。\n",
+ "w3d2": "\n### for：最适合\"遍历\"的循环\n```python\nfor i in range(1, 6):\n    print(i)          # 1 2 3 4 5\n```\n读法：**对于 range(1,6) 里的每一个 i，做下面缩进的事**。\n\n### range 的三种用法（含头不含尾！）\n| 写法 | 产生的数 | 个数 |\n| --- | --- | --- |\n| `range(5)` | 0 1 2 3 4 | 5 |\n| `range(1, 6)` | 1 2 3 4 5 | 5 |\n| `range(1, 10, 2)` | 1 3 5 7 9 | 5 |\n| `range(5, 0, -1)` | 5 4 3 2 1 | 5 |\n\n**`range(1, 5)` 只到 4** —— 这是最常被记错的一点，和字符串切片一样\"含头不含尾\"。\n\n### 遍历列表\n```python\nfruits = [\"苹果\", \"香蕉\", \"橙子\"]\nfor fruit in fruits:\n    print(f\"我喜欢吃{fruit}\")\n\n# 同时要序号时用 enumerate\nfor index, fruit in enumerate(fruits, start=1):\n    print(f\"{index}. {fruit}\")\n```\n\n### 用 for 改写昨天的累加\n```python\ntotal = 0\nfor i in range(1, 11):\n    total += i\nprint(total)      # 55\n```\n**对比昨天那段 while，for 少了\"起点\"和\"变化量\"两行** —— 因为 for 自动帮你管了。\n\n### for 和 while 怎么选\n- 知道要循环多少次 → `for i in range(n)`；\n- 要在列表/字符串里逐个处理 → `for x in 容器`；\n- 循环到某个条件满足才停 → `while`。\n\n### tab 补全的小技巧\n在 VS Code 里输入 `for` 会弹出代码片段，按 Tab 直接生成循环骨架，**空格和冒号都不会漏**。\n\n> 动手：用 for 打印 1 到 100 里所有的偶数（两种写法：`range(2, 101, 2)` 和 `if i % 2 == 0`）。\n\n\n### 常见误区\n\n**1. 以为 i 从 1 开始**\n`for i in range(5)` 里 i 依次是 0 到 4，一共五轮。想要 1 到 5 得写 `range(1, 6)`，右边那个数一直取不到。\n\n**2. 在循环里给 i 赋值想跳过一轮**\n写 `i = i + 1` 没有用，下一轮开始时 i 又被 range 送来的新值覆盖了。\n\n**3. 累加变量写在循环里**\n求和时在循环内部写 `total = 0`，等于每轮清零，最后只剩下最后一个数。\n\n**为什么**：range 每轮只负责吐出一个新数字，i 是它发下来的，不是你能随手改的；只有循环外面的变量才会一直留到最后。\n\n**怎么改**：要几轮就写清楚，`range(1, 6)` 是五轮。累加先在外面备好零，`total = 0`，再进循环写 `total = total + i`，循环结束后才打印结果。\n",
  "w3d3": "\n### break：立刻结束整个循环\n```python\nfor i in range(1, 100):\n    if i == 5:\n        break\n    print(i)        # 1 2 3 4\n```\n`break` 之后，**循环里剩下的代码和剩余的循环次数全部不做了**，直接跳到循环外面。\n\n### continue：跳过这一轮，继续下一轮\n```python\nfor i in range(1, 11):\n    if i % 2 == 0:\n        continue\n    print(i)        # 1 3 5 7 9\n```\n区别一句话：**break 是\"不干了\"，continue 是\"这轮不算，下轮继续\"**。\n\n### 在 while 里用 break\n```python\nwhile True:                  # 看起来是死循环\n    cmd = input(\"输入命令（q 退出）：\")\n    if cmd == \"q\":\n        break                # 靠 break 出去\n    print(f\"执行：{cmd}\")\n```\n`while True` + `break` 是非常常用的套路：**循环次数不确定时，用它在中间判断退出**。第 20 天的猜数字游戏就是这么写的。\n\n### 循环的 else（了解，能读懂就行）\n```python\nfor i in range(3):\n    if i == 5:\n        break\nelse:\n    print(\"循环正常跑完，没被 break 打断\")\n```\n\n### 别踩的坑\n```python\nfor i in range(5):\n    if i == 2:\n        break\n    print(i)\nprint(i)     # 2，break 之后 i 保留跳出时的值\n```\n- `break` 和 `continue` **只影响它所在的那一层循环**（第 18 天讲嵌套时会再提醒）；\n- 循环外的 `print(i)` 能拿到 i，是因为 Python 的循环变量不会\"消失\"。\n\n> 动手：写一个循环，打印 1 到 20，遇到 15 就停止；再写一个版本，跳过所有能被 3 整除的数。\n",
  "w3d4": "\n### 嵌套循环：外层一行，内层一列\n```python\nfor i in range(1, 4):        # 外层：控制\"第几行\"\n    for j in range(1, 4):    # 内层：控制\"这一行有几个\"\n        print(\"*\", end=\"\")\n    print()                  # 每行结束后换行\n```\n输出：\n```\n***\n***\n***\n```\n**理解要点**：外层走 1 次，内层要把自己走完；所以总共执行 3 × 3 = 9 次内层代码。\n\n### `end=\"\"` 是什么\n`print()` 默认在结尾加换行。`print(\"*\", end=\"\")` 表示**结尾不加任何东西**，这样星星才会打在同一行。\n想加分隔就用 `print(\"*\", end=\" \")`。\n\n### 打印三角形（今天的作业）\n```python\nn = 5\nfor i in range(1, n + 1):        # 第 i 行\n    for j in range(i):           # 第 i 行打 i 个星\n        print(\"*\", end=\"\")\n    print()\n```\n输出：\n```\n*\n**\n***\n****\n*****\n```\n**内层的范围用 i 而不是固定值** —— 这是三角形能\"长大\"的关键。\n\n### 再来个倒三角形\n```python\nfor i in range(5, 0, -1):\n    print(\"*\" * i)\n```\n小技巧：`\"*\" * i` 直接得到 i 个星，比内层循环更简洁。\n\n### 常见问题\n- 忘了 `print()` → 全部打在一行；\n- 内层用了 `print(\"*\")` 而不是 `end=\"\"` → 每个星一行；\n- 外层内层都用同一个变量名 `i` → 逻辑混乱（能跑但极易出错，**内外层变量名要区分开**）。\n\n> 进阶（选做）：打印一个金字塔，第 i 行先打若干个空格再打星。\n",
- "w3d5": "\n### 今天把循环和条件合起来用\n```python\ntotal = 0\nfor i in range(1, 101):\n    if i % 2 == 1:        # 只挑奇数\n        total += i\nprint(total)              # 2500\n```\n思路：**循环负责\"走过每个数\"，条件负责\"挑出想要的\"**，这是绝大多数数据处理程序的骨架。\n\n### 三种写法，结果应该一样\n```python\n# 写法一：先循环后判断\ntotal = 0\nfor i in range(1, 101):\n    if i % 2 == 1:\n        total += i\n\n# 写法二：直接生成奇数\ntotal = 0\nfor i in range(1, 101, 2):\n    total += i\n\n# 写法三：用 sum 一行搞定\ntotal = sum(range(1, 101, 2))\n```\n**先写清楚的那一种，再考虑简写**。三种写法都写一遍，对 `range` 的理解会深一层。\n\n### 常用统计模板\n```python\nnumbers = [3, 8, 12, 5, 20, 7]\ncount = 0      # 计数\ntotal = 0      # 累加\nmax_n = numbers[0]   # 最大值（先假设第一个最大）\n\nfor n in numbers:\n    total += n\n    if n > max_n:\n        max_n = n\n    if n % 2 == 0:\n        count += 1\n\nprint(f\"总和 {total}，最大 {max_n}，偶数 {count} 个，平均 {total / len(numbers):.1f}\")\n```\n**这段模板请务必自己敲一遍**，第 4 周做项目时统计菜单、算总分都用它。\n\n### 累积乘法（阶乘）\n```python\nresult = 1               # 注意：乘法要从 1 开始，不能从 0\nfor i in range(1, 6):\n    result *= i\nprint(result)            # 120 = 5!\n```\n**累加从 0 开始，累乘从 1 开始** —— 从 0 开始乘，结果永远是 0。\n\n> 动手：算 1 到 100 里所有能被 3 整除的数的和（答案 1683）。\n",
- "w3d6": "\n### 今天做出第一个\"完整\"的程序\n完整 = 真的随机 + 能反复猜 + 会反馈 + 猜到就结束。\n\n### 第一步：随机数\n```python\nimport random\n\nanswer = random.randint(1, 100)     # 含 1 和 100\nprint(answer)                        # 调试时先打印出来看看\n```\n`import` 要写在文件最上方。`randint(a, b)` 生成的是**包含 a 和 b** 的整数。\n\n### 第二步：加上循环，反复猜\n```python\nimport random\n\nanswer = random.randint(1, 100)\ncount = 0\n\nwhile True:\n    guess = int(input(\"猜一个 1-100 的数字：\"))\n    count += 1\n\n    if guess > answer:\n        print(\"大了\")\n    elif guess < answer:\n        print(\"小了\")\n    else:\n        print(f\"猜对了！你一共猜了 {count} 次\")\n        break\n```\n结构要看清：**`while True` 提供\"反复\"，`if/elif/else` 提供\"判断\"，`break` 提供\"结束\"** —— 三周学的东西在这里汇合。\n\n### 第三步：让它更友好（今天的加分项）\n```python\nimport random\n\nanswer = random.randint(1, 100)\ncount = 0\nlow, high = 1, 100            # 记录已知范围，给提示\n\nprint(\"我想好了一个 1-100 的数字，你来猜！\")\n\nwhile True:\n    guess = int(input(f\"在 {low}-{high} 之间猜一个：\"))\n    count += 1\n\n    if guess < 1 or guess > 100:\n        print(\"请输入 1 到 100 之间的数\")\n        continue\n    if guess > answer:\n        print(\"大了\")\n        high = min(high, guess - 1)\n    elif guess < answer:\n        print(\"小了\")\n        low = max(low, guess + 1)\n    else:\n        print(f\"猜对了！用了 {count} 次\")\n        break\n```\n小升级里用到了 `continue`（不合法输入不计次数）和 `min/max`（更新已知范围），**能看懂就够，不用背**。\n\n### 调试技巧\n随机数最难调，因为它每次都不一样。**先临时把 `answer` 写成固定的 `42`**，等逻辑跑通了再换回 `random`。\n\n### 测试清单\n- [ ] 猜大、猜小、猜中三种反馈都正确；\n- [ ] 猜到之后程序真的退出（不是继续转）；\n- [ ] 次数统计正确；\n- [ ] 输入 0 或 200 有提示，程序不崩。\n\n> 这就是你第 4 周项目的候选之一。做完把它存成 `guess_number.py`，周日传 GitHub。\n",
- "w3d7": "\n### 一、今天的主角：九九乘法表\n```python\nfor i in range(1, 10):\n    for j in range(1, 10):\n        print(f\"{j}x{i}={i * j}\", end=\"\t\")\n    print()\n```\n`\\t` 是制表符，用来对齐列。\n\n### 进阶：下三角（真正的九九乘法表）\n```python\nfor i in range(1, 10):\n    for j in range(1, i + 1):        # 关键：内层只到 i\n        print(f\"{j}x{i}={i * j}\", end=\"\t\")\n    print()\n```\n输出：\n```\n1x1=1\n1x2=2   2x2=4\n1x3=3   2x3=6   3x3=9\n...\n```\n**内层范围随外层变化**，这是嵌套循环最实用的技巧，和周三的三角形是同一个思路。\n\n### 对齐不好看怎么办\n```python\nprint(f\"{j}x{i}={i*j:2d}\", end=\"  \")    # :2d 表示占 2 个字符宽，右对齐\n```\n格式说明里 `2d` 的 2 是宽度、d 是整数。数字不齐时用它。\n\n### 二、循环复习三连\n1. 用 while 和 for 各写一遍 1 到 100 的和；\n2. 打印 1 到 50 中所有能被 7 整除的数；\n3. 求 1 到 10 的阶乘（120），再用循环打印 1! 到 5! 的每一行。\n\n### 三、笔记 + 上传\n```\n## D15-D21 循环\n- 学会了：while 三件套；range 含头不含尾；break 与 continue 的区别\n- 卡住过：忘写 i += 1 导致死循环，用 Ctrl+C 停下来的\n- 心得：嵌套循环里内外层变量名要区分开\n```\n`git add .` → `git commit -m \"第3周：循环结构\"` → `git push`\n\n### 下周一预告\n第 4 周先做三轮复习（变量/条件/循环各 5 道小题），然后**自己设计并实现一个小项目**。\n周末那两天要交的是「完整小项目 + README」，所以这周日的任务就是把前三周的代码整理干净。\n",
- "w4d1": "\n### 今天的规则：关掉教程，自己写\n复习日不看新知识，**只看题目 → 自己写 → 卡住了再查**。5 道题，每题限时 5 分钟。\n\n### 五道小题\n1. 定义 5 个不同类型的变量（`int` / `float` / `str` / `bool` / `list`），全部打印出来；\n2. 输入两个数字，输出和、差、积、商（商保留 2 位小数）；\n3. 输入姓名和年龄，输出 `我叫小明，今年20岁，明年21岁`；\n4. 用 `type()` 打印第 1 题每个变量的类型；\n5. 输入一个字符串，输出长度、第一个字符、最后一个字符。\n\n### 关键知识点回顾\n| 内容 | 要点 |\n| --- | --- |\n| 变量 | 名字要能看懂；`=` 是赋值 |\n| 类型转换 | `int()` `float()` `str()`；`input()` 永远是字符串 |\n| f-string | 前面必须有 `f`；`{值:.2f}` 保留两位小数 |\n| 字符串 | 索引从 0 开始，`s[-1]` 是最后一个 |\n| 查看类型 | `type(x)` |\n\n### 参考答案（**先自己写完再看**）\n```python\nnum = 10\nprice = 9.9\nname = \"ZERO\"\nis_student = True\nscores = [90, 85, 77]\nprint(num, price, name, is_student, scores)\n\na = float(input(\"第一个数：\"))\nb = float(input(\"第二个数：\"))\nprint(f\"和={a + b} 差={a - b} 积={a * b} 商={a / b:.2f}\")\n\nname = input(\"姓名：\")\nage = int(input(\"年龄：\"))\nprint(f\"我叫{name}，今年{age}岁，明年{age + 1}岁\")\n\nprint(type(num), type(price), type(name), type(is_student), type(scores))\n\ns = input(\"输入一段文字：\")\nprint(f\"长度 {len(s)}，首字符 {s[0]}，末字符 {s[-1]}\")\n```\n\n### 三个高频错点\n- `\"20\" + 1` → `TypeError`，字符串和数字不能直接相加；\n- `print(\"{age} 岁\")` → 忘了 `f`，原样输出大括号；\n- `len(10)` → 数字没有长度，会报 `TypeError`。\n\n> 做不出来不是记忆力问题，而是**手练得不够**。哪一题卡住，就回去把对应那天的模板重敲一遍。\n",
+ "w3d5": "\n### 今天把循环和条件合起来用\n```python\ntotal = 0\nfor i in range(1, 101):\n    if i % 2 == 1:        # 只挑奇数\n        total += i\nprint(total)              # 2500\n```\n思路：**循环负责\"走过每个数\"，条件负责\"挑出想要的\"**，这是绝大多数数据处理程序的骨架。\n\n### 三种写法，结果应该一样\n```python\n# 写法一：先循环后判断\ntotal = 0\nfor i in range(1, 101):\n    if i % 2 == 1:\n        total += i\n\n# 写法二：直接生成奇数\ntotal = 0\nfor i in range(1, 101, 2):\n    total += i\n\n# 写法三：用 sum 一行搞定\ntotal = sum(range(1, 101, 2))\n```\n**先写清楚的那一种，再考虑简写**。三种写法都写一遍，对 `range` 的理解会深一层。\n\n### 常用统计模板\n```python\nnumbers = [3, 8, 12, 5, 20, 7]\ncount = 0      # 计数\ntotal = 0      # 累加\nmax_n = numbers[0]   # 最大值（先假设第一个最大）\n\nfor n in numbers:\n    total += n\n    if n > max_n:\n        max_n = n\n    if n % 2 == 0:\n        count += 1\n\nprint(f\"总和 {total}，最大 {max_n}，偶数 {count} 个，平均 {total / len(numbers):.1f}\")\n```\n**这段模板请务必自己敲一遍**，第 4 周做项目时统计菜单、算总分都用它。\n\n### 累积乘法（阶乘）\n```python\nresult = 1               # 注意：乘法要从 1 开始，不能从 0\nfor i in range(1, 6):\n    result *= i\nprint(result)            # 120 = 5!\n```\n**累加从 0 开始，累乘从 1 开始** —— 从 0 开始乘，结果永远是 0。\n\n> 动手：算 1 到 100 里所有能被 3 整除的数的和（答案 1683）。\n\n\n### 常见误区\n\n**1. 只写一层循环**\n打印三行星号写成 `for i in range(3): print('*')`，出来是竖着一列。每行想要多个星号，得在里面再套一层循环。\n\n**2. 内外层用了同一个变量名**\n外层 `for i`，内层又 `for i`，两个 i 互相覆盖，行列全乱。内外层名字必须不同，常用 i 和 j。\n\n**3. 乘法表忘了 end 和换行**\n`print(f'{i}*{j}={i*j}')` 一行只打一个式子，想排成一行得写 `print(..., end=' ')`，内层跑完再补一次 `print()`。\n\n**为什么**：外层转一圈，内层就要完整转一圈，所以总次数是两层次数相乘，少一层就没有列。\n\n**怎么改**：记住外层管行、内层管列，名字左右分开取。写完先把次数改小，用两行三列看看形状对不对，再放大到九行九列。\n",
+ "w3d6": "\n### 今天做出第一个\"完整\"的程序\n完整 = 真的随机 + 能反复猜 + 会反馈 + 猜到就结束。\n\n### 第一步：随机数\n```python\nimport random\n\nanswer = random.randint(1, 100)     # 含 1 和 100\nprint(answer)                        # 调试时先打印出来看看\n```\n`import` 要写在文件最上方。`randint(a, b)` 生成的是**包含 a 和 b** 的整数。\n\n### 第二步：加上循环，反复猜\n```python\nimport random\n\nanswer = random.randint(1, 100)\ncount = 0\n\nwhile True:\n    guess = int(input(\"猜一个 1-100 的数字：\"))\n    count += 1\n\n    if guess > answer:\n        print(\"大了\")\n    elif guess < answer:\n        print(\"小了\")\n    else:\n        print(f\"猜对了！你一共猜了 {count} 次\")\n        break\n```\n结构要看清：**`while True` 提供\"反复\"，`if/elif/else` 提供\"判断\"，`break` 提供\"结束\"** —— 三周学的东西在这里汇合。\n\n### 第三步：让它更友好（今天的加分项）\n```python\nimport random\n\nanswer = random.randint(1, 100)\ncount = 0\nlow, high = 1, 100            # 记录已知范围，给提示\n\nprint(\"我想好了一个 1-100 的数字，你来猜！\")\n\nwhile True:\n    guess = int(input(f\"在 {low}-{high} 之间猜一个：\"))\n    count += 1\n\n    if guess < 1 or guess > 100:\n        print(\"请输入 1 到 100 之间的数\")\n        continue\n    if guess > answer:\n        print(\"大了\")\n        high = min(high, guess - 1)\n    elif guess < answer:\n        print(\"小了\")\n        low = max(low, guess + 1)\n    else:\n        print(f\"猜对了！用了 {count} 次\")\n        break\n```\n小升级里用到了 `continue`（不合法输入不计次数）和 `min/max`（更新已知范围），**能看懂就够，不用背**。\n\n### 调试技巧\n随机数最难调，因为它每次都不一样。**先临时把 `answer` 写成固定的 `42`**，等逻辑跑通了再换回 `random`。\n\n### 测试清单\n- [ ] 猜大、猜小、猜中三种反馈都正确；\n- [ ] 猜到之后程序真的退出（不是继续转）；\n- [ ] 次数统计正确；\n- [ ] 输入 0 或 200 有提示，程序不崩。\n\n> 这就是你第 4 周项目的候选之一。做完把它存成 `guess_number.py`，周日传 GitHub。\n\n\n### 常见误区\n\n**1. while 忘了让条件变化**\n`while guess != answer:` 里面没有再读一次输入，guess 永远不变，程序卡死。循环体最后一定要写 `guess = int(input('再猜：'))`。\n\n**2. 上下限写反或写错**\n`random.randint(100, 1)` 会直接报错，`randint(0, 100)` 多了个 0，提示语和实际范围对不上，玩家会觉得不公平。\n\n**3. 拿字符串去比数字**\n`guess = input('猜：')` 不转换，`'50'` 和 `50` 永远不相等，猜中了也会提示没中。\n\n**为什么**：while 每一轮开始前都重新检查条件，条件里的变量不变，判断结果就一直一样。\n\n**怎么改**：把改变条件的那一行放进循环体，并保证每条分支都能执行到。答案用 `answer = random.randint(1, 100)` 只在循环外生成一次。比较之前先 `int()`。\n",
+ "w3d7": "\n### 一、今天的主角：九九乘法表\n```python\nfor i in range(1, 10):\n    for j in range(1, 10):\n        print(f\"{j}x{i}={i * j}\", end=\"\t\")\n    print()\n```\n`\\t` 是制表符，用来对齐列。\n\n### 进阶：下三角（真正的九九乘法表）\n```python\nfor i in range(1, 10):\n    for j in range(1, i + 1):        # 关键：内层只到 i\n        print(f\"{j}x{i}={i * j}\", end=\"\t\")\n    print()\n```\n输出：\n```\n1x1=1\n1x2=2   2x2=4\n1x3=3   2x3=6   3x3=9\n...\n```\n**内层范围随外层变化**，这是嵌套循环最实用的技巧，和周三的三角形是同一个思路。\n\n### 对齐不好看怎么办\n```python\nprint(f\"{j}x{i}={i*j:2d}\", end=\"  \")    # :2d 表示占 2 个字符宽，右对齐\n```\n格式说明里 `2d` 的 2 是宽度、d 是整数。数字不齐时用它。\n\n### 二、循环复习三连\n1. 用 while 和 for 各写一遍 1 到 100 的和；\n2. 打印 1 到 50 中所有能被 7 整除的数；\n3. 求 1 到 10 的阶乘（120），再用循环打印 1! 到 5! 的每一行。\n\n### 三、笔记 + 上传\n```\n## D15-D21 循环\n- 学会了：while 三件套；range 含头不含尾；break 与 continue 的区别\n- 卡住过：忘写 i += 1 导致死循环，用 Ctrl+C 停下来的\n- 心得：嵌套循环里内外层变量名要区分开\n```\n`git add .` → `git commit -m \"第3周：循环结构\"` → `git push`\n\n### 下周一预告\n第 4 周先做三轮复习（变量/条件/循环各 5 道小题），然后**自己设计并实现一个小项目**。\n周末那两天要交的是「完整小项目 + README」，所以这周日的任务就是把前三周的代码整理干净。\n\n\n### 常见误区\n\n**1. break 和 continue 用反**\nbreak 是直接结束整个循环，continue 只是跳过这一轮剩下的语句，直接跑下一轮。想让某轮不处理但循环继续，用 continue。\n\n**2. 累加初始值写在循环里**\n`for i in ...: total = 0` 每轮清零，最后只剩最后一个数，求和结果永远是错的。\n\n**3. 在 continue 后面还写代码**\n以为那句还会执行，其实这一轮已经跳走了，后面的语句一次都没跑。\n\n**为什么**：循环变量每轮翻新，循环外的变量会一直保留到结束，而 break 和 continue 都是立刻改变流程的指令。\n\n**怎么改**：累加前先在循环外写 `total = 0`，要提前收工用 break，要跳过这一轮用 continue。调试时在循环里加 `print(i, total)`，能立刻看出哪一步不对。\n",
+ "w4d1": "\n### 今天的规则：关掉教程，自己写\n复习日不看新知识，**只看题目 → 自己写 → 卡住了再查**。5 道题，每题限时 5 分钟。\n\n### 五道小题\n1. 定义 5 个不同类型的变量（`int` / `float` / `str` / `bool` / `list`），全部打印出来；\n2. 输入两个数字，输出和、差、积、商（商保留 2 位小数）；\n3. 输入姓名和年龄，输出 `我叫小明，今年20岁，明年21岁`；\n4. 用 `type()` 打印第 1 题每个变量的类型；\n5. 输入一个字符串，输出长度、第一个字符、最后一个字符。\n\n### 关键知识点回顾\n| 内容 | 要点 |\n| --- | --- |\n| 变量 | 名字要能看懂；`=` 是赋值 |\n| 类型转换 | `int()` `float()` `str()`；`input()` 永远是字符串 |\n| f-string | 前面必须有 `f`；`{值:.2f}` 保留两位小数 |\n| 字符串 | 索引从 0 开始，`s[-1]` 是最后一个 |\n| 查看类型 | `type(x)` |\n\n### 参考答案（**先自己写完再看**）\n```python\nnum = 10\nprice = 9.9\nname = \"ZERO\"\nis_student = True\nscores = [90, 85, 77]\nprint(num, price, name, is_student, scores)\n\na = float(input(\"第一个数：\"))\nb = float(input(\"第二个数：\"))\nprint(f\"和={a + b} 差={a - b} 积={a * b} 商={a / b:.2f}\")\n\nname = input(\"姓名：\")\nage = int(input(\"年龄：\"))\nprint(f\"我叫{name}，今年{age}岁，明年{age + 1}岁\")\n\nprint(type(num), type(price), type(name), type(is_student), type(scores))\n\ns = input(\"输入一段文字：\")\nprint(f\"长度 {len(s)}，首字符 {s[0]}，末字符 {s[-1]}\")\n```\n\n### 三个高频错点\n- `\"20\" + 1` → `TypeError`，字符串和数字不能直接相加；\n- `print(\"{age} 岁\")` → 忘了 `f`，原样输出大括号；\n- `len(10)` → 数字没有长度，会报 `TypeError`。\n\n> 做不出来不是记忆力问题，而是**手练得不够**。哪一题卡住，就回去把对应那天的模板重敲一遍。\n\n\n### 常见误区\n\n**1. 只 print 不 return**\n函数里写了 `print(result)` 却没有 `return result`，外面 `x = add(1, 2)` 拿到的是 None，再拿 x 去算就报错。\n\n**2. 调用时忘了括号**\n写 `x = add` 只是把函数本身交给 x，不会执行；要写 `add(1, 2)` 才算真的调用。\n\n**3. 参数个数对不上**\n定义了两个参数，调用时只传一个，报 TypeError，提示少了一个参数。\n\n**为什么**：print 只是把过程打到屏幕上给人看，return 才是把成品交出去，两者是两回事。\n\n**怎么改**：外面要用到结果就用 return，函数里不急着打印。调用时括号别落下，参数按定义的顺序对一遍。不确定就先 `print(add(1, 2))`，看看拿到的是不是 None。\n",
  "w4d2": "\n### 五道条件判断题\n1. 输入一个数，判断正数 / 负数 / 零（用 elif）；\n2. 输入年份，判断闰年（能被 4 整除不能被 100 整除，或能被 400 整除）；\n3. 输入成绩，输出 A/B/C/D/E 等级，并校验 0-100 范围；\n4. 输入用户名和密码，用 and 组合条件判断登录是否成功；\n5. 输入三个数，找出最大的那个（用 if/elif/else 或 and 组合）。\n\n### 关键知识点回顾\n| 内容 | 要点 |\n| --- | --- |\n| 结构 | `if` → `elif`（多个）→ `else`（0 或 1 个） |\n| 顺序 | **从上往下，命中第一个就结束**，顺序决定结果 |\n| 缩进 | 决定代码块归属，统一 4 个空格 |\n| 组合 | `and` `or` `not`，复合条件要加括号 |\n| 比较 | `==` 才是等于；范围判断可用 `60 <= x < 90` |\n\n### 参考答案要点\n```python\n# 第 1 题\nn = float(input(\"输入一个数：\"))\nif n > 0:\n    print(\"正数\")\nelif n < 0:\n    print(\"负数\")\nelse:\n    print(\"零\")\n\n# 第 2 题\nyear = int(input(\"年份：\"))\nif (year % 4 == 0 and year % 100 != 0) or year % 400 == 0:\n    print(\"闰年\")\nelse:\n    print(\"平年\")\n\n# 第 5 题\na, b, c = 3, 8, 5\nif a >= b and a >= c:\n    print(a)\nelif b >= a and b >= c:\n    print(b)\nelse:\n    print(c)\n```\n\n### 最容易错的地方\n- `elif` 顺序写反（比如把 `>= 60` 放在 `>= 90` 前面）；\n- 该用 `elif` 的地方用了独立的 `if`，导致打印多个结果；\n- `and` 和 `or` 混用不加括号。\n\n> **边界值测试法**：写完条件判断，一定要试 0、刚好等于边界、刚好差 1 的数（比如 59/60/61）。\n",
- "w4d3": "\n### 五道循环题\n1. 用 while 求 1 到 100 的和（5050）；\n2. 用 for 打印列表里每个元素和它的序号；\n3. 打印 1 到 50 中所有能被 7 整除的数；\n4. 打印一个 5 行的三角形星星（嵌套循环）；\n5. 用循环判断一个数是不是质数（只能被 1 和自身整除）。\n\n### 关键知识点回顾\n| 内容 | 要点 |\n| --- | --- |\n| while | 起点、条件、变化量，**变化量忘了 = 死循环** |\n| for / range | 含头不含尾：`range(1, 5)` 是 1-4 |\n| break | 立即结束整个循环 |\n| continue | 跳过本轮，进入下一轮 |\n| 嵌套 | 外层管行、内层管列；变量名要区分 |\n\n### 参考答案要点\n```python\n# 第 2 题\nfruits = [\"苹果\", \"香蕉\", \"橙子\"]\nfor i, fruit in enumerate(fruits, start=1):\n    print(f\"{i}. {fruit}\")\n\n# 第 5 题：质数判断\nn = int(input(\"输入一个大于 1 的整数：\"))\nis_prime = True\nfor i in range(2, n):\n    if n % i == 0:\n        is_prime = False\n        break                # 找到一个因子就够，不用再算\nif n <= 1:\n    print(\"不是质数\")\nelif is_prime:\n    print(\"是质数\")\nelse:\n    print(\"不是质数\")\n```\n第 5 题用到了**\"标志变量\"**（`is_prime`）和 **break 提前结束** —— 这是很实用的组合套路。\n\n### 三个高频错点\n- `while` 里忘了改变化量 → 死循环，`Ctrl+C` 停；\n- 累乘从 0 开始 → 结果永远是 0（应该从 1 开始）；\n- `range` 少算一个数 → 想包含 10 就要写 `range(1, 11)`。\n\n> 循环是三周里最容易\"看着会、写着错\"的部分。**五题全对再进入项目阶段**，否则项目会写得很痛苦。\n",
- "w4d4": "\n### 今天不写代码，只做决策\n选一个项目，**把功能清单写在纸上/文件里**。项目做不完的最大原因是\"想做的太多\"。\n\n### 三个候选项目对比\n| 项目 | 难度 | 需要的知识 | 建议 |\n| --- | --- | --- | --- |\n| 猜数字游戏 | ★ | 循环 + 条件 + random | 已经写过，适合想快速收尾 |\n| 简易计算器 | ★★ | 函数未学也能做，用 if 分支 + 循环菜单 | **推荐**，功能边界清晰 |\n| 单位换算器 | ★★ | 条件判断 + 字典（可现学） | 适合喜欢\"有用工具\"的人 |\n\n### 功能清单怎么定\n原则：**核心 3 条 + 加分 2 条，做完核心就算成功**。\n\n以计算器为例：\n```\n核心功能（必做）\n1. 支持 + - * / 四则运算\n2. 循环菜单，算完一次可以继续算，选 0 退出\n3. 除法遇到 0 要给提示，不能让程序崩\n\n加分功能（选做）\n4. 支持连续运算（用上一次的结果继续算）\n5. 记录并显示本次运行算过几次\n```\n\n以猜数字为例：\n```\n核心功能\n1. 随机生成 1-100 的数，反复猜直到猜对\n2. 提示大了/小了，猜对显示次数\n3. 非法输入（字母、超出范围）要有提示\n\n加分功能\n4. 限制最多 7 次，超了显示答案\n5. 猜对后询问\"再来一局吗\"\n```\n\n### 今天要交的东西\n- [ ] 选定一个项目，写下项目名和一句话简介；\n- [ ] 核心功能 3 条（每条都能用一句话验证\"做到了没有\"）；\n- [ ] 加分功能 2 条；\n- [ ] 用伪代码（中文描述）写出主流程，例如：\n```\n显示菜单\n当用户没有选择退出时：\n    读入选择\n    如果是 1 就做加法\n    ...\n    问是否继续\n```\n\n> 判据：**如果你说不清\"怎么算做完了\"，说明需求还没想清楚**。今天宁可多想 10 分钟。\n",
+ "w4d3": "\n### 五道循环题\n1. 用 while 求 1 到 100 的和（5050）；\n2. 用 for 打印列表里每个元素和它的序号；\n3. 打印 1 到 50 中所有能被 7 整除的数；\n4. 打印一个 5 行的三角形星星（嵌套循环）；\n5. 用循环判断一个数是不是质数（只能被 1 和自身整除）。\n\n### 关键知识点回顾\n| 内容 | 要点 |\n| --- | --- |\n| while | 起点、条件、变化量，**变化量忘了 = 死循环** |\n| for / range | 含头不含尾：`range(1, 5)` 是 1-4 |\n| break | 立即结束整个循环 |\n| continue | 跳过本轮，进入下一轮 |\n| 嵌套 | 外层管行、内层管列；变量名要区分 |\n\n### 参考答案要点\n```python\n# 第 2 题\nfruits = [\"苹果\", \"香蕉\", \"橙子\"]\nfor i, fruit in enumerate(fruits, start=1):\n    print(f\"{i}. {fruit}\")\n\n# 第 5 题：质数判断\nn = int(input(\"输入一个大于 1 的整数：\"))\nis_prime = True\nfor i in range(2, n):\n    if n % i == 0:\n        is_prime = False\n        break                # 找到一个因子就够，不用再算\nif n <= 1:\n    print(\"不是质数\")\nelif is_prime:\n    print(\"是质数\")\nelse:\n    print(\"不是质数\")\n```\n第 5 题用到了**\"标志变量\"**（`is_prime`）和 **break 提前结束** —— 这是很实用的组合套路。\n\n### 三个高频错点\n- `while` 里忘了改变化量 → 死循环，`Ctrl+C` 停；\n- 累乘从 0 开始 → 结果永远是 0（应该从 1 开始）；\n- `range` 少算一个数 → 想包含 10 就要写 `range(1, 11)`。\n\n> 循环是三周里最容易\"看着会、写着错\"的部分。**五题全对再进入项目阶段**，否则项目会写得很痛苦。\n\n\n### 常见误区\n\n**1. 索引从 0 开始，越界很常见**\n`lst = [10, 20, 30]` 想取最后一个写 `lst[3]` 会报 IndexError，最大下标是 2，最后一位用 `lst[-1]` 更保险。\n\n**2. 把 append 的返回值当列表**\n写 `lst = lst.append(40)` 之后 lst 变成 None，因为 append 是原地修改，自己不返回列表。正确写法就一行 `lst.append(40)`。\n\n**3. 想改元组里的值**\n`t = (1, 2)` 之后写 `t[0] = 9` 会报 TypeError，元组创建后不能改，需要能改就用方括号的列表。\n\n**为什么**：索引表示偏移几个位置，所以从 0 数；append、remove 这类方法是就地操作，动的是原列表，不用重新赋值。\n\n**怎么改**：取值前先 `len(lst)` 看长度，或者直接用负索引。增删改单独成行，像 `lst.append(40)`、`lst[0] = 9`。会变的数据用列表，固定不变的用元组。\n",
+ "w4d4": "\n### 今天不写代码，只做决策\n选一个项目，**把功能清单写在纸上/文件里**。项目做不完的最大原因是\"想做的太多\"。\n\n### 三个候选项目对比\n| 项目 | 难度 | 需要的知识 | 建议 |\n| --- | --- | --- | --- |\n| 猜数字游戏 | ★ | 循环 + 条件 + random | 已经写过，适合想快速收尾 |\n| 简易计算器 | ★★ | 函数未学也能做，用 if 分支 + 循环菜单 | **推荐**，功能边界清晰 |\n| 单位换算器 | ★★ | 条件判断 + 字典（可现学） | 适合喜欢\"有用工具\"的人 |\n\n### 功能清单怎么定\n原则：**核心 3 条 + 加分 2 条，做完核心就算成功**。\n\n以计算器为例：\n```\n核心功能（必做）\n1. 支持 + - * / 四则运算\n2. 循环菜单，算完一次可以继续算，选 0 退出\n3. 除法遇到 0 要给提示，不能让程序崩\n\n加分功能（选做）\n4. 支持连续运算（用上一次的结果继续算）\n5. 记录并显示本次运行算过几次\n```\n\n以猜数字为例：\n```\n核心功能\n1. 随机生成 1-100 的数，反复猜直到猜对\n2. 提示大了/小了，猜对显示次数\n3. 非法输入（字母、超出范围）要有提示\n\n加分功能\n4. 限制最多 7 次，超了显示答案\n5. 猜对后询问\"再来一局吗\"\n```\n\n### 今天要交的东西\n- [ ] 选定一个项目，写下项目名和一句话简介；\n- [ ] 核心功能 3 条（每条都能用一句话验证\"做到了没有\"）；\n- [ ] 加分功能 2 条；\n- [ ] 用伪代码（中文描述）写出主流程，例如：\n```\n显示菜单\n当用户没有选择退出时：\n    读入选择\n    如果是 1 就做加法\n    ...\n    问是否继续\n```\n\n> 判据：**如果你说不清\"怎么算做完了\"，说明需求还没想清楚**。今天宁可多想 10 分钟。\n\n\n### 常见误区\n\n**1. 全部代码平铺在顶层**\n一个项目从头写到尾，几十行里没有函数，出错只能从头读，改一处又怕影响别处。\n\n**2. 没想清楚就动手写**\n输入、计算、显示混在一起，写到后面发现算分那段复制了三遍。\n\n**3. 变量名互相打架**\n菜单循环用 i，统计也用 i，又混着一堆 temp、data，回头自己都读不懂。\n\n**为什么**：程序一长，人脑一次只能装下几样东西；切成小块单独看就简单。\n\n**怎么改**：先列功能清单，一个功能写一个函数，像 `show_menu()`、`main()`，主流程只负责按顺序调用。数据在开头统一定义，名字写清含义。写完一个函数先单独测，再拼进主流程。\n",
  "w4d5": "\n### 目标：让程序先\"能跑起来\"\n今天不追求完善，**只要求主流程走通**。丑一点、缺边界处理都没关系。\n\n### 推荐结构：主循环 + 分支\n```python\n# 简易计算器 · 核心版\nprint(\"=\" * 32)\nprint(\"  简易计算器\")\nprint(\"=\" * 32)\n\nwhile True:\n    print(\"\\n1. 加法   2. 减法   3. 乘法   4. 除法   0. 退出\")\n    choice = input(\"请选择：\")\n\n    if choice == \"0\":\n        print(\"再见！\")\n        break\n\n    a = float(input(\"第一个数：\"))\n    b = float(input(\"第二个数：\"))\n\n    if choice == \"1\":\n        print(f\"结果：{a + b:.2f}\")\n    elif choice == \"2\":\n        print(f\"结果：{a - b:.2f}\")\n    elif choice == \"3\":\n        print(f\"结果：{a * b:.2f}\")\n    elif choice == \"4\":\n        print(f\"结果：{a / b:.2f}\")\n    else:\n        print(\"没有这个选项\")\n```\n\n### 写代码的顺序（重要）\n1. **先写最外层骨架**：菜单 + 主循环 + 输入选择，跑一遍确认菜单能循环；\n2. **再填一个分支**（比如只做加法），跑通；\n3. **最后复制出其他分支**，改运算符；\n4. 每一步都运行一次 —— **不要一次写完 60 行再运行**，那样出错很难定位。\n\n### 调试三板斧\n```python\nprint(\">>> 我走到这里了\")        # 1. 打印路标，看执行到哪一步\nprint(choice, type(choice))       # 2. 打印变量值，看是不是你以为的\nprint(len(choice))                # 3. 字符串看不清就打印长度\n```\n\n### 今天可能的坑\n- 只输入一次就算完，不能继续 → 检查 `while True` 是否包住了整个流程；\n- 选择 1 却没反应 → 检查 `choice` 是字符串 `\"1\"` 还是数字 `1`；\n- 除法输入 0 直接崩 → 今天先记下，明天加错误处理。\n\n> 完成标准：**能连续做三次不同的运算，选 0 能正常退出**。做到这一条，今天就算过关。\n",
- "w4d6": "\n### 目标：从\"能跑\"到\"好用\"\n今天三件事：错误处理、循环菜单优化、注释与结构。\n\n### 一、错误处理：让程序不崩\n```python\ntry:\n    a = float(input(\"第一个数：\"))\nexcept ValueError:\n    print(\"请输入数字！\")\n    continue                     # 回到菜单，重新来\n```\n它的意思是：**尝试执行 try 里的代码，如果出现 ValueError 就跳到 except 里**，而不是让程序崩掉。\n\n常见异常类型：\n\n| 异常 | 什么时候出现 | 怎么处理 |\n| --- | --- | --- |\n| `ValueError` | `int(\"abc\")` 转换失败 | 提示重新输入 |\n| `ZeroDivisionError` | 除以 0 | 判断除数是否为 0 |\n| `KeyError` | 字典里没有这个键 | 用 `in` 先判断 |\n\n除零的两种写法：\n```python\nif b == 0:\n    print(\"除数不能为 0\")\nelse:\n    print(a / b)\n```\n\n### 二、循环菜单：能优雅退出\n```python\nwhile True:\n    ...\n    again = input(\"继续吗？（y/n）：\").strip().lower()\n    if again != \"y\":\n        break\n```\n`.strip()` 去掉空格、`.lower()` 统一小写，这样用户输入 `Y`、` y ` 都能识别 —— **这是很实用的健壮性细节**。\n\n### 三、加注释：让代码能被人读懂\n```python\n# ============================================\n# 简易计算器 v1.0\n# 功能：四则运算、循环菜单、错误处理\n# 作者：ZERO    日期：2026-09\n# ============================================\n\ndef show_menu():\n    \"\"\"打印菜单（第 5 周会讲函数，这里先了解）\"\"\"\n    print(\"1. 加法  2. 减法  3. 乘法  4. 除法  0. 退出\")\n```\n注释写三样：**文件是干什么的、关键步骤为什么这么做、临时没解决的 TODO**。\n```python\n# TODO: 以后加一个\"连续运算\"功能\n```\n\n### 四、今天的验收\n- [ ] 输入字母不崩溃，能重新输入；\n- [ ] 除以 0 有提示；\n- [ ] 选 0 能退出，选 y 能继续；\n- [ ] 文件头有注释说明，关键行有注释；\n- [ ] 整份代码在 VS Code 里格式化过（`Shift+Alt+F`）。\n\n> 别忘了：每加一个功能就运行一次。**程序从 10 行长到 60 行，全靠\"小步验证\"**。\n",
+ "w4d6": "\n### 目标：从\"能跑\"到\"好用\"\n今天三件事：错误处理、循环菜单优化、注释与结构。\n\n### 一、错误处理：让程序不崩\n```python\ntry:\n    a = float(input(\"第一个数：\"))\nexcept ValueError:\n    print(\"请输入数字！\")\n    continue                     # 回到菜单，重新来\n```\n它的意思是：**尝试执行 try 里的代码，如果出现 ValueError 就跳到 except 里**，而不是让程序崩掉。\n\n常见异常类型：\n\n| 异常 | 什么时候出现 | 怎么处理 |\n| --- | --- | --- |\n| `ValueError` | `int(\"abc\")` 转换失败 | 提示重新输入 |\n| `ZeroDivisionError` | 除以 0 | 判断除数是否为 0 |\n| `KeyError` | 字典里没有这个键 | 用 `in` 先判断 |\n\n除零的两种写法：\n```python\nif b == 0:\n    print(\"除数不能为 0\")\nelse:\n    print(a / b)\n```\n\n### 二、循环菜单：能优雅退出\n```python\nwhile True:\n    ...\n    again = input(\"继续吗？（y/n）：\").strip().lower()\n    if again != \"y\":\n        break\n```\n`.strip()` 去掉空格、`.lower()` 统一小写，这样用户输入 `Y`、` y ` 都能识别 —— **这是很实用的健壮性细节**。\n\n### 三、加注释：让代码能被人读懂\n```python\n# ============================================\n# 简易计算器 v1.0\n# 功能：四则运算、循环菜单、错误处理\n# 作者：ZERO    日期：2026-09\n# ============================================\n\ndef show_menu():\n    \"\"\"打印菜单（第 5 周会讲函数，这里先了解）\"\"\"\n    print(\"1. 加法  2. 减法  3. 乘法  4. 除法  0. 退出\")\n```\n注释写三样：**文件是干什么的、关键步骤为什么这么做、临时没解决的 TODO**。\n```python\n# TODO: 以后加一个\"连续运算\"功能\n```\n\n### 四、今天的验收\n- [ ] 输入字母不崩溃，能重新输入；\n- [ ] 除以 0 有提示；\n- [ ] 选 0 能退出，选 y 能继续；\n- [ ] 文件头有注释说明，关键行有注释；\n- [ ] 整份代码在 VS Code 里格式化过（`Shift+Alt+F`）。\n\n> 别忘了：每加一个功能就运行一次。**程序从 10 行长到 60 行，全靠\"小步验证\"**。\n\n\n### 常见误区\n\n**1. except 写的异常名对不上**\n输入字母时抛出的是 ValueError，代码里却写 `except TypeError`，程序照样崩。记不清类型，可以先看报错信息的最后一行。\n\n**2. try 包得太大**\n把输入、计算、打印全塞进一个 try，出错时只知道“有问题”，不知道是哪一行，反而更难查。\n\n**3. except 里什么都不做**\n`except: pass` 把错误悄悄吞掉，程序带着错数据继续跑，问题被藏得更深。\n\n**为什么**：except 只接住它写明的那类异常，其他类型还会往上抛；try 里的代码越少，出错位置越清楚。\n\n**怎么改**：只把真正可能出错的一两行放进 try，比如 `n = int(input('数字：'))`。except 后面至少写句提示：`except ValueError: print('请输入数字')`，别用空的 pass。\n",
  "w4d7": "\n### 今天收尾，把项目变成作品\n\n### 一、写 README.md（最重要的交付物）\nREADME 是别人打开你仓库看到的第一份文件。模板：\n\n```markdown\n# 简易计算器\n\n一个用 Python 写的命令行计算器，支持四则运算、循环菜单和错误处理。\n\n## 功能\n- 支持 + - * / 四则运算，结果保留两位小数\n- 算完一次可以继续算，输入 0 退出\n- 输入非数字、除以 0 都有友好提示\n\n## 运行方式\n\\`\\`\\`bash\npython calculator.py\n\\`\\`\\`\n\n## 使用示例\n\\`\\`\\`\n1. 加法   2. 减法   3. 乘法   4. 除法   0. 退出\n请选择：1\n第一个数：12\n第二个数：8\n结果：20.00\n\\`\\`\\`\n\n## 用到的知识\n变量与类型、f-string、if/elif/else、while 循环、try/except\n\n## 我踩过的坑\n- 除法遇到 0 会崩，用 if 判断解决\n- 一开始没写 while True，算一次就退出了\n\n## 后续计划\n- [ ] 支持连续运算\n- [ ] 增加乘方和开方\n```\n\n**「我踩过的坑」这一段最值钱**，它证明你真的动手写过，而不是复制了一个教程。\n\n### 二、整理目录结构\n```\npython-learning/\n├── README.md              # 项目总说明\n├── week1/\n│   ├── hello.py\n│   └── calculator.py\n├── week2/\n├── week3/\n├── week4/\n│   └── final_project/\n│       ├── calculator.py\n│       └── README.md\n└── notes.md               # 四周的学习笔记\n```\n\n### 三、上传 GitHub\n```bat\ngit add .\ngit commit -m \"第4周：完成计算器项目 + README\"\ngit push\n```\n刷新仓库页面，确认文件都在、README 能正常显示（GitHub 会自动渲染 Markdown）。\n\n### 四、复盘：回答这五个问题\n1. 四周里哪一天最卡？现在回头看还难吗？\n2. 哪个知识点当时听懂了、写的时候却写不出来？\n3. 我的代码里重复最多的写法是什么？（提示：以后可以用函数和循环消除）\n4. 如果重做这个项目，哪里会做得不一样？\n5. 下一个四周想学什么？（函数、列表字典、文件读写、爬虫…）\n\n把这五个答案写进 `notes.md`，**这是四周学习里最属于你自己的东西**。\n\n### 五、下一步往哪走\n推荐顺序：**函数 → 列表与字典进阶 → 文件读写 → 异常处理 → 面向对象**。\n你现在已经具备了自学这些的基础：会看报错、会查文档、会跑通一个完整程序。\n\n> 最后一件小事：把仓库链接发给自己或朋友看一眼。**有人看过的代码，才会被你真的当回事。**\n"
 };
 const HOMEWORK = {
@@ -3918,6 +4132,7 @@ function renderRunner(id){
         ) +
         '<div class="console" id="runConsole"></div>' +
         '<div class="gradelist" id="gradeList"></div>' +
+        '<div id="errActions" style="display:none"></div>' +
       "</div>" +
     "</div>";
   const btn = document.getElementById("runGrade");
@@ -3988,6 +4203,7 @@ async function doRunOnly(id){
   const w = workAt(id);
   const code = (w.code || "").trim();
   if (!code){ toast("先把代码填进上面的框里"); return; }
+  if (typeof clearErrorActions === "function") clearErrorActions();
   const stdinText = (document.getElementById("stdinBox") || {}).value || "";
   await guard(async () => {
   consoleClear();
@@ -4003,7 +4219,11 @@ async function doRunOnly(id){
     }
     consoleWrite("—— 程序输出 ——\n", "dim");
     consoleWrite(r.stdout || "（没有任何输出）\n");
-    if (r.error){ consoleWrite("\n—— 报错 ——\n", "bad"); consoleError(r.error + "\n"); }
+    if (r.error){
+      consoleWrite("\n—— 报错 ——\n", "bad");
+      consoleError(r.error + "\n");
+      if (typeof showErrorActions === "function") showErrorActions(id, r.error);
+    }
     else consoleWrite("\n✅ 运行结束，用时 " + ms + " 毫秒\n", "ok");
   });
   });
@@ -4049,14 +4269,29 @@ async function doRunGrade(id){
     if (timedOut){
       consoleError("\n⏱ 程序运行超过 " + Math.round(RUN_TIMEOUT / 1000) + " 秒，疑似死循环，已强制停止。\n");
       consoleError("检查一下 while 循环里有没有让条件变化的语句（例如 i += 1）。\n");
+      if (typeof showErrorActions === "function") showErrorActions(id, "疑似死循环：程序超过 " + Math.round(RUN_TIMEOUT / 1000) + " 秒没有结束");
       return;
     }
-    // 展示真实输出（选最长的那次）
-    let longest = { stdout:"", error:"" }, lk = "";
-    keys.forEach((k) => { if ((cache[k].stdout || "").length > (longest.stdout || "").length){ longest = cache[k]; lk = k; } });
+    // 展示真实输出：优先展示"输出最多"的那次，但只要有任意一次报错，报错必须显示出来
+    // （否则 print(1/0) 这种"没有输出只有报错"的程序，界面上会是一片空白）
+    let longest = null, lk = "";
+    keys.forEach((k) => {
+      if (!longest || (cache[k].stdout || "").length > (longest.stdout || "").length){ longest = cache[k]; lk = k; }
+    });
+    if (!longest) longest = { stdout:"", error:"" };
+    let showErr = longest.error || "";
+    if (!showErr){
+      for (let i = 0; i < keys.length; i++){
+        if (cache[keys[i]] && cache[keys[i]].error){ showErr = cache[keys[i]].error; break; }
+      }
+    }
     consoleWrite("\n—— 程序实际输出（输入：" + (lk.split(/\r?\n/).filter((x)=>x!=="").join(" / ") || "无") + "）——\n", "dim");
     consoleWrite(longest.stdout || "（没有输出）\n");
-    if (longest.error){ consoleWrite("\n—— 报错 ——\n", "bad"); consoleError(longest.error + "\n"); }
+    if (showErr){
+      consoleWrite("\n—— 报错 ——\n", "bad");
+      consoleError(showErr + "\n");
+      if (typeof showErrorActions === "function") showErrorActions(id, showErr);
+    }
     // 判分
     const g = gradeAll(id, code, (src, stdinKey) => cache[stdinKey] || { stdout:"", error:"" });
     saveGrade(id, g);
@@ -4083,6 +4318,711 @@ function skipGrade(id){
 }
 
 
+/* ===== 常见报错查询表（由 errordex.js 生成） ===== */
+const ERRORS = [
+ {
+  "id": "syntax",
+  "name": "SyntaxError",
+  "cn": "语法错误",
+  "see": [
+   "SyntaxError",
+   "invalid syntax",
+   "unexpected EOF",
+   "EOL while scanning"
+  ],
+  "why": "代码不符合 Python 的语法规则，解释器\"读不懂\"这句话。它跟逻辑对错无关 —— 是标点、括号、冒号这类写法问题。",
+  "cases": [
+   {
+    "bad": "print \"你好\"",
+    "good": "print(\"你好\")",
+    "note": "Python 3 里 print 是函数，参数必须写在括号里"
+   },
+   {
+    "bad": "if age >= 18\n    print(\"成年\")",
+    "good": "if age >= 18:\n    print(\"成年\")",
+    "note": "if / for / while / def 结尾的冒号不能漏"
+   },
+   {
+    "bad": "print(\"你好\"）",
+    "good": "print(\"你好\")",
+    "note": "中文全角括号）和引号\"\"都不能当代码用"
+   }
+  ],
+  "how": [
+   "看报错最后一行的 ^ 符号，它指的位置就是解释器读不下去的地方（通常真正的问题在它前一个字符）",
+   "先数括号和引号有没有成对，再看该写冒号的地方有没有漏",
+   "输入法切回英文再打标点 —— 全角符号是最常见的原因"
+  ]
+ },
+ {
+  "id": "indent",
+  "name": "IndentationError",
+  "cn": "缩进错误",
+  "see": [
+   "IndentationError",
+   "unexpected indent",
+   "expected an indented block",
+   "unindent does not match"
+  ],
+  "why": "Python 靠缩进判断代码的层级关系（哪些语句属于 if / for 里面）。缩进乱了，它就不知道你的代码结构。",
+  "cases": [
+   {
+    "bad": "if x > 0:\nprint(\"正数\")",
+    "good": "if x > 0:\n    print(\"正数\")",
+    "note": "冒号下面的代码必须缩进，通常 4 个空格"
+   },
+   {
+    "bad": "if x > 0:\n    print(\"a\")\n  print(\"b\")",
+    "good": "if x > 0:\n    print(\"a\")\n    print(\"b\")",
+    "note": "同一层的代码缩进量必须完全一样"
+   }
+  ],
+  "how": [
+   "报错说 unexpected indent 是\"多缩进了\"，expected an indented block 是\"该缩进没缩进\"",
+   "统一用 4 个空格，别用 Tab（Tab 和空格混用最容易出这种错）",
+   "VS Code 里选中多行按 Tab / Shift+Tab 可以整块调整"
+  ]
+ },
+ {
+  "id": "name",
+  "name": "NameError",
+  "cn": "名字没定义",
+  "see": [
+   "NameError",
+   "is not defined"
+  ],
+  "why": "你用了一个 Python 不认识的变量名 —— 要么拼错了，要么还没赋值就用了，要么大小写不一样。",
+  "cases": [
+   {
+    "bad": "print(nmae)",
+    "good": "print(name)",
+    "note": "字母顺序打错，Python 不会猜"
+   },
+   {
+    "bad": "print(score)\nscore = 90",
+    "good": "score = 90\nprint(score)",
+    "note": "必须先赋值再使用"
+   },
+   {
+    "bad": "Name = \"小明\"\nprint(name)",
+    "good": "name = \"小明\"\nprint(name)",
+    "note": "Python 区分大小写，Name 和 name 是两个变量"
+   },
+   {
+    "bad": "print(你好)",
+    "good": "print(\"你好\")",
+    "note": "想打印文字忘了加引号，它会被当成变量名去找"
+   }
+  ],
+  "how": [
+   "看报错里的名字（name 'xxx' is not defined），把 xxx 跟你的代码逐字对一遍",
+   "检查它是\"用之前有没有赋值\"",
+   "想让一个带引号的字符串显示出来，别忘了引号"
+  ]
+ },
+ {
+  "id": "strcat",
+  "name": "TypeError: can only concatenate str",
+  "cn": "字符串和数字相加",
+  "see": [
+   "can only concatenate str",
+   "unsupported operand type(s) for +",
+   "must be str, not int",
+   "unsupported operand type(s) for -"
+  ],
+  "why": "input() 拿到的**永远是字符串**，就算你输入的是 20。字符串 + 数字在 Python 里是\"拼接\"而不是\"加法\"，类型不同不能直接相加。",
+  "cases": [
+   {
+    "bad": "age = input(\"年龄：\")\nprint(age + 1)",
+    "good": "age = int(input(\"年龄：\"))\nprint(age + 1)",
+    "note": "要先 int() 转成整数"
+   },
+   {
+    "bad": "print(\"我今年\" + 18)",
+    "good": "print(\"我今年\" + str(18))",
+    "note": "或者用 f-string：print(f\"我今年{18}\")"
+   }
+  ],
+  "how": [
+   "要参与计算就用 int(...) 或 float(...) 转换",
+   "只是要拼在一起显示，用 f-string 最省事：print(f\"我今年{age}岁\")",
+   "不知道类型时用 print(type(x)) 看一眼"
+  ]
+ },
+ {
+  "id": "value",
+  "name": "ValueError: invalid literal for int()",
+  "cn": "转换失败",
+  "see": [
+   "ValueError",
+   "invalid literal for int",
+   "could not convert string to float"
+  ],
+  "why": "int() 只能把\"看起来像整数的字符串\"转成整数。输入了字母、空字符串、小数点，它就转不动。",
+  "cases": [
+   {
+    "bad": "int(\"abc\")",
+    "good": "int(\"123\")",
+    "note": "要转换的内容必须真的是数字"
+   },
+   {
+    "bad": "int(\"3.5\")",
+    "good": "float(\"3.5\")",
+    "note": "带小数点的要用 float"
+   }
+  ],
+  "how": [
+   "确认输入的是数字，可以在转换前先提示用户",
+   "带小数用 float()，要整数用 int()",
+   "想防止输错导致程序崩，用 try / except 包起来（见第 4 周的错误处理）"
+  ]
+ },
+ {
+  "id": "index",
+  "name": "IndexError: list index out of range",
+  "cn": "索引越界",
+  "see": [
+   "IndexError",
+   "list index out of range",
+   "string index out of range",
+   "tuple index out of range"
+  ],
+  "why": "列表的下标从 0 开始。有 3 个元素时合法下标是 0、1、2，写 list[3] 就越界了。",
+  "cases": [
+   {
+    "bad": "a = [1, 2, 3]\nprint(a[3])",
+    "good": "a = [1, 2, 3]\nprint(a[2])",
+    "note": "最后一个元素的下标是 长度-1"
+   },
+   {
+    "bad": "a = []\nprint(a[0])",
+    "good": "a = []\nprint(len(a))",
+    "note": "空列表没有任何下标"
+   }
+  ],
+  "how": [
+   "用 len(a) 看长度，最大合法下标是 len(a) - 1",
+   "想取最后一个元素，用 a[-1] 更不容易错",
+   "循环遍历时用 for x in a 而不是手写下标"
+  ]
+ },
+ {
+  "id": "key",
+  "name": "KeyError",
+  "cn": "字典里没这个键",
+  "see": [
+   "KeyError"
+  ],
+  "why": "字典用键取值，键必须真实存在。键名拼错、或者大小写不同，都会报这个错。",
+  "cases": [
+   {
+    "bad": "d = {\"name\": \"小明\"}\nprint(d[\"Name\"])",
+    "good": "print(d[\"name\"])",
+    "note": "键名区分大小写"
+   },
+   {
+    "bad": "print(d[\"age\"])",
+    "good": "print(d.get(\"age\", \"未知\"))",
+    "note": "用 get 可以给个默认值，不会崩"
+   }
+  ],
+  "how": [
+   "先用 print(d) 看看字典里到底有哪些键",
+   "不确定键在不在，用 d.get(\"键\") —— 不存在时返回 None 而不是报错",
+   "检查键的拼写和大小写"
+  ]
+ },
+ {
+  "id": "zerodiv",
+  "name": "ZeroDivisionError",
+  "cn": "除以零",
+  "see": [
+   "ZeroDivisionError",
+   "division by zero",
+   "modulo by zero"
+  ],
+  "why": "数学上除数不能是 0，Python 会直接报错。计算器、平均分这类程序里最容易遇到（比如用户输入了 0）。",
+  "cases": [
+   {
+    "bad": "print(10 / 0)",
+    "good": "if b != 0:\n    print(a / b)\nelse:\n    print(\"除数不能为 0\")",
+    "note": "做除法前先判断"
+   }
+  ],
+  "how": [
+   "在做除法前加一个 if b != 0 的判断",
+   "用 try / except ZeroDivisionError 兜住",
+   "算平均值时注意数量不能是 0"
+  ]
+ },
+ {
+  "id": "none",
+  "name": "TypeError: NoneType / AttributeError: NoneType",
+  "cn": "拿到的是 None",
+  "see": [
+   "NoneType",
+   "'NoneType' object has no attribute",
+   "NoneType object is not subscriptable",
+   "NoneType object is not iterable"
+  ],
+  "why": "函数没有写 return 时，返回值是 None。最常见的两个坑：忘了 return，或者把 append() / sort() 的返回值当结果用了 —— 它们都是原地修改，返回 None。",
+  "cases": [
+   {
+    "bad": "def add(a, b):\n    print(a + b)\nprint(add(1, 2) + 1)",
+    "good": "def add(a, b):\n    return a + b\nprint(add(1, 2) + 1)",
+    "note": "要让函数把结果交出来，必须 return"
+   },
+   {
+    "bad": "a = [1]\na = a.append(2)",
+    "good": "a = [1]\na.append(2)",
+    "note": "append 直接在原列表上加，不要接返回值"
+   },
+   {
+    "bad": "a = [3, 1]\nb = a.sort()",
+    "good": "a = [3, 1]\na.sort()",
+    "note": "sort 也是原地排序"
+   }
+  ],
+  "how": [
+   "print(函数名(...)) 看看拿到的是不是 None",
+   "记住：append / sort / reverse 这类\"原地修改\"的方法都返回 None",
+   "函数要交结果就用 return，不要用 print"
+  ]
+ },
+ {
+  "id": "attr",
+  "name": "AttributeError",
+  "cn": "类型没有这个方法",
+  "see": [
+   "AttributeError",
+   "object has no attribute"
+  ],
+  "why": "你调用的方法不属于这个类型。最常见的：把字符串当成列表用（字符串没有 append），或者变量类型跟你以为的不一样。",
+  "cases": [
+   {
+    "bad": "s = \"hello\"\ns.append(\"!\")",
+    "good": "s = \"hello\"\ns = s + \"!\"",
+    "note": "字符串不能改，只能用 + 拼或 replace"
+   },
+   {
+    "bad": "n = 5\nn.append(1)",
+    "good": "a = [5]\na.append(1)",
+    "note": "整数没有 append，列表才有"
+   }
+  ],
+  "how": [
+   "用 print(type(x)) 确认这个变量到底是什么类型",
+   "字符串要拼接用 + 或 f-string；要拼接很多块用 \"\".join(列表)",
+   "列表才有 append / remove / sort 这些方法"
+  ]
+ },
+ {
+  "id": "module",
+  "name": "ModuleNotFoundError / ImportError",
+  "cn": "模块导入失败",
+  "see": [
+   "ModuleNotFoundError",
+   "ImportError",
+   "No module named"
+  ],
+  "why": "import 的名字写错了，或者这个库还没安装，或者你自己的文件名跟库名撞了（比如你存了 random.py）。",
+  "cases": [
+   {
+    "bad": "import Randint",
+    "good": "import random",
+    "note": "模块名区分大小写且要拼对"
+   },
+   {
+    "bad": "import pandas",
+    "good": "# 先装：pip install pandas\nimport pandas",
+    "note": "第三方库要先安装才能 import"
+   },
+   {
+    "bad": "文件存成 random.py 后 import random",
+    "good": "文件改名为 my_random.py",
+    "note": "自己的文件名别跟标准库重名"
+   }
+  ],
+  "how": [
+   "核对模块名拼写与大小写",
+   "第三方库要先在终端里 pip install 包名",
+   "别把自己写的文件命名成 random.py / math.py / turtle.py 这类标准库名"
+  ]
+ },
+ {
+  "id": "file",
+  "name": "FileNotFoundError",
+  "cn": "找不到文件",
+  "see": [
+   "FileNotFoundError",
+   "No such file or directory"
+  ],
+  "why": "代码里的路径跟文件实际位置对不上。程序是在\"当前工作目录\"里找文件的，不是在你放代码的地方找。",
+  "cases": [
+   {
+    "bad": "open(\"data.txt\")   # 文件其实在 data 子文件夹里",
+    "good": "open(\"data/data.txt\", encoding=\"utf-8\")",
+    "note": "路径要写对，相对路径是相对于运行目录"
+   },
+   {
+    "bad": "open(\"C:\\Users\\me\\Desktop\\a.txt\")  # 路径不存在",
+    "good": "open(\"a.txt\")   # 把文件放到同一个文件夹",
+    "note": "初学者先把文件放同一目录最省事"
+   }
+  ],
+  "how": [
+   "确认文件名和后缀完全一致（.txt 和 .TXT 不一样）",
+   "最省事的做法：把要读的文件跟 .py 放在同一个文件夹",
+   "用绝对路径时注意 Windows 的反斜杠要写成 \\\\ 或直接用 /"
+  ]
+ },
+ {
+  "id": "unbound",
+  "name": "UnboundLocalError",
+  "cn": "函数里的变量作用域",
+  "see": [
+   "UnboundLocalError",
+   "cannot access local variable"
+  ],
+  "why": "函数内部一旦给某个变量赋值，Python 就认为它是\"局部变量\"，哪怕外面有同名的全局变量也不认。",
+  "cases": [
+   {
+    "bad": "count = 0\ndef add():\n    count = count + 1   # 这里认为 count 是局部的，但它还没赋值",
+    "good": "count = 0\ndef add():\n    global count\n    count = count + 1",
+    "note": "要改全局变量得声明 global"
+   },
+   {
+    "bad": "def f():\n    print(total)   # total 在函数外",
+    "good": "def f(total):\n    print(total)",
+    "note": "更好的做法是把值当参数传进去"
+   }
+  ],
+  "how": [
+   "尽量把需要的值用参数传进函数、用 return 传出来（这是推荐做法）",
+   "确实要改全局变量时才用 global，并且尽量少用",
+   "函数里不要用和外面同名的临时变量"
+  ]
+ }
+];
+function matchError(text) {
+  const t = String(text || '');
+  if (!t) return null;
+  let best = null, bestLen = 0;
+  ERRORS.forEach((e) => {
+    e.see.forEach((k) => {
+      if (t.indexOf(k) >= 0 && k.length > bestLen) { best = e.id; bestLen = k.length; }
+    });
+  });
+  return best;
+}
+
+
+/* ---------- 渲染报错列表 ---------- */
+/* 行内代码：把反引号包起来的内容渲染成 code 标签（先转义再替换，安全） */
+function inlineCode(t){
+  return esc(String(t == null ? "" : t)).replace(/\x60([^\x60]+)\x60/g, "<code>$1</code>");
+}
+function renderErrList(filter, highlightId){
+  const list = document.getElementById("errList");
+  if (!list) return;
+  const q = String(filter || "").trim().toLowerCase();
+  const items = ERRORS.filter(function (e){
+    if (!q) return true;
+    const hay = [e.name, e.cn, e.why, (e.see || []).join(" "), e.how.join(" ")]
+      .join(" ").toLowerCase();
+    return hay.indexOf(q) >= 0;
+  });
+  const cnt = document.getElementById("errCount");
+  if (cnt) cnt.textContent = q
+    ? ("找到 " + items.length + " 条（共 " + ERRORS.length + " 条）")
+    : ("共 " + ERRORS.length + " 条最常见的报错");
+  if (!items.length){
+    list.innerHTML = '<div class="gradesum info">没搜到这一条。<br>' +
+      '换个关键词试试：报错名（<code>NameError</code>、<code>IndexError</code>）或中文症状（缩进、越界、除以零、None）。<br>' +
+      '也可以直接把完整报错复制到群里问 —— 运行结果下方有「📋 复制报错」按钮。</div>';
+    return;
+  }
+  list.innerHTML = items.map(function (e){
+    const isHit = (e.id === highlightId);
+    return '<details class="errcard' + (isHit ? " hit" : "") + '"' + (isHit ? " open" : "") + ' data-eid="' + e.id + '">' +
+      '<summary><span class="code">' + esc(e.name) + '</span><span class="cn">' + esc(e.cn) + "</span></summary>" +
+      '<div class="body">' +
+        '<div class="sect"><b>为什么会这样</b><p>' + inlineCode(e.why) + "</p></div>" +
+        '<div class="sect"><b>错误写法 vs 正确写法</b>' +
+          e.cases.map(function (c){
+            return '<div class="errcase">' +
+              '<div class="bad"><span class="lbl">✗ 这样写会报错</span>' + esc(c.bad) + "</div>" +
+              '<div class="good"><span class="lbl">✓ 应该这样写</span>' + esc(c.good) + "</div>" +
+              '<div class="why2">' + inlineCode(c.note) + "</div>" +
+            "</div>";
+          }).join("") +
+        "</div>" +
+        '<div class="sect"><b>怎么改 / 怎么防</b><ul class="errhow">' +
+          e.how.map(function (h){ return "<li>" + inlineCode(h) + "</li>"; }).join("") +
+        "</ul></div>" +
+      "</div></details>";
+  }).join("");
+}
+/* ---------- 打开 / 关闭 ---------- */
+let errReturnFocus = null;
+function openErrbox(opts){
+  const box = document.getElementById("errbox");
+  if (!box) return;
+  const hit = (opts && opts.id) || null;
+  const q = (opts && opts.q) || "";
+  const input = document.getElementById("errq");
+  if (input) input.value = q;
+  renderErrList(q, hit);
+  errReturnFocus = document.activeElement;
+  box.classList.add("show");
+  setTimeout(function (){
+    const target = hit ? box.querySelector('[data-eid="' + hit + '"]') : input;
+    if (target && target.scrollIntoView) target.scrollIntoView({ block: "center", behavior: "smooth" });
+    if (input && !hit) input.focus();
+  }, 120);
+}
+function closeErrbox(){
+  const box = document.getElementById("errbox");
+  if (box) box.classList.remove("show");
+  if (errReturnFocus && errReturnFocus.focus) { try { errReturnFocus.focus(); } catch (e) {} }
+}
+/* 从一段报错文本自动定位到对应条目 */
+function lookupError(text){
+  const id = (typeof matchError === "function") ? matchError(text) : null;
+  openErrbox({ id: id });
+  return id;
+}
+/* ---------- 事件 ---------- */
+document.addEventListener("input", function (e){
+  if (e.target && e.target.id === "errq") renderErrList(e.target.value, null);
+});
+document.addEventListener("click", function (e){
+  const t = e.target;
+  if (!t) return;
+  if (t.id === "errClear"){
+    const input = document.getElementById("errq");
+    if (input){ input.value = ""; input.focus(); }
+    renderErrList("", null);
+    return;
+  }
+  if (t.id === "errClose2" || t.id === "errOpen" && false) { closeErrbox(); return; }
+  if (t.id === "errbox") { closeErrbox(); return; }          /* 点遮罩关闭 */
+  if (t.id === "errBtn" || (t.closest && t.closest("#errBtn"))){ openErrbox({}); return; }
+  const look = t.closest ? t.closest("[data-lookup]") : null;
+  if (look){ lookupError(look.getAttribute("data-lookup") || ""); return; }
+  const cp = t.closest ? t.closest("[data-copyerr]") : null;
+  if (cp){ copyErrorReport(currentErrDay, cp.getAttribute("data-copyerr") || ""); return; }
+});
+document.addEventListener("keydown", function (e){
+  if (e.key === "Escape"){ closeErrbox(); }
+});
+
+/* ---------- 报错求助：把「代码 + 报错」整理成一段可粘贴的话 ---------- */
+let currentErrDay = null;
+function showErrorActions(dayId, errText){
+  currentErrDay = dayId;
+  const box = document.getElementById("errActions");
+  if (!box) return;
+  const safe = String(errText || "").replace(/"/g, "&quot;");
+  const matched = (typeof matchError === "function") ? matchError(errText) : null;
+  box.innerHTML =
+    '<div class="gradesum fail" style="margin-top:10px">看不懂这个报错？可以查一下，或者复制给群里问</div>' +
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">' +
+      '<button class="btn primary" type="button" data-lookup="' + safe + '">🔍 ' +
+        (matched ? "查看这个错误的解释" : "去报错查询页看看") + "</button>" +
+      '<button class="btn" type="button" data-copyerr="' + safe + '">📋 复制报错（去群里问）</button>' +
+    "</div>";
+  box.style.display = "block";
+}
+function clearErrorActions(){
+  const box = document.getElementById("errActions");
+  if (box){ box.innerHTML = ""; box.style.display = "none"; }
+  currentErrDay = null;
+}
+function copyErrorReport(dayId, errText){
+  const idx = (typeof WORK_IDX === "function" && dayId) ? WORK_IDX(dayId) : -1;
+  const d = (idx >= 0) ? DAYS[idx] : null;
+  const w = (dayId && typeof workAt === "function") ? workAt(dayId) : null;
+  const lines = [];
+  lines.push("【求助】Python 四周学习计划" + (d ? " · D" + pad2(idx + 1) + " " + d.topic : ""));
+  lines.push("");
+  lines.push("我的代码：");
+  lines.push("\x60\x60\x60python");
+  lines.push(((w && w.code) || "").trim() || "（空）");
+  lines.push("\x60\x60\x60");
+  lines.push("");
+  lines.push("运行后的报错：");
+  lines.push("\x60\x60\x60");
+  lines.push(String(errText || "（没有报错信息）").trim());
+  lines.push("\x60\x60\x60");
+  copyText(lines.join("\n"));
+}
+
+
+/* ============ 无障碍与键盘导航 ============ */
+/* 判断是不是"正在输入"（输入框里不能抢键盘） */
+function isTyping(el){
+  if (!el) return false;
+  const tag = (el.tagName || "").toLowerCase();
+  return tag === "input" || tag === "textarea" || tag === "select" || el.isContentEditable === true;
+}
+/* 当前是否有可见的弹层（抽屉或弹窗） */
+function overlayOpen(){
+  const d = document.getElementById("drawer");
+  if (d && d.classList.contains("show")) return d;
+  const ids = ["gate", "errbox", "remind"];
+  for (let i = 0; i < ids.length; i++){
+    const el = document.getElementById(ids[i]);
+    if (el && el.classList.contains("show")) return el;
+  }
+  return null;
+}
+/* 焦点锁在弹层里：Tab 到边界就绕回去 */
+function trapTab(container, e){
+  const sel = 'button:not([disabled]),[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),summary,[tabindex]:not([tabindex="-1"])';
+  const all = Array.prototype.slice.call(container.querySelectorAll(sel))
+    .filter(function (el){ return el.offsetParent !== null || el === document.activeElement; });
+  if (!all.length) return;
+  const first = all[0], last = all[all.length - 1];
+  if (e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+  else if (all.indexOf(document.activeElement) < 0){ e.preventDefault(); first.focus(); }
+}
+/* ---------- 日卡之间移动焦点 ---------- */
+function dayCards(){ return Array.prototype.slice.call(document.querySelectorAll(".day")); }
+function focusDay(dir){
+  const days = dayCards();
+  if (!days.length) return false;
+  let i = days.indexOf(document.activeElement);
+  if (i < 0){
+    // 没聚焦在任何卡片上：若在抽屉里就先关掉，然后聚焦第一张
+    i = dir > 0 ? -1 : days.length;
+  }
+  const next = Math.min(days.length - 1, Math.max(0, i + dir));
+  if (next === i) return false;
+  const el = days[next];
+  el.focus();
+  if (el.scrollIntoView) el.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  return true;
+}
+/* 当前聚焦的卡片对应的 dayId */
+function focusedDayId(){
+  const el = document.activeElement;
+  if (!el) return null;
+  const card = el.closest ? el.closest(".day") : null;
+  return card ? card.getAttribute("data-id") : null;
+}
+/* ---------- 键盘总入口 ---------- */
+document.addEventListener("keydown", function (e){
+  if (e.key === "Escape"){
+    const ov = overlayOpen();
+    if (ov){ e.preventDefault(); if (typeof closeErrbox === "function") closeErrbox(); if (typeof closeGate === "function") closeGate(); if (typeof closeRemind === "function") closeRemind(); if (typeof closeDrawer === "function") closeDrawer(); }
+    return;
+  }
+  /* 弹层里的 Tab 循环 */
+  if (e.key === "Tab"){
+    const ov = overlayOpen();
+    if (ov){ trapTab(ov, e); return; }
+  }
+  if (isTyping(e.target)) return;
+  /* 问号：打开报错查询（也算快捷键说明页） */
+  if (e.key === "?" || (e.key === "/" && e.shiftKey)){
+    if (typeof openErrbox === "function"){ e.preventDefault(); openErrbox({}); }
+    return;
+  }
+  /* 上下 / j k：在日卡间移动 */
+  if (e.key === "ArrowDown" || e.key === "j"){
+    if (focusDay(1)) e.preventDefault();
+    return;
+  }
+  if (e.key === "ArrowUp" || e.key === "k"){
+    if (focusDay(-1)) e.preventDefault();
+    return;
+  }
+  /* Enter：打开教程；W：打开作业 */
+  const id = focusedDayId();
+  if (id && e.key === "Enter" && !e.shiftKey && document.activeElement.classList.contains("day")){
+    e.preventDefault();
+    if (typeof openDay === "function") openDay(id, "lesson");
+    return;
+  }
+  if (id && (e.key === "w" || e.key === "W" || (e.key === "Enter" && e.shiftKey))){
+    e.preventDefault();
+    if (typeof openDay === "function") openDay(id, "work");
+    return;
+  }
+});
+/* ---------- 焦点管理：打开抽屉/弹窗时把焦点送进去，关闭后还回去 ---------- */
+let a11yReturn = null;
+function rememberFocus(){ a11yReturn = document.activeElement; }
+function restoreFocus(){ if (a11yReturn && a11yReturn.focus){ try { a11yReturn.focus(); } catch (e) {} } a11yReturn = null; }
+/* 渲染完成后：给卡片和控件补上无障碍标签。
+   注意：这里只是"锦上添花"，任何一步出错都不能影响页面正常渲染，所以整体包了 try。 */
+function canAttr(el){ return !!(el && typeof el.getAttribute === "function" && typeof el.setAttribute === "function"); }
+function enhanceA11y(){
+  try {
+  /* 搜索框 */
+  const q = document.getElementById("q") || document.querySelector("input[type=search]");
+  if (canAttr(q) && !q.getAttribute("aria-label")) q.setAttribute("aria-label", "搜索主题、任务或备注");
+  /* 日卡 */
+  dayCards().forEach(function (el, i){
+    if (!canAttr(el)) return;
+    if (!el.getAttribute("tabindex")) el.setAttribute("tabindex", "0");
+    if (!el.getAttribute("aria-label")){
+      const t = el.querySelector(".topic .txt");
+      const dt = el.querySelector(".dt");
+      el.setAttribute("aria-label",
+        "第 " + (i + 1) + " 天" + (dt ? " " + dt.textContent.trim() : "") + (t ? "：" + t.textContent.trim() : "") +
+        "。按回车打开教程，按 W 打开作业");
+    }
+  });
+  /* 卡片内的按钮：补上"第 N 天"的上下文，读屏才不会只念"教程" */
+  dayCards().forEach(function (el){
+    if (!canAttr(el)) return;
+    const id = el.getAttribute("data-id");
+    const label = el.getAttribute("aria-label") || "";
+    el.querySelectorAll("button").forEach(function (b){
+      if (!canAttr(b) || b.getAttribute("aria-label")) return;
+      const txt = (b.textContent || "").replace(/\s+/g, " ").trim();
+      b.setAttribute("aria-label", label.split("。")[0] + " —— " + txt);
+    });
+  });
+  /* 签到格 */
+  document.querySelectorAll("#ciStrip .ci").forEach(function (el){
+    if (!canAttr(el) || el.getAttribute("aria-label")) return;
+    const t = el.getAttribute("title") || el.textContent.replace(/\s+/g, " ").trim();
+    el.setAttribute("aria-label", t + "（签到格，回车/空格可操作）");
+  });
+  /* 抽屉标签页 */
+  const tabs = document.querySelectorAll(".dtab");
+  tabs.forEach(function (b){
+    if (!canAttr(b)) return;
+    b.setAttribute("role", "tab");
+    b.setAttribute("aria-selected", b.classList.contains("on") ? "true" : "false");
+  });
+  /* 关闭按钮 */
+  document.querySelectorAll("[data-close],#drawer .x,.closebtn").forEach(function (b){
+    if (!canAttr(b)) return;
+    if (!b.getAttribute("aria-label")){
+      if (b.hasAttribute("data-close") || b.classList.contains("x") || b.classList.contains("closebtn")) {
+        b.setAttribute("aria-label", "关闭");
+      }
+    }
+  });
+  } catch (e) {
+    /* 无障碍增强失败不能影响页面 —— 静默跳过 */
+  }
+}
+/* 每次重新渲染后补一遍（renderPlan 结尾会调用） */
+document.addEventListener("click", function (e){
+  const t = e.target;
+  if (!t) return;
+  /* 打开抽屉 / 弹窗时记住来源焦点 */
+  if (t.closest && (t.closest("[data-learn]") || t.closest("[data-work]") || t.closest("[data-set]") || t.closest("[data-fix]"))) rememberFocus();
+  if (t.id === "errBtn" || t.id === "gateGo" || t.id === "gateForce") rememberFocus();
+});
+
+
 /* ============ 启动 ============ */
 load();
 initStartDate();
@@ -4100,6 +5040,26 @@ window.__dayCount = DAYS.length;
 window.__lessonCount = Object.keys(TUTORIALS).length;
 window.__homeworkCount = Object.keys(HOMEWORK).length;
 window.__gateOn = gateOn();
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Course",
+  "name": "Python 四周学习计划",
+  "description": "面向零基础的 28 天 Python 入门计划：每天 30 分钟逐日教程、动手作业、浏览器内真机运行代码并自动批改、每日打卡与作业门禁。",
+  "inLanguage": "zh-CN",
+  "url": "https://zero-python-4weeks.netlify.app/",
+  "isAccessibleForFree": true,
+  "teaches": ["Python 基础语法", "变量与数据类型", "条件判断", "循环", "列表与字典", "函数", "文件读写", "错误处理"],
+  "timeRequired": "PT14H",
+  "provider": { "@type": "Organization", "name": "Python 四周学习计划" },
+  "hasCourseInstance": {
+    "@type": "CourseInstance",
+    "courseMode": "online",
+    "courseWorkload": "PT30M",
+    "name": "四周打卡班"
+  }
+}
 </script>
 </body>
 </html>
