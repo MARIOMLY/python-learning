@@ -738,6 +738,36 @@ ul.tips kbd{border:1px solid var(--line); border-bottom-width:2px; border-radius
   border:1px solid var(--line); border-bottom-width:2px; border-radius:5px; padding:0 5px;
   background:#fff; font-family:inherit; font-size:11px; color:var(--ink-2);
 }
+
+
+/* ---------- 管理员 ---------- */
+.adminbadge{
+  display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:700;
+  padding:4px 10px; border-radius:999px; cursor:pointer; user-select:none;
+  background:linear-gradient(135deg,#f59e0b,#f97316); color:#fff; border:none;
+  box-shadow:0 2px 8px rgba(245,158,11,.35);
+}
+.adminbadge:hover{filter:brightness(1.06)}
+.adminbox .remind-card{max-width:640px; width:min(640px,94vw)}
+.adm-sec{margin-top:14px; padding-top:12px; border-top:1px solid var(--line)}
+.adm-sec > h4{margin:0 0 8px; font-size:13px; color:var(--ink-3); letter-spacing:.3px}
+.adm-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(132px,1fr)); gap:8px}
+.adm-stat{background:#f8fafc; border:1px solid var(--line); border-radius:10px; padding:9px 11px}
+.adm-stat b{display:block; font-size:19px; color:var(--ink); line-height:1.25}
+.adm-stat span{font-size:11.5px; color:var(--ink-3)}
+.adm-row{display:flex; align-items:center; gap:9px; font-size:13.3px; color:var(--ink-2); margin:7px 0}
+.adm-row input[type=checkbox]{flex:none; width:15px; height:15px}
+.adm-btns{display:flex; gap:8px; flex-wrap:wrap; margin-top:4px}
+.adm-warn{
+  margin-top:14px; padding:9px 12px; border-radius:10px; font-size:12.3px; line-height:1.65;
+  background:#fffbeb; border:1px solid #fde68a; color:#92400e;
+}
+.adm-input{
+  width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:10px;
+  font-size:14px; outline:none; background:#fff; letter-spacing:.5px;
+}
+.adm-input:focus{border-color:#f59e0b; box-shadow:0 0 0 3px rgba(245,158,11,.15)}
+.adm-err{margin-top:8px; font-size:12.5px; color:#b91c1c; min-height:17px}
 </style>
 </head>
 <body>
@@ -884,6 +914,31 @@ ul.tips kbd{border:1px solid var(--line); border-bottom-width:2px; border-radius
       <span class="grow"></span>
       <button class="btn primary" id="errClose2" type="button">知道了</button>
     </div>
+  </div>
+</div>
+
+<!-- 管理员登录 -->
+<div class="remind gate adminbox" id="adminlogin" role="dialog" aria-modal="true" aria-label="管理员登录">
+  <div class="remind-card">
+    <h3>🛡 管理员登录</h3>
+    <p class="rsub">输入密钥后进入管理员模式。密钥不区分设备，只存在这份页面里。</p>
+    <input class="adm-input" type="password" id="admKey" placeholder="请输入密钥" autocomplete="off" spellcheck="false" aria-label="管理员密钥">
+    <div class="adm-err" id="admErr" role="status" aria-live="polite"></div>
+    <div class="rfoot">
+      <button class="btn primary" id="admOk" type="button">进入</button>
+      <button class="btn" id="admCancel" type="button">取消</button>
+    </div>
+    <div class="adm-warn">🔒 这是前端密码，用于防止误触和误改，<b>不是真正的安全措施</b>。</div>
+  </div>
+</div>
+
+<!-- 管理面板 -->
+<div class="remind gate adminbox" id="adminpanel" role="dialog" aria-modal="true" aria-label="管理面板">
+  <div class="remind-card">
+    <h3>🛡 管理面板</h3>
+    <p class="rsub">这里的操作只影响<b>当前这台设备</b>（静态页面没有服务器，数据都在你自己的浏览器里）。</p>
+    <div id="admBody"></div>
+    <div class="rfoot"><button class="btn" id="admClose" type="button">关闭</button></div>
   </div>
 </div>
 
@@ -5031,6 +5086,268 @@ document.addEventListener("click", function (e){
   if (t.id === "errBtn" || t.id === "gateGo" || t.id === "gateForce") rememberFocus();
 });
 
+const ADMIN_KEY_HASH = "b4fba15149c22d2cb9bf6a06";
+
+
+/* ============ 管理员模式 ============ */
+/* 密钥校验：哈希后比对（源码里看不到明文）。
+   注意：这是"前端密码"，只防误触和好奇，不是真正的安全措施。 */
+function adminHashKey(s){
+  var str = String(s == null ? "" : s);
+  function fnv(input, seed){
+    var h = seed >>> 0;
+    for (var i = 0; i < input.length; i++){
+      h ^= input.charCodeAt(i);
+      h += (h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24);
+      h = h >>> 0;
+    }
+    return h >>> 0;
+  }
+  var a = fnv(str + "\u0001py-plan-4w", 0x811c9dc5);
+  var b = fnv("\u0002admin:" + str, 0x01000193);
+  var c = fnv(str.split("").reverse().join("") + "\u0003ZERO", 0xdeadbeef);
+  var hex = function (n){ var t = n.toString(16); while (t.length < 8) t = "0" + t; return t; };
+  return hex(a) + hex(b) + hex(c);
+}
+function isAdmin(){ return state.setting.admin === true; }
+function adminLoginMsg(text, ok){
+  var el = document.getElementById("admErr");
+  if (el){ el.textContent = text || ""; el.style.color = ok ? "#15803d" : "#b91c1c"; }
+}
+/* ---------- 登录弹窗 ---------- */
+let admReturnFocus = null;
+function openAdminLogin(){
+  if (isAdmin()){ openAdminPanel(); return; }
+  const box = document.getElementById("adminlogin");
+  if (!box) return;
+  admReturnFocus = document.activeElement;
+  const inp = document.getElementById("admKey");
+  if (inp) inp.value = "";
+  adminLoginMsg("");
+  box.classList.add("show");
+  setTimeout(function (){ if (inp) inp.focus(); }, 120);
+}
+function closeAdminLogin(){
+  const box = document.getElementById("adminlogin");
+  if (box) box.classList.remove("show");
+  if (admReturnFocus && admReturnFocus.focus){ try { admReturnFocus.focus(); } catch (e) {} }
+}
+function tryAdminLogin(){
+  const inp = document.getElementById("admKey");
+  const val = inp ? inp.value : "";
+  if (!val){ adminLoginMsg("请输入密钥"); return false; }
+  if (adminHashKey(val) === ADMIN_KEY_HASH){
+    state.setting.admin = true;
+    save();
+    adminLoginMsg("密钥正确，正在进入…", true);
+    setTimeout(function (){
+      closeAdminLogin();
+      applyAdminUi();
+      openAdminPanel();
+      toast("🛡 已进入管理员模式", 2400);
+    }, 380);
+    return true;
+  }
+  adminLoginMsg("密钥不对，再试一次");
+  if (inp && inp.select){ try { inp.select(); } catch (e) {} }
+  return false;
+}
+function adminLogout(){
+  state.setting.admin = false;
+  save();
+  applyAdminUi();
+  closeAdminPanel();
+  toast("已退出管理员模式", 2200);
+}
+/* ---------- 顶栏徽标 ---------- */
+let admBadgeEl = null;      // 持有引用，不依赖 getElementById 反查
+function applyAdminUi(){
+  const bar = document.querySelector(".topbar-in") || document.querySelector(".topbar");
+  if (isAdmin()){
+    if (!admBadgeEl && bar){
+      admBadgeEl = document.createElement("button");
+      admBadgeEl.id = "adminBadge";
+      admBadgeEl.className = "adminbadge";
+      admBadgeEl.type = "button";
+      admBadgeEl.title = "管理员模式已开启，点开管理面板";
+      admBadgeEl.textContent = "🛡 管理员";
+      admBadgeEl.addEventListener("click", openAdminPanel);
+      bar.appendChild(admBadgeEl);      /* 追加到顶栏末尾（最右侧） */
+    }
+  } else if (admBadgeEl){
+    try { admBadgeEl.remove(); } catch (e) {}
+    admBadgeEl = null;
+  }
+  try {
+    const root = document.documentElement;
+    if (root && root.setAttribute) root.setAttribute("data-admin", isAdmin() ? "1" : "0");
+  } catch (e) { /* 锦上添花，出错不影响主流程 */ }
+}
+/* ---------- 管理面板 ---------- */
+function admStats(){
+  const done = DAYS.filter(function (_, i){ return statusOf(dayIdAt(i)) === "done"; }).length;
+  const checked = DAYS.filter(function (_, i){ return isChecked(i); }).length;
+  const graded = DAYS.filter(function (_, i){ return typeof gradePassed === "function" && gradePassed(dayIdAt(i)); }).length;
+  const submitted = DAYS.filter(function (_, i){ return typeof hasSubmitted === "function" && hasSubmitted(dayIdAt(i)); }).length;
+  let bytes = 0;
+  try { bytes = (localStorage.getItem(STORE_KEY) || "").length * 2; } catch (e) {}
+  return { done: done, checked: checked, graded: graded, submitted: submitted, kb: (bytes / 1024).toFixed(1) };
+}
+function openAdminPanel(){
+  const box = document.getElementById("adminpanel");
+  if (!box) return;
+  if (!isAdmin()){ openAdminLogin(); return; }
+  renderAdminPanel();
+  box.classList.add("show");
+}
+function closeAdminPanel(){
+  const box = document.getElementById("adminpanel");
+  if (box) box.classList.remove("show");
+}
+function renderAdminPanel(){
+  const s = admStats();
+  const set = state.setting || {};
+  const box = document.getElementById("admBody");
+  if (!box) return;
+  box.innerHTML =
+    '<div class="adm-sec"><h4>数据概览（只统计这台设备）</h4><div class="adm-grid">' +
+      '<div class="adm-stat"><b>' + s.done + '/28</b><span>已完成天数</span></div>' +
+      '<div class="adm-stat"><b>' + s.checked + '/28</b><span>已签到天数</span></div>' +
+      '<div class="adm-stat"><b>' + s.submitted + '/28</b><span>交过作业</span></div>' +
+      '<div class="adm-stat"><b>' + s.graded + '/28</b><span>批改通过</span></div>' +
+      '<div class="adm-stat"><b>' + s.kb + ' KB</b><span>本机存储占用</span></div>' +
+      '<div class="adm-stat"><b>' + (typeof streak === "function" ? streak() : 0) + ' 天</b><span>当前连续签到</span></div>' +
+    '</div></div>' +
+    '<div class="adm-sec"><h4>快捷开关</h4>' +
+      '<label class="adm-row"><input type="checkbox" id="admGateOff"' + (set.allowNoWork === true ? " checked" : "") + '><span>允许不交作业直接标记完成（门禁总开关）</span></label>' +
+      '<label class="adm-row"><input type="checkbox" id="admNoGrade"' + (set.requireGrade === false ? " checked" : "") + '><span>取消"必须通过自动批改"的要求</span></label>' +
+    '</div>' +
+    '<div class="adm-sec"><h4>数据管理</h4><div class="adm-btns">' +
+      '<button class="btn" type="button" id="admExport">📤 导出完整数据（JSON）</button>' +
+      '<button class="btn" type="button" id="admImport">📥 导入数据</button>' +
+      '<button class="btn" type="button" id="admWipe" style="color:#b91c1c">🗑 清空全部数据</button>' +
+    '</div><div style="font-size:12px;color:var(--ink-3);margin-top:7px">导出的 JSON 可以留作备份，换电脑时用「导入数据」恢复。</div></div>' +
+    '<div class="adm-sec"><h4>管理员</h4><div class="adm-btns">' +
+      '<button class="btn" type="button" id="admLogout">退出管理员模式</button>' +
+    '</div></div>' +
+    '<div class="adm-warn">⚠️ 这是<b>前端密码</b>：页面代码在你自己浏览器里运行，用来防止误触和好奇的人乱改，<b>不等于真正的安全措施</b>。别用它保护敏感信息。</div>';
+  const g = document.getElementById("admGateOff");
+  if (g) g.addEventListener("change", function (e){
+    state.setting.allowNoWork = e.target.checked;
+    save();
+    if (typeof initGate === "function") initGate();
+    renderPlan();
+    toast(e.target.checked ? "门禁已关闭" : "门禁已开启", 2000);
+  });
+  const ng = document.getElementById("admNoGrade");
+  if (ng) ng.addEventListener("change", function (e){
+    state.setting.requireGrade = e.target.checked ? false : true;
+    save();
+    if (typeof initGate === "function") initGate();
+    renderPlan();
+    toast(e.target.checked ? "已取消批改要求" : "已恢复批改要求", 2000);
+  });
+  const ex = document.getElementById("admExport");
+  if (ex) ex.addEventListener("click", adminExportData);
+  const im = document.getElementById("admImport");
+  if (im) im.addEventListener("click", adminImportData);
+  const wp = document.getElementById("admWipe");
+  if (wp) wp.addEventListener("click", adminWipeData);
+  const lo = document.getElementById("admLogout");
+  if (lo) lo.addEventListener("click", adminLogout);
+}
+/* ---------- 数据导出 / 导入 / 清空 ---------- */
+function adminDownload(name, text){
+  try {
+    const blob = new Blob([text], { type: "application/json;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    if (a.click) a.click();
+    a.remove();
+    setTimeout(function (){ try { URL.revokeObjectURL(url); } catch (e) {} }, 3000);
+    return true;
+  } catch (e) { return false; }
+}
+function adminExportData(){
+  const payload = {
+    app: "python-4weeks-plan",
+    exportedAt: new Date().toISOString(),
+    version: 1,
+    data: state
+  };
+  const txt = JSON.stringify(payload, null, 2);
+  const name = "python-plan-backup-" + todayKey() + ".json";
+  if (adminDownload(name, txt)) toast("已导出备份文件：" + name, 2800);
+  else copyText(txt);
+}
+function adminImportData(){
+  const inp = document.createElement("input");
+  inp.type = "file";
+  inp.accept = ".json,application/json";
+  inp.addEventListener("change", function (){
+    const f = inp.files && inp.files[0];
+    if (!f) return;
+    const rd = new FileReader();
+    rd.onload = function (){
+      let obj = null;
+      try { obj = JSON.parse(String(rd.result)); } catch (e) { toast("这个文件不是有效的 JSON", 2600); return; }
+      const data = obj && obj.data ? obj.data : obj;
+      if (!data || typeof data !== "object" || (!data.status && !data.work && !data.checked)){
+        toast("文件内容不像本页面的备份", 2600);
+        return;
+      }
+      if (!confirm("导入会覆盖当前这台设备上的所有进度，确定吗？\n\n（导入后页面会自动刷新）")) return;
+      try {
+        localStorage.setItem(STORE_KEY, JSON.stringify(data));
+        toast("导入成功，正在刷新…", 2000);
+        setTimeout(function (){ location.reload(); }, 700);
+      } catch (e) { toast("写入失败：" + e.message, 3000); }
+    };
+    rd.readAsText(f);
+  });
+  inp.click();
+}
+function adminWipeData(){
+  if (!confirm("⚠️ 这会清空这台设备上的全部学习记录（签到、作业、批改、备注），无法撤销。\n\n建议先点「导出完整数据」备份。\n\n确定要清空吗？")) return;
+  if (!confirm("最后确认：真的要清空全部数据吗？")) return;
+  try {
+    localStorage.removeItem(STORE_KEY);
+    toast("已清空，正在刷新…", 2000);
+    setTimeout(function (){ location.reload(); }, 600);
+  } catch (e) { toast("清理失败：" + e.message, 3000); }
+}
+/* ---------- 入口：网址 #admin / Ctrl+Shift+A ---------- */
+function checkAdminEntry(){
+  if (location.hash === "#admin" || location.hash === "#管理员"){
+    try { history.replaceState(null, "", location.pathname + location.search); } catch (e) {}
+    if (isAdmin()) { applyAdminUi(); openAdminPanel(); }
+    else openAdminLogin();
+  }
+}
+document.addEventListener("keydown", function (e){
+  if (e.ctrlKey && e.shiftKey && (e.key === "A" || e.key === "a")){
+    e.preventDefault();
+    if (isAdmin()) openAdminPanel(); else openAdminLogin();
+  }
+  if (e.key === "Enter" && document.activeElement && document.activeElement.id === "admKey"){
+    e.preventDefault();
+    tryAdminLogin();
+  }
+});
+window.addEventListener("hashchange", checkAdminEntry);
+document.addEventListener("click", function (e){
+  const t = e.target;
+  if (!t) return;
+  if (t.id === "admOk"){ tryAdminLogin(); return; }
+  if (t.id === "admCancel"){ closeAdminLogin(); return; }
+  if (t.id === "adminlogin"){ closeAdminLogin(); return; }
+  if (t.id === "admClose"){ closeAdminPanel(); return; }
+  if (t.id === "adminpanel"){ closeAdminPanel(); return; }
+});
+
 
 /* ============ 启动 ============ */
 load();
@@ -5044,6 +5361,10 @@ updateStats();
 applyFilter();
 scrollToToday();
 autoRemind();
+/* 管理员模式：恢复徽标，并检查 #admin 入口。
+   包 try：这类增强不该影响页面正常启动（__planReady 必须照常置位）。 */
+try { if (typeof applyAdminUi === "function") applyAdminUi(); } catch (e) {}
+try { if (typeof checkAdminEntry === "function") checkAdminEntry(); } catch (e) {}
 window.__planReady = true;
 window.__dayCount = DAYS.length;
 window.__lessonCount = Object.keys(TUTORIALS).length;
