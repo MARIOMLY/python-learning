@@ -406,6 +406,15 @@ kbd{background:#fff; border:1px solid var(--line); border-bottom-width:2px; bord
 .saveline{font-size:12px; color:var(--ink-3); margin-top:8px; display:flex; align-items:center; gap:8px; flex-wrap:wrap}
 .saveline .ok{color:var(--done); font-weight:600}
 
+/* ---------- 性能优化 ----------
+   全屏遮罩不做毛玻璃：backdrop-filter:blur() 要对整屏重新模糊，是低端设备上最贵的
+   CSS 效果之一，开弹窗/抽屉时会明显卡顿。遮罩本身已经是半透明深色，视觉上够用。 */
+.remind, .gate, .errbox{backdrop-filter:none !important; -webkit-backdrop-filter:none !important}
+/* 顶栏的毛玻璃减轻一点，滚动时重绘更省力 */
+.topbar{backdrop-filter:saturate(1.4) blur(7px) !important; -webkit-backdrop-filter:saturate(1.4) blur(7px) !important}
+/* 卡片阴影从 30px/70px 收到 24px/48px：一屏 28 张卡片时合成开销差别很明显 */
+.remind-card{box-shadow:0 24px 48px rgba(15,23,42,.32) !important}
+
 /* ---------- 常见报错查询页 ---------- */
 .errbox .remind-card{max-width:760px; width:min(760px,94vw)}
 .errsearch{display:flex; gap:8px; align-items:center; margin:2px 0 12px}
