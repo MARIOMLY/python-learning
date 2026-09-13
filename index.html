@@ -669,7 +669,7 @@ kbd{background:#fff; border:1px solid var(--line); border-bottom-width:2px; bord
 
   <header class="hero">
     <h1>Python 四周学习计划 · 打卡表</h1>
-    <p>工作日每天 30 分钟（20:00–20:30），周末每天 2 小时（09:00–11:00）。四周共 28 天、约 26 小时，终点是一个完整的小项目 + README。进度会自动保存在本机浏览器里。</p>
+    <p>工作日每天 30 分钟，周末每天 2 小时。四周共 28 天、约 26 小时，终点是一个完整的小项目 + README。进度会自动保存在本机浏览器里。</p>
     <div class="hero-meta">
       <span class="chip">第 1 周 · 基础入门</span>
       <span class="chip">第 2 周 · 条件判断</span>
@@ -704,7 +704,7 @@ kbd{background:#fff; border:1px solid var(--line); border-bottom-width:2px; bord
     <h2>怎么用这张表</h2>
     <p class="hint">写给你的执行说明 —— 计划不难，难的是不断线。</p>
     <ul class="tips">
-      <li data-n="1">每天固定时段学习：工作日 20:00–20:30、周末 09:00–11:00，写进日历更不容易断。</li>
+      <li data-n="1">每天固定时段学习：工作日 30 分钟、周末 2 小时，写进日历更不容易断。</li>
       <li data-n="2">每行右侧三态按钮：<b>未开始 / 进行中 / 已完成</b>，学完当天点一下，顶部总进度会实时更新。</li>
       <li data-n="3">卡住的点、报错信息、想补的知识写进“备注”，周日复盘时统一处理。</li>
       <li data-n="4">每个周六是动手日，周日必须收尾：写笔记 + 上传 GitHub，四周后自然形成作品集。</li>
@@ -833,64 +833,64 @@ const WEEKS = [
 /* 时长单位：小时 */
 const DAYS = [
   // ---------- 第 1 周 ----------
-  { w:1, dow:"周一", time:"20:00-20:30", len:"30分钟", hours:0.5,
+  { w:1, dow:"周一", len:"30分钟", hours:0.5,
     topic:"环境搭建", task:"安装 Python 和 VS Code；运行 Hello World", goal:"能成功打印 Hello World" },
-  { w:1, dow:"周二", time:"20:00-20:30", len:"30分钟", hours:0.5,
+  { w:1, dow:"周二", len:"30分钟", hours:0.5,
     topic:"变量与数据类型", task:"学习 `int` / `float` / `str` / `bool`；定义变量并打印", goal:"能写出 5 个不同类型的变量" },
-  { w:1, dow:"周三", time:"20:00-20:30", len:"30分钟", hours:0.5,
+  { w:1, dow:"周三", len:"30分钟", hours:0.5,
     topic:"输入输出与注释", task:"学习 `input` / `print` / 注释；写问候程序", goal:"输入姓名后能输出问候语" },
-  { w:1, dow:"周四", time:"20:00-20:30", len:"30分钟", hours:0.5,
+  { w:1, dow:"周四", len:"30分钟", hours:0.5,
     topic:"基本运算符", task:"学习 `+` `-` `*` `/` `//` `%` `**`；做简单运算", goal:"能计算两个数的加减乘除" },
-  { w:1, dow:"周五", time:"20:00-20:30", len:"30分钟", hours:0.5,
+  { w:1, dow:"周五", len:"30分钟", hours:0.5,
     topic:"字符串基础", task:"学习索引 / 切片 / 拼接 / `f-string`", goal:"能用 f-string 格式化输出" },
-  { w:1, dow:"周六", time:"09:00-11:00", len:"2小时", hours:2,
+  { w:1, dow:"周六", len:"2小时", hours:2,
     topic:"综合练习", task:"写“个人介绍生成器”和“加减计算器”", goal:"两个小脚本能运行" },
-  { w:1, dow:"周日", time:"09:00-11:00", len:"2小时", hours:2,
+  { w:1, dow:"周日", len:"2小时", hours:2,
     topic:"复习 + 整理", task:"复习本周内容；写笔记；上传 GitHub；规划下周", goal:"笔记和代码已上传" },
   // ---------- 第 2 周 ----------
-  { w:2, dow:"周一", time:"20:00-20:30", len:"30分钟", hours:0.5,
+  { w:2, dow:"周一", len:"30分钟", hours:0.5,
     topic:"if 基本语法", task:"学习单分支 `if`；写判断是否成年", goal:"能写出一个 if 判断" },
-  { w:2, dow:"周二", time:"20:00-20:30", len:"30分钟", hours:0.5,
+  { w:2, dow:"周二", len:"30分钟", hours:0.5,
     topic:"if-else", task:"学习双分支；写奇偶数判断", goal:"能判断奇偶数" },
-  { w:2, dow:"周三", time:"20:00-20:30", len:"30分钟", hours:0.5,
+  { w:2, dow:"周三", len:"30分钟", hours:0.5,
     topic:"elif 多分支", task:"学习多分支；写成绩等级判断", goal:"能输出 A/B/C/D 等级" },
-  { w:2, dow:"周四", time:"20:00-20:30", len:"30分钟", hours:0.5,
+  { w:2, dow:"周四", len:"30分钟", hours:0.5,
     topic:"比较运算符", task:"学习 `==` `!=` `>` `<` `>=` `<=`", goal:"能组合条件做判断" },
-  { w:2, dow:"周五", time:"20:00-20:30", len:"30分钟", hours:0.5,
+  { w:2, dow:"周五", len:"30分钟", hours:0.5,
     topic:"逻辑运算符", task:"学习 `and` `or` `not`；写登录条件判断", goal:"能写出复合条件" },
-  { w:2, dow:"周六", time:"09:00-11:00", len:"2小时", hours:2,
+  { w:2, dow:"周六", len:"2小时", hours:2,
     topic:"猜数字条件版", task:"固定一个数字；用 `if`/`elif`/`else` 比较大小", goal:"能提示“大了 / 小了 / 猜对”" },
-  { w:2, dow:"周日", time:"09:00-11:00", len:"2小时", hours:2,
+  { w:2, dow:"周日", len:"2小时", hours:2,
     topic:"复习 + 整理", task:"复习条件判断；优化成绩等级判断；写笔记", goal:"代码和笔记已整理" },
   // ---------- 第 3 周 ----------
-  { w:3, dow:"周一", time:"20:00-20:30", len:"30分钟", hours:0.5,
+  { w:3, dow:"周一", len:"30分钟", hours:0.5,
     topic:"while 循环", task:"学习 `while` 语法；写 1 到 10 累加", goal:"能写出 while 循环" },
-  { w:3, dow:"周二", time:"20:00-20:30", len:"30分钟", hours:0.5,
+  { w:3, dow:"周二", len:"30分钟", hours:0.5,
     topic:"for 循环与 range", task:"学习 `for` 和 `range`；遍历列表", goal:"能用 for 打印列表元素" },
-  { w:3, dow:"周三", time:"20:00-20:30", len:"30分钟", hours:0.5,
+  { w:3, dow:"周三", len:"30分钟", hours:0.5,
     topic:"break 和 continue", task:"学习循环控制；写跳过偶数的循环", goal:"能正确使用 break / continue" },
-  { w:3, dow:"周四", time:"20:00-20:30", len:"30分钟", hours:0.5,
+  { w:3, dow:"周四", len:"30分钟", hours:0.5,
     topic:"嵌套循环", task:"学习循环嵌套；打印小星星图案", goal:"能打印三角形星星" },
-  { w:3, dow:"周五", time:"20:00-20:30", len:"30分钟", hours:0.5,
+  { w:3, dow:"周五", len:"30分钟", hours:0.5,
     topic:"循环 + 条件综合", task:"用循环和条件写 1 到 100 内奇数和", goal:"能算出正确结果" },
-  { w:3, dow:"周六", time:"09:00-11:00", len:"2小时", hours:2,
+  { w:3, dow:"周六", len:"2小时", hours:2,
     topic:"完整猜数字游戏", task:"用 `random` 生成随机数；循环 + 条件实现多次猜测", goal:"游戏能反复猜直到猜对" },
-  { w:3, dow:"周日", time:"09:00-11:00", len:"2小时", hours:2,
+  { w:3, dow:"周日", len:"2小时", hours:2,
     topic:"乘法表 + 复习", task:"打印九九乘法表；复习循环；写笔记", goal:"乘法表和笔记完成" },
   // ---------- 第 4 周 ----------
-  { w:4, dow:"周一", time:"20:00-20:30", len:"30分钟", hours:0.5,
+  { w:4, dow:"周一", len:"30分钟", hours:0.5,
     topic:"复习变量与数据类型", task:"做 5 道变量和类型小题", goal:"能独立完成小题" },
-  { w:4, dow:"周二", time:"20:00-20:30", len:"30分钟", hours:0.5,
+  { w:4, dow:"周二", len:"30分钟", hours:0.5,
     topic:"复习条件判断", task:"做 5 道 `if`/`elif` 小题", goal:"能独立完成小题" },
-  { w:4, dow:"周三", time:"20:00-20:30", len:"30分钟", hours:0.5,
+  { w:4, dow:"周三", len:"30分钟", hours:0.5,
     topic:"复习循环", task:"做 5 道 `for`/`while` 小题", goal:"能独立完成小题" },
-  { w:4, dow:"周四", time:"20:00-20:30", len:"30分钟", hours:0.5,
+  { w:4, dow:"周四", len:"30分钟", hours:0.5,
     topic:"项目设计", task:"从猜数字 / 计算器 / 单位换算中选一个；写功能清单", goal:"确定项目要做什么" },
-  { w:4, dow:"周五", time:"20:00-20:30", len:"30分钟", hours:0.5,
+  { w:4, dow:"周五", len:"30分钟", hours:0.5,
     topic:"项目编码", task:"完成核心功能；先让程序能跑起来", goal:"核心功能可运行" },
-  { w:4, dow:"周六", time:"09:00-11:00", len:"2小时", hours:2,
+  { w:4, dow:"周六", len:"2小时", hours:2,
     topic:"项目完善", task:"加错误处理；加循环菜单；加注释", goal:"项目体验更完整" },
-  { w:4, dow:"周日", time:"09:00-11:00", len:"2小时", hours:2,
+  { w:4, dow:"周日", len:"2小时", hours:2,
     topic:"整理 + 复盘", task:"写 README；上传 GitHub；复盘本月", goal:"完整小项目 + README 已上传" }
 ];
 
@@ -1014,7 +1014,6 @@ function renderPlan(){
           ${isToday ? '<span class="todaytag">今天</span>' : ""}
           <div class="dow">${WEEKDAY_CN[dt.getDay()]}</div>
           <div class="dt">${dstrShort(dt)}</div>
-          <div class="hr">${d.time}</div>
           <div class="len">${d.len}</div>
         </div>
         <div class="what">
@@ -1172,13 +1171,13 @@ document.getElementById("onlyOpen").addEventListener("click", (e) => {
 document.getElementById("printBtn").addEventListener("click", () => window.print());
 
 document.getElementById("exportBtn").addEventListener("click", () => {
-  const head = ["周次","星期","时间","时长","学习主题","具体任务","完成标志","完成情况","备注"];
+  const head = ["周次","星期","时长","学习主题","具体任务","完成标志","完成情况","备注"];
   const label = { todo:"未开始", doing:"进行中", done:"已完成" };
   const q = (v) => `"${String(v == null ? "" : v).replace(/"/g, '""')}"`;
   const lines = [head.map(q).join(",")];
   DAYS.forEach((d, i) => {
     const id = dayIdAt(i);
-    lines.push([`第${d.w}周`, d.dow, d.time, d.len, d.topic, d.task, d.goal,
+    lines.push([`第${d.w}周`, d.dow, d.len, d.topic, d.task, d.goal,
       label[statusOf(id)], state.notes[id] || ""].map(q).join(","));
   });
   const done = DAYS.filter((d, i) => statusOf(dayIdAt(i)) === "done").length;
@@ -1345,7 +1344,7 @@ function openDay(id, tab){
   dr.style.setProperty("--dw", w.soft);
   dr.style.setProperty("--dwt", w.text);
   document.getElementById("dMeta").innerHTML =
-    '<b>第 ' + d.w + ' 周 · ' + esc(w.name) + '</b><span>·</span><span>' + esc(d.dow) + ' ' + esc(d.time) + '</span><span>·</span><span>' + esc(d.len) + '</span><span>·</span><span>D' + pad2(i + 1) + '</span>';
+    '<b>第 ' + d.w + ' 周 · ' + esc(w.name) + '</b><span>·</span><span>' + esc(d.dow) + '</span><span>·</span><span>' + esc(d.len) + '</span><span>·</span><span>D' + pad2(i + 1) + '</span>';
   document.getElementById("dTitle").textContent = d.topic;
   document.getElementById("dGoal").innerHTML = "完成标志：" + richText(d.goal);
   renderLesson(id); renderWork(id); renderCode(id);
@@ -1531,7 +1530,7 @@ function exportZip(scope, id){
     entries.push(["week" + d.w + "/d" + pad2(k + 1) + "_" + CODE_NAMES[k] + ".py",
       w.code.replace(/\s+$/, "") + "\n", new Date()]);
     const rd = ["# D" + pad2(k + 1) + " · " + d.topic, "",
-      "- 周次：" + d.w + "　星期：" + d.dow + "　时间：" + d.time + "　时长：" + d.len,
+      "- 周次：" + d.w + "　星期：" + d.dow + "　时长：" + d.len,
       "- 具体任务：" + d.task,
       "- 完成标志：" + d.goal,
       "- 提交状态：" + WORK_TAG[w.status] + (w.savedAt ? "（" + w.savedAt + "）" : ""), ""];
@@ -1863,7 +1862,7 @@ function renderCheckin(){
   const previewCount = DAYS.reduce((n, d, i) => n + ((statusOf(dayIdAt(i)) !== "todo" || workStatusOf(dayIdAt(i)) !== "todo") ? 1 : 0), 0);
   if (t < 0){
     foot.innerHTML = '<button class="cibtn" disabled>未到开营日</button>' +
-      '<span class="cinote">下周一（' + dstr(PLAN_START) + '）开始，每天 20:00-20:30 签到打卡' +
+      '<span class="cinote">下周一（' + dstr(PLAN_START) + '）开始，每天记得签到打卡' +
       (previewCount ? ' —— 你已经提前完成 <b>' + previewCount + '</b> 天了，很棒 👍' : "") + '</span>';
   } else if (t >= DAYS.length){
     foot.innerHTML = '<span class="ciok"><span class="big">🎓</span> 28 天计划已完成，共签到 ' + total + ' 天</span>';
