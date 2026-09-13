@@ -760,6 +760,15 @@ ul.tips kbd{border:1px solid var(--line); border-bottom-width:2px; border-radius
   background:#f1f5f9; border:1px solid var(--line); font-family:inherit;
 }
 .adm-sec select.adm-input{margin-top:2px; cursor:pointer}
+/* ---------- 数据看板 ---------- */
+.dash-box{margin-top:9px; padding:10px 12px 6px; border:1px solid var(--line); border-radius:11px; background:#fff}
+.dash-cap{font-size:12.3px; font-weight:700; color:var(--ink-2); margin-bottom:6px; display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+.dash-legend{font-weight:400; font-size:11px; color:var(--ink-3); display:inline-flex; align-items:center; gap:4px}
+.dash-legend i{display:inline-block; width:9px; height:9px; border-radius:2px; margin-left:6px}
+.dash-table{width:100%; border-collapse:collapse; margin-top:10px; font-size:12.4px}
+.dash-table th{text-align:left; font-weight:600; color:var(--ink-3); font-size:11.5px; padding:5px 6px; border-bottom:1px solid var(--line)}
+.dash-table td{padding:6px; border-bottom:1px solid #f1f5f9; color:var(--ink-2)}
+.dash-table td:first-child{color:var(--ink); font-weight:600}
 .adm-row{display:flex; align-items:center; gap:9px; font-size:13.3px; color:var(--ink-2); margin:7px 0}
 .adm-row input[type=checkbox]{flex:none; width:15px; height:15px}
 .adm-btns{display:flex; gap:8px; flex-wrap:wrap; margin-top:4px}
@@ -5339,6 +5348,7 @@ function renderAdminPanel(){
     '<div class="adm-sec"><h4>快捷开关</h4>' +      '<label class="adm-row"><input type="checkbox" id="admGateOff"' + (set.allowNoWork === true ? " checked" : "") + '><span>允许不交作业直接标记完成（门禁总开关）</span></label>' +
       '<label class="adm-row"><input type="checkbox" id="admNoGrade"' + (set.requireGrade === false ? " checked" : "") + '><span>取消"必须通过自动批改"的要求</span></label>' +
     '</div>' +
+    dashHtml() +
     admDebugHtml() +
     '<div class="adm-sec"><h4>数据管理</h4><div class="adm-btns">' +
       '<button class="btn" type="button" id="admExport">📤 导出完整数据（JSON）</button>' +
@@ -5532,6 +5542,164 @@ function admWireDebug(){
     b.addEventListener("click", function (){ admResetWeek(Number(b.getAttribute("data-admweek"))); });
   });
 }
+/* ---------- 数据看板：投入时长 + 每周完成率图表 ---------- */
+/* 用独立的存储键，不动主存档的 save/load（避免误伤核心逻辑） */
+const TIME_KEY = "py-plan-time-v1";
+const TIME_TICK = 20;              // 每 20 秒记一次
+let timeData = null, timeDirty = false, timeTimer = null;
+
+function loadTimeData(){
+  if (timeData) return timeData;
+  try { timeData = JSON.parse(localStorage.getItem(TIME_KEY) || "{}") || {}; }
+  catch (e) { timeData = {}; }
+  return timeData;
+}
+function saveTimeData(){
+  if (!timeDirty) return;
+  try { localStorage.setItem(TIME_KEY, JSON.stringify(loadTimeData())); timeDirty = false; }
+  catch (e) {}
+}
+/* 时间记到哪一天：以"今天"为准；开营前记到 __pre */
+function timeBucketId(){
+  const t = todayIdx();
+  return (t >= 0 && t < DAYS.length) ? dayIdAt(t) : "__pre";
+}
+function initTimeTracking(){
+  if (timeTimer) return;
+  timeTimer = setInterval(function (){
+    try {
+      if (document.visibilityState && document.visibilityState !== "visible") return;
+      const id = timeBucketId();
+      const d = loadTimeData();
+      d[id] = (d[id] || 0) + TIME_TICK;
+      timeDirty = true;
+    } catch (e) {}
+  }, TIME_TICK * 1000);
+  setInterval(saveTimeData, 120000);      /* 每 2 分钟落盘，别频繁写 */
+  if (typeof window !== "undefined" && window.addEventListener){
+    window.addEventListener("beforeunload", saveTimeData);
+    window.addEventListener("visibilitychange", function (){ if (document.visibilityState === "hidden") saveTimeData(); });
+  }
+}
+function actualHours(i){ const v = loadTimeData()[dayIdAt(i)]; return v ? v / 3600 : 0; }
+function planHours(i){ return DAYS[i].hours || 0.5; }
+function fmtHours(h){
+  if (!h) return "0";
+  if (h < 1) return Math.round(h * 60) + " 分钟";
+  return (Math.round(h * 10) / 10) + " 小时";
+}
+function dashWeeks(){
+  const out = [];
+  for (let w = 1; w <= 4; w++){
+    const s = weekSlice(w);
+    let done = 0, checked = 0, act = 0, plan = 0, donePlan = 0;
+    for (let i = s.start; i < s.end; i++){
+      const id = dayIdAt(i);
+      const isDone = statusOf(id) === "done";
+      if (isDone){ done++; donePlan += planHours(i); }
+      if (isChecked(i)) checked++;
+      act += actualHours(i);
+      plan += planHours(i);
+    }
+    out.push({ w: w, done: done, checked: checked, act: act, plan: plan, donePlan: donePlan, rate: Math.round(done / 7 * 100) });
+  }
+  return out;
+}
+/* 折线图：每周完成率（纯内联 SVG，零依赖） */
+function svgLine(weeks){
+  const W = 320, H = 130, padL = 30, padR = 12, padT = 16, padB = 22;
+  const iw = W - padL - padR, ih = H - padT - padB;
+  const x = (k) => padL + (weeks.length <= 1 ? iw / 2 : iw * k / (weeks.length - 1));
+  const y = (v) => padT + ih * (1 - v / 100);
+  let grid = "";
+  [0, 50, 100].forEach(function (v){
+    grid += '<line x1="' + padL + '" y1="' + y(v).toFixed(1) + '" x2="' + (W - padR) + '" y2="' + y(v).toFixed(1) +
+      '" stroke="#e2e8f0" stroke-width="1"' + (v === 50 ? ' stroke-dasharray="3 3"' : "") + "/>";
+    grid += '<text x="' + (padL - 6) + '" y="' + (y(v) + 3.5).toFixed(1) + '" text-anchor="end" font-size="9" fill="#94a3b8">' + v + "%</text>";
+  });
+  const pts = weeks.map(function (d, k){ return x(k).toFixed(1) + "," + y(d.rate).toFixed(1); }).join(" ");
+  const area = padL + "," + y(0).toFixed(1) + " " + pts + " " + (W - padR) + "," + y(0).toFixed(1);
+  let dots = "";
+  weeks.forEach(function (d, k){
+    dots += '<circle cx="' + x(k).toFixed(1) + '" cy="' + y(d.rate).toFixed(1) + '" r="3.6" fill="#2563eb" stroke="#fff" stroke-width="1.6"/>';
+    dots += '<text x="' + x(k).toFixed(1) + '" y="' + (y(d.rate) - 8).toFixed(1) + '" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1d4ed8">' + d.rate + "</text>";
+    dots += '<text x="' + x(k).toFixed(1) + '" y="' + (H - 6) + '" text-anchor="middle" font-size="9.5" fill="#64748b">第' + d.w + "周</text>";
+  });
+  return '<svg viewBox="0 0 ' + W + " " + H + '" style="width:100%;height:auto;display:block" role="img" aria-label="每周完成率折线图">' +
+    '<polygon points="' + area + '" fill="rgba(37,99,235,.08)"/>' +
+    '<polyline points="' + pts + '" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>' +
+    grid + dots + "</svg>";
+}
+/* 柱状图：每天投入（有实际计时用实际，否则用计划时长） */
+function svgBars(){
+  const W = 320, H = 132, padL = 26, padR = 8, padT = 12, padB = 26;
+  const iw = W - padL - padR, ih = H - padT - padB;
+  const vals = DAYS.map(function (d, i){
+    const act = actualHours(i), plan = planHours(i);
+    return { act: act, plan: plan, v: act > 0 ? act : plan, real: act > 0, done: statusOf(dayIdAt(i)) === "done" };
+  });
+  const maxV = Math.max(2, Math.ceil(Math.max.apply(null, vals.map(function (x){ return x.v; }))));
+  const gap = 2, bw = (iw - gap * 27) / 28;
+  let bars = "", ticks = "";
+  [0, maxV / 2, maxV].forEach(function (v){
+    const yy = padT + ih * (1 - v / maxV);
+    ticks += '<line x1="' + padL + '" y1="' + yy.toFixed(1) + '" x2="' + (W - padR) + '" y2="' + yy.toFixed(1) + '" stroke="#e2e8f0" stroke-width="1"/>';
+    ticks += '<text x="' + (padL - 5) + '" y="' + (yy + 3.2).toFixed(1) + '" text-anchor="end" font-size="8.5" fill="#94a3b8">' + (Math.round(v * 10) / 10) + "h</text>";
+  });
+  vals.forEach(function (x, i){
+    const h = Math.max(1.5, ih * (x.v / maxV));
+    const bx = padL + i * (bw + gap), by = padT + ih - h;
+    let fill = "#e2e8f0";
+    if (x.real) fill = x.act >= x.plan * 0.8 ? "#22c55e" : "#f59e0b";
+    else if (x.done) fill = "#93c5fd";
+    const label = "D" + pad2(i + 1) + " " + DAYS[i].topic + "：" +
+      (x.real ? ("实际 " + fmtHours(x.act)) : (x.done ? ("已完成（按计划约 " + fmtHours(x.plan) + "）") : ("未开始（计划 " + fmtHours(x.plan) + "）")));
+    bars += '<rect x="' + bx.toFixed(1) + '" y="' + by.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + h.toFixed(1) +
+      '" rx="1.6" fill="' + fill + '"><title>' + esc(label) + "</title></rect>";
+  });
+  let wl = "";
+  for (let w = 1; w <= 4; w++){
+    const s = weekSlice(w);
+    const c1 = padL + s.start * (bw + gap), c2 = padL + (s.end - 1) * (bw + gap) + bw;
+    wl += '<text x="' + ((c1 + c2) / 2).toFixed(1) + '" y="' + (H - 7) + '" text-anchor="middle" font-size="9" fill="#64748b">第' + w + "周</text>";
+  }
+  return '<svg viewBox="0 0 ' + W + " " + H + '" style="width:100%;height:auto;display:block" role="img" aria-label="每天投入时长柱状图">' +
+    ticks + bars + wl + "</svg>";
+}
+function dashHtml(){
+  const ws = dashWeeks();
+  const totalDone = ws.reduce(function (s, w){ return s + w.done; }, 0);
+  const totalAct = ws.reduce(function (s, w){ return s + w.act; }, 0);
+  const totalDonePlan = ws.reduce(function (s, w){ return s + w.donePlan; }, 0);
+  const totalPlan = ws.reduce(function (s, w){ return s + w.plan; }, 0);
+  const bar = function (v, max, color){
+    return '<div style="height:5px;border-radius:3px;background:#eef2f7;overflow:hidden;margin-top:3px"><div style="height:100%;width:' +
+      Math.min(100, Math.round(v / max * 100)) + "%;background:" + color + '"></div></div>';
+  };
+  const rows = ws.map(function (w){
+    return "<tr><td>第 " + w.w + " 周</td>" +
+      '<td><b>' + w.done + "/7</b>" + bar(w.done, 7, "#2563eb") + "</td>" +
+      "<td>" + w.checked + "/7</td>" +
+      "<td>" + (w.act > 0 ? fmtHours(w.act) : "—") + "</td>" +
+      "<td>" + fmtHours(w.donePlan) + "</td></tr>";
+  }).join("");
+  const pre = loadTimeData()["__pre"] || 0;
+  return '<div class="adm-sec"><h4>数据看板</h4>' +
+    '<div class="adm-grid" style="margin-bottom:11px">' +
+      '<div class="adm-stat"><b>' + totalDone + "/28</b><span>总完成率 " + Math.round(totalDone / 28 * 100) + "%</span></div>" +
+      '<div class="adm-stat"><b>' + (totalAct > 0 ? fmtHours(totalAct) : "—") + "</b><span>实际投入</span></div>" +
+      '<div class="adm-stat"><b>' + fmtHours(totalDonePlan) + "</b><span>完成部分的计划</span></div>" +
+      '<div class="adm-stat"><b>' + fmtHours(totalPlan) + "</b><span>全部计划</span></div>" +
+    "</div>" +
+    '<div class="dash-box"><div class="dash-cap">每周完成率</div>' + svgLine(ws) + "</div>" +
+    '<div class="dash-box"><div class="dash-cap">每天投入时长' +
+      '<span class="dash-legend"><i style="background:#22c55e"></i>达标<i style="background:#f59e0b"></i>不足<i style="background:#93c5fd"></i>已完成·无计时<i style="background:#e2e8f0"></i>未开始</span>' +
+      "</div>" + svgBars() + "</div>" +
+    '<table class="dash-table"><thead><tr><th>周次</th><th>完成</th><th>签到</th><th>实际投入</th><th>完成部分计划</th></tr></thead><tbody>' + rows + "</tbody></table>" +
+    (pre > 0 ? '<div style="font-size:12px;color:var(--ink-3);margin-top:8px">另有开营前的准备时间 ' + fmtHours(pre / 3600) + "（不计入上面）。</div>" : "") +
+    '<div style="font-size:12px;color:var(--ink-3);margin-top:8px">「实际投入」是<b>从加入这个统计之后</b>才开始记的' +
+      "（页面开着且可见时每 20 秒记一次）。之前的日期没有真实数据，柱状图里用浅蓝表示「已完成但无计时」。</div></div>";
+}
 /* ---------- 数据导出 / 导入 / 清空 ---------- */
 function adminDownload(name, text){
   try {
@@ -5641,6 +5809,8 @@ autoRemind();
    包 try：这类增强不该影响页面正常启动（__planReady 必须照常置位）。 */
 try { if (typeof applyAdminUi === "function") applyAdminUi(); } catch (e) {}
 try { if (typeof checkAdminEntry === "function") checkAdminEntry(); } catch (e) {}
+/* 数据看板：开启页面停留计时（每 20 秒一次，只在页面可见时记） */
+try { if (typeof initTimeTracking === "function") initTimeTracking(); } catch (e) {}
 window.__planReady = true;
 window.__dayCount = DAYS.length;
 window.__lessonCount = Object.keys(TUTORIALS).length;
