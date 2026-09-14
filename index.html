@@ -772,6 +772,7 @@ ul.tips kbd{border:1px solid var(--line); border-bottom-width:2px; border-radius
 .nl-row .adm-input{flex:1; min-width:190px}
 .nl-msg{margin-top:7px; font-size:12.4px; color:var(--ink-3); min-height:17px}
 .nl-msg.err{color:#b91c1c}
+.nl-diag{margin-top:9px; padding:10px 12px; border-radius:10px; background:#0f172a; color:#cbd5e1; font-family:Consolas,monospace; font-size:11.8px; line-height:1.7; white-space:pre-wrap; word-break:break-all; max-height:260px; overflow:auto}
 .nl-fresh{font-weight:700}
 .nl-fresh.fresh{color:#15803d}
 .nl-fresh.warm{color:#b45309}
@@ -5782,6 +5783,7 @@ const NL_TOKEN_KEY = "py-plan-nltoken-v1";
 const NL_SITE = "zero-python-4weeks";
 let nlData = null;
 let nlState = { s: "idle", msg: "" };
+let nlDebug = {};        /* 诊断信息：接口返回了什么，读不到时用来看原因 */
 
 function nlToken(){ try { return localStorage.getItem(NL_TOKEN_KEY) || ""; } catch (e) { return ""; } }
 function nlSetToken(v){
@@ -5822,10 +5824,34 @@ async function nlFetch(){
     throw new Error("站点里没找到名为 progress 的表单（现有表单：" + fs2 +
       "）—— 确认 Netlify 的表单识别已开启，并且开启后重新部署过");
   }
-  /* ③ 拉提交记录 */
-  const sr = await fetch(base + "/forms/" + form.id + "/submissions?per_page=100", { headers: H });
-  if (!sr.ok) throw new Error("读取提交记录失败：HTTP " + sr.status);
-  const list = await sr.json();
+  /* ③ 拉提交记录：先用「站点级」接口（更稳），失败再退回「表单级」
+        顺便把诊断信息记下来，方便排查为什么读不到 */
+  nlDebug.site = { name: site.name, id: site.id };
+  nlDebug.forms = (forms || []).map(function (f){
+    return { name: f.name, id: f.id, count: (f.submission_count == null ? "?" : f.submission_count) };
+  });
+  let list = null;
+  let errSite = "";
+  try {
+    const sr1 = await fetch(base + "/sites/" + site.id + "/submissions?per_page=100", { headers: H });
+    if (sr1.ok){
+      const all = await sr1.json();
+      nlDebug.siteSubsTotal = (all || []).length;
+      nlDebug.siteSubsFormIds = (all || []).slice(0, 5).map(function (x){ return x.form_id; });
+      list = (all || []).filter(function (x){ return !x.form_id || x.form_id === form.id; });
+      nlDebug.usedEndpoint = "站点级 /sites/{id}/submissions";
+    } else {
+      errSite = "站点级 HTTP " + sr1.status;
+    }
+  } catch (e) { errSite = "站点级异常：" + e.message; }
+  if (list === null){
+    const sr2 = await fetch(base + "/forms/" + form.id + "/submissions?per_page=100", { headers: H });
+    if (!sr2.ok) throw new Error("读取提交记录失败（" + errSite + " ／ 表单级 HTTP " + sr2.status + "）");
+    list = await sr2.json();
+    nlDebug.usedEndpoint = "表单级 /forms/{id}/submissions";
+  }
+  nlDebug.rawCount = (list || []).length;
+  nlDebug.sample = (list || [])[0] ? JSON.stringify((list || [])[0]).slice(0, 300) : "";
   return (list || []).map(function (x){
     const d = x.data || {};
     return {
@@ -5865,6 +5891,29 @@ function nlHowLong(iso){
   return Math.round(d) + " 天前";
 }
 function nlTxt(s){ return esc(String(s == null ? "" : s)); }
+/* 诊断信息：把接口到底返回了什么摊开显示，读不到数据时一眼看出原因 */
+let nlShowDebug = false;
+function nlDebugHtml(){
+  if (!nlShowDebug) return "";
+  const d = nlDebug || {};
+  const lines = [];
+  lines.push("站点: " + (d.site ? (d.site.name + "  id=" + d.site.id) : "（没取到）"));
+  lines.push("表单列表: " + (d.forms ? d.forms.map(function (f){
+    return f.name + "(id=" + String(f.id).slice(0, 8) + "…, 提交数=" + f.count + ")";
+  }).join(" ／ ") : "（没取到）"));
+  lines.push("用的接口: " + (d.usedEndpoint || "（还没成功过）"));
+  lines.push("站点级提交总数: " + (d.siteSubsTotal == null ? "（没取到）" : d.siteSubsTotal));
+  if (d.siteSubsFormIds && d.siteSubsFormIds.length){
+    lines.push("前几条提交的 form_id: " + d.siteSubsFormIds.map(function (x){ return String(x).slice(0, 8) + "…"; }).join(", "));
+  }
+  lines.push("最终拿到的记录数: " + (d.rawCount == null ? "（还没成功过）" : d.rawCount));
+  if (d.sample) lines.push("第一条原文: " + d.sample);
+  return '<pre class="nl-diag">' + nlTxt(lines.join("\n")) + "</pre>";
+}
+function nlToggleDebug(){
+  nlShowDebug = !nlShowDebug;
+  renderNlBox();
+}
 function renderNlBox(){
   const box = document.getElementById("nlBody");
   if (!box) return;
@@ -5897,9 +5946,11 @@ function renderNlBox(){
       "</span>" +
       '<span style="display:flex;gap:7px">' +
         '<button class="btn" type="button" id="nlRefresh">🔄 刷新</button>' +
+        '<button class="btn" type="button" id="nlDiag">🐞 诊断</button>' +
         '<button class="btn" type="button" id="nlForget">清除令牌</button>' +
       "</span></div>" +
-    '<div class="nl-msg ' + (nlState.s === "err" ? "err" : "") + '" id="nlMsg">' + nlTxt(nlState.msg) + "</div>";
+    '<div class="nl-msg ' + (nlState.s === "err" ? "err" : "") + '" id="nlMsg">' + nlTxt(nlState.msg) + "</div>" +
+    nlDebugHtml();
   if (!rows.length){
     box.innerHTML = head + '<div style="font-size:12.6px;color:var(--ink-3);margin-top:6px">' +
       "把网址发给朋友后，他们点顶栏「📤 上报进度」填个昵称，这里就会出现记录。</div>";
@@ -5917,6 +5968,8 @@ function renderNlBox(){
   }
   const rf = document.getElementById("nlRefresh");
   if (rf) rf.addEventListener("click", nlRefresh);
+  const dg = document.getElementById("nlDiag");
+  if (dg) dg.addEventListener("click", nlToggleDebug);
   const fg = document.getElementById("nlForget");
   if (fg) fg.addEventListener("click", function (){
     if (!confirm("清除这台设备上保存的访问令牌？")) return;
