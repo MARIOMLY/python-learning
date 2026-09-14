@@ -4043,10 +4043,15 @@ const TESTS = {
   ]
  }
 };
-function gradeAll(dayId, code, runCode){
+function gradeAll(dayId, code, runCode, stdinDefault){
   const spec = TESTS[dayId];
   if (!spec) return { ok:false, reason:'这一天还没有批改规则', results:[] };
   const src = String(code || '');
+  /* 默认输入：优先用调用方给的（页面上那个输入框），没有就用规则里的
+     ⚠️ 这个值必须和页面上"喂输入"时用的键完全一致，否则会拿空输出去比对 */
+  const defStdin = (stdinDefault === undefined || stdinDefault === null || stdinDefault === '')
+    ? (spec.stdin || '')
+    : stdinDefault;
   const results = [];
   // 先做静态检查（不需要运行）
   spec.cases.forEach((c) => {
@@ -4069,7 +4074,7 @@ function gradeAll(dayId, code, runCode){
   const runs = {};
   spec.cases.forEach((c, idx) => {
     if (c.srcHas || c.srcRe || c.srcCount) return;
-    const key = (c.stdin === undefined ? (spec.stdin || '') : c.stdin);
+    const key = (c.stdin === undefined ? defStdin : c.stdin);
     if (!runs[key]) runs[key] = { stdout:'', error:'', ids:[] };
     runs[key].ids.push(idx);
   });
@@ -4080,7 +4085,7 @@ function gradeAll(dayId, code, runCode){
   });
   spec.cases.forEach((c) => {
     if (c.srcHas || c.srcRe || c.srcCount) return;
-    const key = (c.stdin === undefined ? (spec.stdin || '') : c.stdin);
+    const key = (c.stdin === undefined ? defStdin : c.stdin);
     const out = runs[key].stdout, err = runs[key].error;
     const r = { name:c.name, kind:'run', pass:true, detail:'' };
     if (c.noError !== false && err){
@@ -4371,6 +4376,9 @@ function renderRunner(id){
   }
   const runnable = spec.runnable !== false;
   const defIn = spec.stdin == null ? "" : spec.stdin;
+  /* 这一天到底需不需要输入？不需要就不显示输入框（避免新手把代码写进去） */
+  const needsInput = (spec.stdin != null && spec.stdin !== "") ||
+    spec.cases.some(function (c){ return c.stdin !== undefined && c.stdin !== null && c.stdin !== ""; });
   box.innerHTML =
     '<div class="runner">' +
       '<div class="rhead">' +
@@ -4382,10 +4390,14 @@ function renderRunner(id){
       '<div class="rbody">' +
         (spec.intro ? '<div class="gradesum info">📋 ' + esc(spec.intro) + "</div>" : "") +
         (runnable
-          ? '<div class="field2" style="margin-top:10px">' +
-              '<label>程序运行时自动输入的内容（一行一个，可以自己改）</label>' +
-              '<textarea class="stdinbox" id="stdinBox" spellcheck="false">' + esc(defIn) + "</textarea>" +
-            "</div>" +
+          ? (needsInput
+              ? '<div class="field2" style="margin-top:10px">' +
+                  '<label>「▶ 只运行看看」时自动喂给程序的内容（一行一个）—— <b>不是写代码的地方</b>；' +
+                  '<span style="color:var(--ink-3)">批改固定用标准输入，改这里不影响批改</span></label>' +
+                  '<textarea class="stdinbox" id="stdinBox" spellcheck="false">' + esc(defIn) + "</textarea>" +
+                  '<div style="margin-top:6px"><button class="btn" type="button" id="stdinReset">恢复默认输入</button></div>' +
+                "</div>"
+              : '<div class="field2" style="margin-top:10px"><label style="color:var(--ink-3)">这一天不需要输入（程序里没有 input()），直接写代码就行</label></div>') +
             '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
               '<button class="runbtn" id="runGrade">▶ 运行并批改</button>' +
               '<button class="runbtn ghost" id="runOnly">▶ 只运行看看</button>' +
@@ -4400,6 +4412,12 @@ function renderRunner(id){
     "</div>";
   const btn = document.getElementById("runGrade");
   if (btn) btn.addEventListener("click", () => doRunGrade(id));
+  const rst = document.getElementById("stdinReset");
+  if (rst) rst.addEventListener("click", function (){
+    const box = document.getElementById("stdinBox");
+    if (box){ box.value = defIn; }
+    toast("已恢复标准输入", 1800);
+  });
   const b2 = document.getElementById("runOnly");
   if (b2) b2.addEventListener("click", () => doRunOnly(id));
   if (g && g.results && g.results.length) showGradeResults(g.results, { ok:g.passed, passed:g.count, total:g.total });
@@ -4510,13 +4528,16 @@ async function doRunGrade(id){
   await guard(async () => {
   consoleClear();
   await withPy(id, async () => {
-    // 输入框里的内容作为"默认输入"；每条用例自己指定的输入优先
-    const custom = (document.getElementById("stdinBox") || {}).value;
+    /* 批改固定用"标准输入"（规则里写好的），**不受输入框影响**：
+       因为判分规则里带着对标准输入的期望值（比如"明年的年龄 20 → 21"），
+       改了输入就会让正确的代码被判错。输入框只服务于「▶ 只运行看看」。
+       defIn 同时用于"喂输入"和"查结果"，两边键必须一致。 */
+    const defIn = spec.stdin || "";
     const cache = {};
     const inputs = {};
     spec.cases.forEach((c) => {
       if (c.srcHas || c.srcRe || c.srcCount) return;
-      const k = c.stdin === undefined ? ((custom != null && custom !== "") ? custom : (spec.stdin || "")) : c.stdin;
+      const k = c.stdin === undefined ? defIn : c.stdin;
       inputs[k] = true;
     });
     const keys = Object.keys(inputs);
@@ -4557,7 +4578,9 @@ async function doRunGrade(id){
       if (typeof showErrorActions === "function") showErrorActions(id, showErr);
     }
     // 判分
-    const g = gradeAll(id, code, (src, stdinKey) => cache[stdinKey] || { stdout:"", error:"" });
+    /* 兜底：万一某个键没跑过，退回到唯一那次运行的结果，避免"拿空输出误判" */
+    const allKeys = Object.keys(cache);
+    const g = gradeAll(id, code, (src, stdinKey) => cache[stdinKey] || (allKeys.length === 1 ? cache[allKeys[0]] : { stdout:"", error:"" }), defIn);
     saveGrade(id, g);
     showGradeResults(g.results, g);
     consoleWrite("\n—— 批改结果：" + g.passed + "/" + g.total + " ——\n", g.ok ? "ok" : "bad");
