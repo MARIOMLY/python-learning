@@ -5794,14 +5794,36 @@ async function nlFetch(){
   const tok = nlToken();
   if (!tok) throw new Error("还没填访问令牌");
   const base = "https://api.netlify.com/api/v1";
-  const fr = await fetch(base + "/sites/" + NL_SITE + "/forms", { headers: nlHeaders() });
-  if (fr.status === 401) throw new Error("令牌无效或已过期（401）—— 去 Netlify 重新生成一个");
-  if (fr.status === 404) throw new Error("找不到站点（404）—— 检查站点名是否还是 " + NL_SITE);
+  const H = nlHeaders();
+  /* ① 先拉站点列表，按名字/网址找到站点，取它的 id
+        （Netlify 的 /sites/{x} 接口不认"站点名"，必须用 id —— 之前直接用名字会 404） */
+  const sitesRes = await fetch(base + "/sites?per_page=100", { headers: H });
+  if (sitesRes.status === 401) throw new Error("令牌无效或已过期（401）—— 去 Netlify 重新生成一个");
+  if (!sitesRes.ok) throw new Error("读取站点列表失败：HTTP " + sitesRes.status);
+  const sites = await sitesRes.json();
+  const site = (sites || []).filter(function (s){
+    return s.name === NL_SITE ||
+      String(s.url || "").indexOf(NL_SITE) >= 0 ||
+      String(s.ssl_url || "").indexOf(NL_SITE) >= 0 ||
+      String(s.custom_domain || "").indexOf(NL_SITE) >= 0;
+  })[0];
+  if (!site){
+    const names = (sites || []).map(function (s){ return s.name; }).join("、") || "（一个都没有）";
+    throw new Error("这个令牌下找不到站点 " + NL_SITE + "。它能看到的站点是：" + names +
+      " —— 确认令牌是在同一个 Netlify 账号下生成的");
+  }
+  /* ② 表单列表（用站点 id） */
+  const fr = await fetch(base + "/sites/" + site.id + "/forms", { headers: H });
   if (!fr.ok) throw new Error("读取表单列表失败：HTTP " + fr.status);
   const forms = await fr.json();
   const form = (forms || []).filter(function (f){ return f.name === "progress"; })[0];
-  if (!form) throw new Error("没找到名为 progress 的表单 —— 确认表单识别已开启并且部署过");
-  const sr = await fetch(base + "/forms/" + form.id + "/submissions?per_page=100", { headers: nlHeaders() });
+  if (!form){
+    const fs2 = (forms || []).map(function (f){ return f.name; }).join("、") || "（一个表单都没有）";
+    throw new Error("站点里没找到名为 progress 的表单（现有表单：" + fs2 +
+      "）—— 确认 Netlify 的表单识别已开启，并且开启后重新部署过");
+  }
+  /* ③ 拉提交记录 */
+  const sr = await fetch(base + "/forms/" + form.id + "/submissions?per_page=100", { headers: H });
   if (!sr.ok) throw new Error("读取提交记录失败：HTTP " + sr.status);
   const list = await sr.json();
   return (list || []).map(function (x){
