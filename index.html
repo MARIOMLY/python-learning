@@ -850,12 +850,6 @@ ul.tips kbd{border:1px solid var(--line); border-bottom-width:2px; border-radius
       <li data-n="7">快捷键：<kbd>/</kbd> 定位搜索框，<kbd>Esc</kbd> 清空搜索，<kbd>Ctrl</kbd>+<kbd>P</kbd> 打印。</li>
       <li data-n="8">进度存在本机浏览器（localStorage），换电脑请先用“导出进度 CSV”备份。</li>
       <li data-n="9">键盘也能用：<kbd>↑</kbd><kbd>↓</kbd>（或 <kbd>J</kbd><kbd>K</kbd>）在日卡间移动，<kbd>Enter</kbd> 开教程，<kbd>W</kbd> 开作业，<kbd>/</kbd> 搜内容，<kbd>?</kbd> 查报错，<kbd>Esc</kbd> 关闭。</li>
-    <div class="setrow" style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line)">
-      <input type="checkbox" id="allowNoWork">
-      <span><b>允许不交作业直接标记完成</b>
-        <span class="sub">默认关闭 —— 开着门禁才拦得住"假装学会"。只有真遇到意外（生病、断网、电脑坏了）才建议临时打开；开门禁期间标记的完成不会发鼓励，并会在当天备注里留痕。</span>
-      </span>
-    </div>
     <div class="setrow" style="margin-top:14px">
       <input type="checkbox" id="requireGrade">
       <span><b>必须通过自动批改才能标记完成</b>
@@ -1297,7 +1291,9 @@ document.getElementById("plan").addEventListener("click", (e) => {
     const gateOff = (typeof gateOn === "function") && !gateOn();
     const submitted = (typeof hasSubmitted === "function") ? hasSubmitted(id) : true;
     if (gateOff){
-      if (!submitted && typeof forceDone === "function") forceDone(id, "门禁已关闭");
+      /* 门禁关了又没交作业：直接标记完成，并且必须 return ——
+         否则会继续走下面的"再点一次就取消"逻辑，把刚标记的完成又翻回未完成 */
+      if (!submitted && typeof forceDone === "function"){ forceDone(id, "门禁已关闭"); return; }
     } else if (!submitted){
       if (typeof openGate === "function") openGate(id, "plan");
       return;
@@ -2340,17 +2336,23 @@ function toggleAllowNoWork(on){
 }
 /* 初始化开关的勾选状态（门禁默认开启 → 复选框不勾） */
 function initGate(){
-  const cb = document.getElementById("allowNoWork");
+  const cb = document.getElementById("allowNoWork");   /* 只在管理员面板里了，这里保留兼容 */
   if (cb) cb.checked = state.setting.allowNoWork === true;
   const rg = document.getElementById("requireGrade");
   if (rg) rg.checked = state.setting.requireGrade !== false;
 }
-document.getElementById("allowNoWork").addEventListener("change", (e) => toggleAllowNoWork(e.target.checked));
-document.getElementById("requireGrade").addEventListener("change", (e) => {
-  state.setting.requireGrade = e.target.checked;
-  save();
-  toast(e.target.checked ? "已开启：必须通过自动批改才能标记完成" : "已关闭：可以不批改直接标记完成", 2600);
-});
+/* 「允许不交作业」这个开关只放在管理员面板里（朋友看不到），
+   所以这里必须做空值保护 —— 拿不到元素时不能报错（否则页面启动就崩）。 */
+(function bindGateSettings(){
+  const cb = document.getElementById("allowNoWork");
+  if (cb) cb.addEventListener("change", (e) => toggleAllowNoWork(e.target.checked));
+  const rg = document.getElementById("requireGrade");
+  if (rg) rg.addEventListener("change", (e) => {
+    state.setting.requireGrade = e.target.checked;
+    save();
+    toast(e.target.checked ? "已开启：必须通过自动批改才能标记完成" : "已关闭：可以不批改直接标记完成", 2600);
+  });
+})();
 
 /* ---------- 事件 ---------- */
 document.getElementById("gate").addEventListener("click", (e) => {
@@ -5345,7 +5347,8 @@ function renderAdminPanel(){
       '<div class="adm-stat"><b>' + s.kb + ' KB</b><span>本机存储占用</span></div>' +
       '<div class="adm-stat"><b>' + (typeof streak === "function" ? streak() : 0) + ' 天</b><span>当前连续签到</span></div>' +
     '</div></div>' +
-    '<div class="adm-sec"><h4>快捷开关</h4>' +      '<label class="adm-row"><input type="checkbox" id="admGateOff"' + (set.allowNoWork === true ? " checked" : "") + '><span>允许不交作业直接标记完成（门禁总开关）</span></label>' +
+    '<div class="adm-sec"><h4>快捷开关</h4>' +
+      '<label class="adm-row"><input type="checkbox" id="admGateOff"' + (set.allowNoWork === true ? " checked" : "") + '><span>关闭门禁：允许不交作业直接标记完成<b style="color:#b45309">（朋友看不到这个开关）</b></span></label>' +
       '<label class="adm-row"><input type="checkbox" id="admNoGrade"' + (set.requireGrade === false ? " checked" : "") + '><span>取消"必须通过自动批改"的要求</span></label>' +
     '</div>' +
     dashHtml() +
