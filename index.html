@@ -5458,6 +5458,8 @@ function renderAdminPanel(){
   if (wp) wp.addEventListener("click", adminWipeData);
   const lo = document.getElementById("admLogout");
   if (lo) lo.addEventListener("click", adminLogout);
+  /* 这两块是"渲染完再填内容"的，必须在 innerHTML 赋值之后调用 */
+  if (typeof renderNlBox === "function") renderNlBox();
   if (typeof admWireDebug === "function") admWireDebug();
 }
 /* ---------- 调试工具（方便自己测试各功能） ---------- */
