@@ -768,6 +768,14 @@ ul.tips kbd{border:1px solid var(--line); border-bottom-width:2px; border-radius
 .dash-table{width:100%; border-collapse:collapse; margin-top:10px; font-size:12.4px}
 .dash-table th{text-align:left; font-weight:600; color:var(--ink-3); font-size:11.5px; padding:5px 6px; border-bottom:1px solid var(--line)}
 .dash-table td{padding:6px; border-bottom:1px solid #f1f5f9; color:var(--ink-2)}
+.nl-row{display:flex; gap:8px; align-items:center; margin-top:8px; flex-wrap:wrap}
+.nl-row .adm-input{flex:1; min-width:190px}
+.nl-msg{margin-top:7px; font-size:12.4px; color:var(--ink-3); min-height:17px}
+.nl-msg.err{color:#b91c1c}
+.nl-fresh{font-weight:700}
+.nl-fresh.fresh{color:#15803d}
+.nl-fresh.warm{color:#b45309}
+.nl-fresh.cold{color:#94a3b8}
 .dash-table td:first-child{color:var(--ink); font-weight:600}
 .adm-row{display:flex; align-items:center; gap:9px; font-size:13.3px; color:var(--ink-2); margin:7px 0}
 .adm-row input[type=checkbox]{flex:none; width:15px; height:15px}
@@ -5390,6 +5398,7 @@ function openAdminPanel(){
   if (!isAdmin()){ openAdminLogin(); return; }
   renderAdminPanel();
   box.classList.add("show");
+  if (nlToken() && !nlData) nlRefresh();
 }
 function closeAdminPanel(){
   const box = document.getElementById("adminpanel");
@@ -5413,6 +5422,7 @@ function renderAdminPanel(){
       '<label class="adm-row"><input type="checkbox" id="admGateOff"' + (set.allowNoWork === true ? " checked" : "") + '><span>关闭门禁：允许不交作业直接标记完成<b style="color:#b45309">（朋友看不到这个开关）</b></span></label>' +
       '<label class="adm-row"><input type="checkbox" id="admNoGrade"' + (set.requireGrade === false ? " checked" : "") + '><span>取消"必须通过自动批改"的要求</span></label>' +
     '</div>' +
+    nlSectionHtml() +
     dashHtml() +
     admDebugHtml() +
     '<div class="adm-sec"><h4>数据管理</h4><div class="adm-btns">' +
@@ -5764,6 +5774,145 @@ function dashHtml(){
     (pre > 0 ? '<div style="font-size:12px;color:var(--ink-3);margin-top:8px">另有开营前的准备时间 ' + fmtHours(pre / 3600) + "（不计入上面）。</div>" : "") +
     '<div style="font-size:12px;color:var(--ink-3);margin-top:8px">「实际投入」是<b>从加入这个统计之后</b>才开始记的' +
       "（页面开着且可见时每 20 秒记一次）。之前的日期没有真实数据，柱状图里用浅蓝表示「已完成但无计时」。</div></div>";
+}
+/* ---------- 朋友进度：直接读 Netlify 表单提交（浏览器可直连，实测 CORS 放行） ---------- */
+const NL_TOKEN_KEY = "py-plan-nltoken-v1";
+const NL_SITE = "zero-python-4weeks";
+let nlData = null;
+let nlState = { s: "idle", msg: "" };
+
+function nlToken(){ try { return localStorage.getItem(NL_TOKEN_KEY) || ""; } catch (e) { return ""; } }
+function nlSetToken(v){
+  try { v ? localStorage.setItem(NL_TOKEN_KEY, v) : localStorage.removeItem(NL_TOKEN_KEY); } catch (e) {}
+}
+function nlHeaders(){ return { Authorization: "Bearer " + nlToken() }; }
+
+/* 取数据：先找到 progress 表单，再拉它的提交记录 */
+async function nlFetch(){
+  const tok = nlToken();
+  if (!tok) throw new Error("还没填访问令牌");
+  const base = "https://api.netlify.com/api/v1";
+  const fr = await fetch(base + "/sites/" + NL_SITE + "/forms", { headers: nlHeaders() });
+  if (fr.status === 401) throw new Error("令牌无效或已过期（401）—— 去 Netlify 重新生成一个");
+  if (fr.status === 404) throw new Error("找不到站点（404）—— 检查站点名是否还是 " + NL_SITE);
+  if (!fr.ok) throw new Error("读取表单列表失败：HTTP " + fr.status);
+  const forms = await fr.json();
+  const form = (forms || []).filter(function (f){ return f.name === "progress"; })[0];
+  if (!form) throw new Error("没找到名为 progress 的表单 —— 确认表单识别已开启并且部署过");
+  const sr = await fetch(base + "/forms/" + form.id + "/submissions?per_page=100", { headers: nlHeaders() });
+  if (!sr.ok) throw new Error("读取提交记录失败：HTTP " + sr.status);
+  const list = await sr.json();
+  return (list || []).map(function (x){
+    const d = x.data || {};
+    return {
+      nick: d.nick || "（没填昵称）", done: d.done || "-", checked: d.checked || "-",
+      graded: d.graded || "-", streak: d.streak || "-", last: d.last || "-",
+      hours: d.hours || "-", at: d.at || "", created: x.created_at || ""
+    };
+  });
+}
+/* 每个人只留最近一条 */
+function nlLatest(list){
+  const map = {};
+  (list || []).forEach(function (r){
+    const k = r.nick;
+    if (!map[k] || String(r.created) > String(map[k].created)) map[k] = r;
+  });
+  const arr = Object.keys(map).map(function (k){ return map[k]; });
+  arr.sort(function (a, b){ return String(b.created).localeCompare(String(a.created)); });
+  return arr;
+}
+function nlDaysAgo(iso){
+  const t = iso ? new Date(iso).getTime() : 0;
+  return t ? (Date.now() - t) / 86400000 : null;
+}
+function nlFreshClass(iso){
+  const d = nlDaysAgo(iso);
+  if (d === null) return "";
+  if (d <= 1.2) return "fresh";
+  if (d <= 3.2) return "warm";
+  return "cold";
+}
+function nlHowLong(iso){
+  const d = nlDaysAgo(iso);
+  if (d === null) return "—";
+  if (d < 1 / 24) return "刚刚";
+  if (d < 1) return Math.round(d * 24) + " 小时前";
+  return Math.round(d) + " 天前";
+}
+function nlTxt(s){ return esc(String(s == null ? "" : s)); }
+function renderNlBox(){
+  const box = document.getElementById("nlBody");
+  if (!box) return;
+  if (!nlToken()){
+    box.innerHTML =
+      '<div class="adm-warn" style="margin-top:0">还没有配置访问令牌。' +
+        '<br>① Netlify → 点右上角头像 → <b>User settings</b> → <b>Applications</b> → <b>Personal access tokens</b> → <b>New access token</b>' +
+        '<br>② 复制那串令牌粘到下面（<b>只存在你这台设备</b>，不会上传到任何地方）</div>' +
+      '<div class="nl-row"><input class="adm-input" type="password" id="nlTok" placeholder="粘贴 Netlify 访问令牌" autocomplete="off">' +
+      '<button class="btn primary" type="button" id="nlSave">保存并读取</button></div>' +
+      '<div class="nl-msg" id="nlMsg"></div>';
+    const b = document.getElementById("nlSave");
+    if (b) b.addEventListener("click", function (){
+      const v = ((document.getElementById("nlTok") || {}).value || "").trim();
+      if (!v){ const m = document.getElementById("nlMsg"); if (m){ m.className = "nl-msg err"; m.textContent = "先粘贴令牌"; } return; }
+      nlSetToken(v);
+      nlState = { s: "idle", msg: "" };
+      nlData = null;
+      renderAdminPanel();
+      nlRefresh();
+    });
+    return;
+  }
+  const rows = nlLatest(nlData || []);
+  const head =
+    '<div class="nl-row" style="justify-content:space-between">' +
+      '<span style="font-size:12.4px;color:var(--ink-3)">' +
+        (nlState.s === "loading" ? "正在读取…"
+          : (rows.length ? ("共 " + rows.length + " 位朋友上报过（每人显示最近一次）") : "还没有人上报")) +
+      "</span>" +
+      '<span style="display:flex;gap:7px">' +
+        '<button class="btn" type="button" id="nlRefresh">🔄 刷新</button>' +
+        '<button class="btn" type="button" id="nlForget">清除令牌</button>' +
+      "</span></div>" +
+    '<div class="nl-msg ' + (nlState.s === "err" ? "err" : "") + '" id="nlMsg">' + nlTxt(nlState.msg) + "</div>";
+  if (!rows.length){
+    box.innerHTML = head + '<div style="font-size:12.6px;color:var(--ink-3);margin-top:6px">' +
+      "把网址发给朋友后，他们点顶栏「📤 上报进度」填个昵称，这里就会出现记录。</div>";
+  } else {
+    box.innerHTML = head +
+      '<table class="dash-table"><thead><tr><th>昵称</th><th>已完成</th><th>签到</th><th>批改</th><th>连续</th><th>最近完成</th><th>上报时间</th></tr></thead><tbody>' +
+      rows.map(function (r){
+        return "<tr><td>" + nlTxt(r.nick) + "</td><td><b>" + nlTxt(r.done) + "</b></td><td>" + nlTxt(r.checked) +
+          "</td><td>" + nlTxt(r.graded) + "</td><td>" + nlTxt(r.streak) + " 天</td><td>" + nlTxt(r.last) +
+          '</td><td><span class="nl-fresh ' + nlFreshClass(r.created) + '">' + nlHowLong(r.created) + "</span></td></tr>";
+      }).join("") + "</tbody></table>" +
+      '<div style="font-size:12px;color:var(--ink-3);margin-top:8px">' +
+        "🟢 一天内上报过（在学）／🟠 两三天前／⚪ 超过三天没动静。<br>" +
+        "完整记录和 CSV 导出在 <b>Netlify → Forms → progress</b>。</div>";
+  }
+  const rf = document.getElementById("nlRefresh");
+  if (rf) rf.addEventListener("click", nlRefresh);
+  const fg = document.getElementById("nlForget");
+  if (fg) fg.addEventListener("click", function (){
+    if (!confirm("清除这台设备上保存的访问令牌？")) return;
+    nlSetToken(""); nlData = null; nlState = { s: "idle", msg: "" };
+    renderAdminPanel();
+  });
+}
+async function nlRefresh(){
+  nlState = { s: "loading", msg: "" };
+  renderNlBox();
+  try {
+    nlData = await nlFetch();
+    nlState = { s: "ok", msg: "读取成功（" + (nlData || []).length + " 条记录）" };
+  } catch (e) {
+    nlState = { s: "err", msg: "读取失败：" + (e && e.message ? e.message : e) };
+  }
+  renderNlBox();
+}
+function nlSectionHtml(){
+  return '<div class="adm-sec"><h4>👥 朋友进度（读 Netlify 表单）</h4><div id="nlBody"></div></div>';
 }
 /* ---------- 数据导出 / 导入 / 清空 ---------- */
 function adminDownload(name, text){
