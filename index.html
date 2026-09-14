@@ -782,6 +782,34 @@ ul.tips kbd{border:1px solid var(--line); border-bottom-width:2px; border-radius
 }
 .adm-input:focus{border-color:#f59e0b; box-shadow:0 0 0 3px rgba(245,158,11,.15)}
 .adm-err{margin-top:8px; font-size:12.5px; color:#b91c1c; min-height:17px}
+
+
+/* ---------- 进度上报 ---------- */
+.repbox .remind-card{max-width:560px; width:min(560px,94vw)}
+.rep-nick{
+  width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:10px;
+  font-size:14px; outline:none; background:#fff;
+}
+.rep-nick:focus{border-color:#9dbdf5; box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.rep-preview{
+  margin-top:12px; padding:11px 13px; border-radius:11px; background:#f8fafc;
+  border:1px solid var(--line); font-size:13px; color:var(--ink-2); line-height:1.85;
+}
+.rep-preview b{color:var(--ink)}
+.rep-preview .k{display:inline-block; min-width:74px; color:var(--ink-3); font-size:12.4px}
+.rep-status{margin-top:10px; font-size:13px; min-height:20px; line-height:1.6}
+.rep-status.ok{color:#15803d}
+.rep-status.err{color:#b91c1c}
+.rep-status.warn{color:#a16207}
+.rep-note{
+  margin-top:12px; padding:9px 12px; border-radius:10px; font-size:12.2px; line-height:1.7;
+  background:#f1f5f9; border:1px solid var(--line); color:var(--ink-3);
+}
+.repbtn{position:relative}
+.repbtn .dot{
+  position:absolute; top:1px; right:3px; width:6px; height:6px; border-radius:50%;
+  background:#f59e0b; box-shadow:0 0 0 2px #fff;
+}
 </style>
 </head>
 <body>
@@ -795,6 +823,7 @@ ul.tips kbd{border:1px solid var(--line); border-bottom-width:2px; border-radius
     <div class="search"><input id="q" type="search" placeholder="搜索主题 / 任务 / 备注" title="按主题、任务、完成标志或你自己的备注筛选" autocomplete="off"></div>
     <button class="btn" id="onlyOpen" title="只显示未完成的计划项">只看未完成</button>
     <button class="btn" id="errBtn" title="查常见报错的原因和改法">🐞 报错查询</button>
+    <button class="btn repbtn" id="repBtn" title="把你的进度上报给组织者（不用登录）">📤 上报进度</button>
     <button class="btn" id="exportBtn">导出进度 CSV</button>
     <button class="btn" id="exportWork">导出作业包</button>
     <button class="btn" id="printBtn">打印</button>
@@ -849,7 +878,8 @@ ul.tips kbd{border:1px solid var(--line); border-bottom-width:2px; border-radius
       <li data-n="6">第 4 周的项目从“猜数字 / 计算器 / 单位换算”中选一个，功能越少越容易做完。</li>
       <li data-n="7">快捷键：<kbd>/</kbd> 定位搜索框，<kbd>Esc</kbd> 清空搜索，<kbd>Ctrl</kbd>+<kbd>P</kbd> 打印。</li>
       <li data-n="8">进度存在本机浏览器（localStorage），换电脑请先用“导出进度 CSV”备份。</li>
-      <li data-n="9">键盘也能用：<kbd>↑</kbd><kbd>↓</kbd>（或 <kbd>J</kbd><kbd>K</kbd>）在日卡间移动，<kbd>Enter</kbd> 开教程，<kbd>W</kbd> 开作业，<kbd>/</kbd> 搜内容，<kbd>?</kbd> 查报错，<kbd>Esc</kbd> 关闭。</li>
+      <li data-n="9">想把进度告诉组织者？点顶栏「📤 上报进度」，填个昵称就行（不用登录、不用注册）。</li>
+      <li data-n="10">键盘也能用：<kbd>↑</kbd><kbd>↓</kbd>（或 <kbd>J</kbd><kbd>K</kbd>）在日卡间移动，<kbd>Enter</kbd> 开教程，<kbd>W</kbd> 开作业，<kbd>/</kbd> 搜内容，<kbd>?</kbd> 查报错，<kbd>Esc</kbd> 关闭。</li>
     <div class="setrow" style="margin-top:14px">
       <input type="checkbox" id="requireGrade">
       <span><b>必须通过自动批改才能标记完成</b>
@@ -947,6 +977,38 @@ ul.tips kbd{border:1px solid var(--line); border-bottom-width:2px; border-radius
     <p class="rsub">这里的操作只影响<b>当前这台设备</b>（静态页面没有服务器，数据都在你自己的浏览器里）。</p>
     <div id="admBody"></div>
     <div class="rfoot"><button class="btn" id="admClose" type="button">关闭</button></div>
+  </div>
+</div>
+
+<!-- 进度上报表单：Netlify 部署时会扫描 HTML 识别它；页面用 fetch POST 到 / 提交
+     字段名必须和 report.js 里 reportPayload() 的键保持一致 -->
+<form name="progress" data-netlify="true" netlify-honeypot="bot-field" hidden>
+  <input type="text" name="bot-field">
+  <input type="text" name="nick">
+  <input type="text" name="done">
+  <input type="text" name="checked">
+  <input type="text" name="graded">
+  <input type="text" name="streak">
+  <input type="text" name="last">
+  <input type="text" name="hours">
+  <input type="text" name="at">
+</form>
+
+<!-- 进度上报弹窗 -->
+<div class="remind gate repbox" id="reportbox" role="dialog" aria-modal="true" aria-label="上报我的进度">
+  <div class="remind-card">
+    <h3>📤 上报我的进度</h3>
+    <p class="rsub" id="repHint">上报后，组织者能看到这条记录（只有进度数字和你填的昵称，没有别的）。</p>
+    <label style="display:block;font-size:12.5px;font-weight:700;color:var(--ink-3);margin:0 0 6px">你的昵称（随便起，朋友之间能认出你就行）</label>
+    <input class="rep-nick" type="text" id="repNick" maxlength="24" placeholder="比如：小明 / 阿绫" autocomplete="off" spellcheck="false">
+    <div class="rep-preview" id="repPreview"></div>
+    <div class="rep-status" id="repStatus" role="status" aria-live="polite"></div>
+    <div class="rfoot">
+      <button class="btn primary" id="repSend" type="button">上报</button>
+      <button class="btn" id="repCancel" type="button">取消</button>
+    </div>
+    <div class="rep-note" id="repLast"></div>
+    <div class="rep-note">上报是<b>自愿的、手动点一下</b>才发送。你的作业代码和学习记录仍然只存在你自己的浏览器里。</div>
   </div>
 </div>
 
@@ -5796,6 +5858,176 @@ document.addEventListener("click", function (e){
 });
 
 
+/* ============ 进度上报 ============ */
+const NICK_KEY = "py-plan-nick-v1";
+const REPORT_AT_KEY = "py-plan-reportat-v1";
+/* 上报地址：Netlify 上用站点根路径（Netlify Forms 会接管 POST）；
+   其它域名（github.io / 本地文件）不支持，给出提示即可。 */
+function reportEndpoint(){
+  const host = (location.hostname || "");
+  if (host.indexOf("netlify.app") >= 0 || host.indexOf("netlify.com") >= 0) return "/";
+  return null;
+}
+function getNick(){
+  try { return localStorage.getItem(NICK_KEY) || ""; } catch (e) { return ""; }
+}
+function setNick(v){
+  try { localStorage.setItem(NICK_KEY, String(v || "")); } catch (e) {}
+}
+function lastReportAt(){
+  try { return localStorage.getItem(REPORT_AT_KEY) || ""; } catch (e) { return ""; }
+}
+function reportedToday(){
+  const t = lastReportAt();
+  if (!t) return false;
+  const d = new Date(t);
+  const n = new Date();
+  return d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth() && d.getDate() === n.getDate();
+}
+/* 收集要上报的数据（就是一份"进度快照"） */
+function reportPayload(nick){
+  const done = DAYS.filter(function (_, i){ return statusOf(dayIdAt(i)) === "done"; }).length;
+  const checked = DAYS.filter(function (_, i){ return isChecked(i); }).length;
+  const graded = DAYS.filter(function (_, i){
+    return typeof gradePassed === "function" && gradePassed(dayIdAt(i));
+  }).length;
+  let lastIdx = -1;
+  DAYS.forEach(function (_, i){ if (statusOf(dayIdAt(i)) === "done") lastIdx = i; });
+  const lastTxt = lastIdx >= 0
+    ? ("D" + pad2(lastIdx + 1) + " " + DAYS[lastIdx].topic)
+    : "还没有完成的天";
+  let hours = 0;
+  try {
+    if (typeof actualHours === "function"){
+      for (let i = 0; i < DAYS.length; i++) hours += actualHours(i);
+    }
+  } catch (e) {}
+  return {
+    nick: String(nick || "").slice(0, 24),
+    done: done + "/28",
+    checked: checked + "/28",
+    graded: graded + "/28",
+    streak: String(typeof streak === "function" ? streak() : 0),
+    last: lastTxt,
+    hours: (Math.round(hours * 10) / 10) + "h",
+    at: new Date().toLocaleString("zh-CN", { hour12: false })
+  };
+}
+function openReport(){
+  const box = document.getElementById("reportbox");
+  if (!box) return;
+  const ep = reportEndpoint();
+  const inp = document.getElementById("repNick");
+  if (inp) inp.value = getNick() || (typeof state !== "undefined" && state.setting && state.setting.nick ? state.setting.nick : "");
+  const st = document.getElementById("repStatus");
+  if (st){ st.className = "rep-status"; st.textContent = ""; }
+  renderReportPreview();
+  const hint = document.getElementById("repHint");
+  if (hint){
+    hint.innerHTML = ep
+      ? "上报后，组织者能在后台看到这条记录（只有进度数字和你填的昵称，没有别的）。"
+      : "⚠️ 当前这个网址<b>不支持上报</b>（只有 Netlify 那个网址可以）。请打开 <b>zero-python-4weeks.netlify.app</b> 再上报。";
+  }
+  const btn = document.getElementById("repSend");
+  if (btn) btn.disabled = !ep;
+  const lt = document.getElementById("repLast");
+  if (lt){
+    const t = lastReportAt();
+    lt.textContent = t ? ("上次上报：" + t + (reportedToday() ? "（今天已经报过了）" : "")) : "还没有上报过";
+  }
+  box.classList.add("show");
+  setTimeout(function (){ if (inp && ep) inp.focus(); }, 120);
+}
+function closeReport(){
+  const box = document.getElementById("reportbox");
+  if (box) box.classList.remove("show");
+}
+function renderReportPreview(){
+  const el = document.getElementById("repPreview");
+  if (!el) return;
+  const nick = (document.getElementById("repNick") || {}).value || "";
+  const p = reportPayload(nick);
+  el.innerHTML =
+    '<div><span class="k">昵称</span><b>' + esc(p.nick || "（还没填）") + "</b></div>" +
+    '<div><span class="k">已完成</span>' + esc(p.done) + "　<span class=\"k\">已签到</span>" + esc(p.checked) + "</div>" +
+    '<div><span class="k">批改通过</span>' + esc(p.graded) + "　<span class=\"k\">连续签到</span>" + esc(p.streak) + " 天</div>" +
+    '<div><span class="k">最近完成</span>' + esc(p.last) + "</div>" +
+    '<div><span class="k">累计投入</span>' + esc(p.hours) + "</div>";
+}
+function reportStatus(cls, text){
+  const st = document.getElementById("repStatus");
+  if (st){ st.className = "rep-status " + (cls || ""); st.textContent = text || ""; }
+}
+function sendReport(){
+  const ep = reportEndpoint();
+  const inp = document.getElementById("repNick");
+  const nick = ((inp && inp.value) || "").trim();
+  if (!ep){ reportStatus("err", "这个网址不支持上报，请用 Netlify 那个网址。"); return; }
+  if (!nick){ reportStatus("err", "先填一个昵称吧（随便起，朋友之间能认出你就行）"); if (inp) inp.focus(); return; }
+  if (nick.length > 24){ reportStatus("err", "昵称太长了，24 个字以内就好"); return; }
+  setNick(nick);
+  const p = reportPayload(nick);
+  const btn = document.getElementById("repSend");
+  if (btn || true) { const b = btn; if (b){ b.disabled = true; b.textContent = "正在上报…"; } }
+  reportStatus("", "正在上报…");
+  /* Netlify Forms：POST 到站点根路径，字段名和页面里那个隐藏表单保持一致 */
+  const body = new URLSearchParams();
+  body.append("form-name", "progress");
+  Object.keys(p).forEach(function (k){ body.append(k, p[k]); });
+  fetch(ep, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: body.toString()
+  }).then(function (res){
+    if (btn){ btn.disabled = false; btn.textContent = "上报"; }
+    if (res && res.ok){
+      try { localStorage.setItem(REPORT_AT_KEY, p.at); } catch (e) {}
+      const lt = document.getElementById("repLast");
+      if (lt) lt.textContent = "上次上报：" + p.at + "（今天已经报过了）";
+      reportStatus("ok", "✅ 上报成功！组织者能看到你的进度了。谢谢你坚持 🙂");
+      if (typeof toast === "function") toast("进度已上报 ✅", 2400);
+      renderPlan();
+    } else {
+      reportStatus("err", "上报失败（服务器返回 " + (res ? res.status : "?") + "）。可能这条链接不支持上报，或者稍后再试。");
+    }
+  }).catch(function (e){
+    if (btn){ btn.disabled = false; btn.textContent = "上报"; }
+    reportStatus("err", "上报失败：" + (e && e.message ? e.message : "网络不通") + "。可以稍后再试。");
+  });
+}
+/* 顶栏按钮上"今天还没上报"的小圆点 */
+function refreshReportDot(){
+  const b = document.getElementById("repBtn");
+  if (!b) return;
+  const old = b.querySelector(".dot");
+  const show = !reportedToday() && reportEndpoint();
+  if (show && !old){
+    const d = document.createElement("span");
+    d.className = "dot";
+    b.appendChild(d);
+  } else if (!show && old){
+    old.remove();
+  }
+}
+document.addEventListener("click", function (e){
+  const t = e.target;
+  if (!t) return;
+  if (t.id === "repBtn" || (t.closest && t.closest("#repBtn"))){ openReport(); return; }
+  if (t.id === "repClose" || t.id === "repCancel"){ closeReport(); return; }
+  if (t.id === "repSend"){ sendReport(); return; }
+  if (t.id === "reportbox"){ closeReport(); return; }
+});
+document.addEventListener("input", function (e){
+  if (e.target && e.target.id === "repNick") renderReportPreview();
+});
+document.addEventListener("keydown", function (e){
+  if (e.key === "Enter" && document.activeElement && document.activeElement.id === "repNick"){
+    e.preventDefault();
+    sendReport();
+  }
+});
+
+
 /* ============ 启动 ============ */
 load();
 initStartDate();
@@ -5814,6 +6046,7 @@ try { if (typeof applyAdminUi === "function") applyAdminUi(); } catch (e) {}
 try { if (typeof checkAdminEntry === "function") checkAdminEntry(); } catch (e) {}
 /* 数据看板：开启页面停留计时（每 20 秒一次，只在页面可见时记） */
 try { if (typeof initTimeTracking === "function") initTimeTracking(); } catch (e) {}
+try { if (typeof refreshReportDot === "function") refreshReportDot(); } catch (e) {}
 window.__planReady = true;
 window.__dayCount = DAYS.length;
 window.__lessonCount = Object.keys(TUTORIALS).length;
